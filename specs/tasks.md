@@ -6,7 +6,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [x] T0.1 Monorepo: `web/`, `api/`, `deploy/`, `docs/`, `specs/` (these four files), `CLAUDE.md`. MIT or private license, `.editorconfig`, root README stub.
 - [x] T0.2 `web/`: Vite + React + TS strict, Tailwind, ESLint + Prettier, Vitest, i18next with `es` locale file. Hello screen in Spanish.
 - [x] T0.3 `web/`: `vite-plugin-pwa` config, manifest (name, icons, theme color), offline app shell.
-- [ ] T0.3b De-risk iOS early: serve the hello-world build from the homelab via `tailscale serve`, install it on her iPhone over Tailscale, turn Tailscale off and confirm the app still opens offline.
+- [x] T0.3b De-risk iOS early: serve the hello-world build from the homelab via `tailscale serve`, install it on her iPhone over Tailscale, turn Tailscale off and confirm the app still opens offline.
 - [ ] T0.4 GitHub Actions: web lint + type-check + test.
 - [ ] T0.5 `docs/decisions/0001-offline-first.md` (ADR: why local DB + sync instead of API-first).
 
@@ -18,7 +18,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [ ] T1.5 [P] Seed data: `crystals.es.json` (~50) + intention tags. She reviews.
 - [ ] T1.5b [P] Card images: download the 1909 RWS scans, record sources in `CREDITS.md`, `scripts/build-card-images.ts` → thumb + full WebP per card key. Check total ≤ 5 MB. Add to service-worker precache.
 - [ ] T1.6 Seed loader with versioning and the "don't overwrite user-modified rows" rule. Tests.
-- [ ] T1.7 Clients: list (search, sort by last visit), create/edit form (with "No sabe la hora"), detail page shell, archive/delete.
+- [ ] T1.7 Clients: list (search, sort by last visit), create/edit form (with "No sabe la hora"), detail page shell, archive/delete. Any bottom navigation must respect the bottom safe-area inset (home indicator), and the status bar color must match the app background.
 - [ ] T1.8 Sessions: create from client, autosave notes, type, price + currency, follow-up. Client timeline.
 - [ ] T1.8b Payments core: `paymentStatus()` and money helpers (integer minor units, per-currency totals, ₡/US$ formatting in es-CR). Unit tests incl. partial, overpaid, mixed currencies, free reading.
 - [ ] T1.8c Payments UI: record/edit/delete payments on a session (method, date, reference), status badge on sessions, client totals + balance.
@@ -56,7 +56,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [ ] T3.9 Two-device e2e: two browser contexts, offline edits on both, sync, assert outcome.
 
 ## Phase 4 — Deploy & horoscopes
-- [ ] T4.1 `deploy/docker-compose.yml`: caddy (serves built PWA + proxies /api), api, db, cron. `.env.example`.
+- [ ] T4.1 `deploy/docker-compose.yml`: caddy (serves built PWA + proxies /api), api, db, cron. `.env.example`. Caddy must serve .webmanifest as application/manifest+json.
 - [ ] T4.2 Tailscale setup doc in `docs/deploy.md`: enable MagicDNS + HTTPS certificates, `tailscale serve` → Caddy, share the node with her account, ACL limiting her to the app port. Install on her iPhone from the ts.net URL.
 - [ ] T4.3 Nightly `pg_dump` backups + tested restore procedure.
 - [ ] T4.4 Spike (1 evening): call freehoroscopeapi.com for all 12 signs, check response shape and text length; translate a sample with DeepL Free (test `formality`), review quality. ADR with decision.
