@@ -29,7 +29,8 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [ ] T1.12 Home: upcoming follow-ups, pending balances, recent sessions.
 - [ ] T1.13 Export to JSON / import from JSON (Zod-validated, versioned format). Round-trip test.
 - [ ] T1.14 Settings: storage persistence request + status, export/import, versions.
-- [ ] T1.15 Playwright e2e on WebKit iPhone viewport: create client → session → Cruz Celta → reload offline → data still there.
+- [ ] T1.15 Playwright e2e on WebKit iPhone viewport: create client → session → Cruz Celta → reload offline → data still there. Runs in CI on Ubuntu (GitHub Actions), not locally: Playwright doesn't support Arch-based distros.
+- [ ] T4.7 Service-worker update toast ("Nueva versión disponible — recargar"). Moved up from Phase 4. Switches `registerType` in `web/pwa.config.ts` to `prompt`.
 - [ ] **Checkpoint:** she uses it for real readings for a week. Collect feedback, update `spec.md`.
 
 ## Phase 2 — Astrology & crystals (offline)
@@ -61,7 +62,6 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [ ] T4.4 Spike (1 evening): call freehoroscopeapi.com for all 12 signs, check response shape and text length; translate a sample with DeepL Free (test `formality`), review quality. ADR with decision.
 - [ ] T4.5 `horoscopes` app: `HoroscopeSource` (freehoroscopeapi, manual) and `Translator` (DeepL Free, none) interfaces. Daily job: fetch → translate → upsert `text_en`/`text_es`; skip re-translation; DeepL quota check that falls back to English-only above 90%. Tests with mocked HTTP, including DeepL down and quota exceeded.
 - [ ] T4.6 Horoscope on client detail (sun + moon/rising if known), Spanish with English original on long-press, synced and cached, dated when stale.
-- [ ] T4.7 Service-worker update toast.
 
 ## Phase 5 — Polish & portfolio
 - [ ] T5.1 Optional PIN lock.
