@@ -12,6 +12,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "skipLibCheck": true,
+    "resolveJsonModule": true,
 
     "strict": true,
     "noUncheckedIndexedAccess": true,
@@ -19,5 +20,11 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["vite.config.ts", "eslint.config.js"]
+  "include": [
+    "vite.config.ts",
+    "pwa.config.ts",
+    "pwa.config.test.ts",
+    "pwa-assets.config.ts",
+    "eslint.config.js"
+  ]
 }

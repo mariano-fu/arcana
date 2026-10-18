@@ -1,6 +1,7 @@
 {
   "app": {
-    "name": "Arcana"
+    "name": "Arcana",
+    "description": "Clientes, lecturas, cartas y cristales para su práctica de tarot, disponible aun sin conexión."
   },
   "hello": {
     "title": "Le damos la bienvenida",
