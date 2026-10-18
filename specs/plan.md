@@ -185,6 +185,7 @@ Backend `horoscopes` app, two independent interfaces so each side can be swapped
 ## Hosting the PWA on iOS — notes for the README
 - Must be served over HTTPS for the service worker and install (the ts.net cert covers this).
 - She installs once via Safari → Compartir → Agregar a inicio, **with Tailscale connected**. After that the app opens and works offline even with Tailscale off; only sync and app updates need it on.
+- Install must be done from Safari itself, not from a link opened inside WhatsApp/Instagram.
 - iOS allows one active VPN at a time: if she uses another VPN, sync waits until Tailscale is back on.
 - iOS updates the service worker on next launch; show a "Nueva versión disponible — recargar" toast.
 - Storage for installed home-screen apps is far less likely to be evicted than for regular Safari tabs, but backups remain mandatory.
