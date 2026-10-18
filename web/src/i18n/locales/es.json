@@ -6,5 +6,53 @@
   "hello": {
     "title": "Le damos la bienvenida",
     "subtitle": "Su espacio para clientes, lecturas y referencias, disponible aun sin conexión."
+  },
+  "cards": {
+    "arcana": {
+      "major": "Arcanos Mayores",
+      "minor": "Arcanos Menores"
+    },
+    "suit": {
+      "wands": "Bastos",
+      "cups": "Copas",
+      "swords": "Espadas",
+      "pentacles": "Oros"
+    },
+    "rank": {
+      "1": "As",
+      "2": "Dos",
+      "3": "Tres",
+      "4": "Cuatro",
+      "5": "Cinco",
+      "6": "Seis",
+      "7": "Siete",
+      "8": "Ocho",
+      "9": "Nueve",
+      "10": "Diez",
+      "11": "Paje",
+      "12": "Caballero",
+      "13": "Reina",
+      "14": "Rey"
+    },
+    "element": {
+      "fire": "Fuego",
+      "water": "Agua",
+      "air": "Aire",
+      "earth": "Tierra"
+    },
+    "minorName": "{{rank}} de {{suit}}",
+    "field": {
+      "element": "Elemento",
+      "astrology": "Astrología",
+      "keywords": "Palabras clave",
+      "upright": "Al derecho",
+      "reversed": "Invertida"
+    },
+    "review": {
+      "title": "Revisión de textos de las cartas",
+      "intro": "Lea cada carta y anote debajo de «Correcciones» lo que quiera cambiar: nombres, palabras clave o significados. Si una carta está bien, deje el espacio en blanco.",
+      "generated": "Generado a partir de cards.es.json (versión {{version}}). Las correcciones que anote aquí se pasan luego al archivo de datos.",
+      "corrections": "Correcciones"
+    }
   }
 }

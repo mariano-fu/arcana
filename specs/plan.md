@@ -104,6 +104,8 @@ Tables:
 
 Seed-only (bundled JSON, not synced, versioned): tarot cards, zodiac sign profiles, cities.
 
+Tarot cards (`seed/cards.es.json`, schema in `seed/cards.ts`): key, arcana, number, suit, element, astrology (Golden Dawn), keywords, upright, reversed. Majors store their Spanish `name`. Minor names are not stored: they are built from the rank and suit labels in `es.json` (`cards.rank.*`, `cards.suit.*`, e.g. "Paje de Oros"), so renaming a suit or court rank is a one-line edit. Court ranks are numbered 11 Paje, 12 Caballero, 13 Reina, 14 Rey; the Ace is 1. Court astrology follows the visual RWS convention: Caballero (on horseback) takes the Golden Dawn mounted Knight's zodiac range, Rey takes the Golden Dawn Prince's, Reina keeps the Queen's; Pajes (GD Princesses) have none. Meanings are gender-neutral toward the consultant (a test rejects common masculine-only words, with an allowlist). `docs/review/cards-es.md` is generated from the seed (`npm run build:cards-review`) for her review, and a test fails if it is stale.
+
 ### Card images
 - Source: scans of the original 1909 Rider-Waite-Smith deck (Pamela Colman Smith artwork, public domain), e.g. the set on Wikimedia Commons. Record the exact source URL and license of each file in `web/src/seed/images/CREDITS.md`; never pull from modern commercial editions.
 - Build script `scripts/build-card-images.ts` (sharp): resize to two sizes (thumb ~160 px wide, full ~600 px wide), convert to WebP, name by card key (`major-00.webp`, `cups-07.webp`). Commit outputs; target ≤ 5 MB total.
