@@ -83,6 +83,12 @@ All synced tables share these columns:
 | `server_version` | bigint | Server-assigned from a global sequence on every write; pull cursor |
 | `device_id` | UUID | Which device last wrote it (debugging, conflict UI) |
 
+Local-only (IndexedDB, never sent to the server):
+- `pending` (`0|1`, not boolean, because IndexedDB can't index booleans): 1 while a row has unsynced changes. The sync push reads `where('pending').equals(1)`, tombstones included.
+- `meta` key/value table: `device_id` (UUIDv7 created on first run), later `seed_version` and the sync cursor.
+
+Local conventions: field names stay snake_case so rows go to the sync API as-is; timestamps are ISO 8601 UTC strings (sort lexically, which last-write-wins relies on); `server_version` is null until first sync. Deletes are soft (`deleted_at` set, row re-stamped `pending`), and repository reads hide tombstones by default.
+
 Tables:
 - **client**: name, instagram, whatsapp, email, birth_date (date, null), birth_time (time, null), birth_place_label, birth_lat, birth_lng, birth_tz (IANA), notes, tags (text[]), archived (bool)
 - **session**: client_id, started_at, type (`in_person|online|message`), price_minor (int, null — céntimos/cents), currency (`CRC|USD`, default `CRC`), notes, follow_up_note, follow_up_date
