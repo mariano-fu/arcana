@@ -11,7 +11,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [x] T0.5 `docs/decisions/0001-offline-first.md` (ADR: why local DB + sync instead of API-first).
 
 ## Phase 1 — Usable on her phone with no backend
-- [ ] T1.1 Dexie schema v1 for all synced tables (plan.md data model), including `pending` flag and UUIDv7 ids. Repository layer with typed CRUD; every write stamps `updated_at`, `device_id`, `pending`.
+- [x] T1.1 Dexie schema v1 for all synced tables (plan.md data model), including `pending` flag and UUIDv7 ids. Repository layer with typed CRUD; every write stamps `updated_at`, `device_id`, `pending`.
 - [ ] T1.2 [P] Seed data: `cards.es.json` — 78 cards (key, número, nombre, arcano, palo, elemento, astrología, palabras clave, significado derecho, significado invertido). Draft with AI, **she reviews**. Zod schema + test that all 78 exist and keys are unique.
 - [ ] T1.3 [P] Seed data: `spreads.json` (1, 3, Herradura 7, Cruz Celta 10) with Spanish position names and meanings.
 - [ ] T1.4 [P] Seed data: `zodiac.es.json` (12 signs: fechas, elemento, modalidad, regente, rasgos, compatibilidades).
