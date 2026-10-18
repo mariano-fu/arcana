@@ -25,6 +25,7 @@
     "pwa.config.ts",
     "pwa.config.test.ts",
     "pwa-assets.config.ts",
-    "eslint.config.js"
+    "eslint.config.js",
+    "scripts"
   ]
 }
