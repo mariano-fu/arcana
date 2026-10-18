@@ -7,7 +7,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [x] T0.2 `web/`: Vite + React + TS strict, Tailwind, ESLint + Prettier, Vitest, i18next with `es` locale file. Hello screen in Spanish.
 - [x] T0.3 `web/`: `vite-plugin-pwa` config, manifest (name, icons, theme color), offline app shell.
 - [x] T0.3b De-risk iOS early: serve the hello-world build from the homelab via `tailscale serve`, install it on her iPhone over Tailscale, turn Tailscale off and confirm the app still opens offline.
-- [ ] T0.4 GitHub Actions: web lint + type-check + test.
+- [x] T0.4 GitHub Actions: web lint + type-check + test + build.
 - [ ] T0.5 `docs/decisions/0001-offline-first.md` (ADR: why local DB + sync instead of API-first).
 
 ## Phase 1 — Usable on her phone with no backend
