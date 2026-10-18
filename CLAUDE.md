@@ -31,6 +31,7 @@ Don't guess silently. Stop and ask, or propose a spec change. Spec changes go in
 - For each task: create a branch `t<id>-<short-name>` from `main` (e.g. `t1.8b-payment-status`), do the work, commit there, push, open a PR. Mariano reviews and merges.
 - Commit at the end of the task, once tests are green. Don't merge, don't push to `main`.
 - License: MIT.
+- When Mariano replies “approved” to a finished task, merge its branch into main (via gh pr merge --merge if a PR exists), delete the branch, pull main, then branch for the next task.
 
 ## Commands
 (fill in as the project grows)
