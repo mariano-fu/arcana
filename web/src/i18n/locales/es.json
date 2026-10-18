@@ -1,0 +1,9 @@
+{
+  "app": {
+    "name": "Arcana"
+  },
+  "hello": {
+    "title": "Le damos la bienvenida",
+    "subtitle": "Su espacio para clientes, lecturas y referencias, disponible aun sin conexión."
+  }
+}

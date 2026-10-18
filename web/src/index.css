@@ -1,0 +1,6 @@
+@import 'tailwindcss';
+
+/* System fonts only: no external fonts at runtime (constitution §2). */
+@theme {
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}

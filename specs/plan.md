@@ -28,7 +28,7 @@
 
 | Concern | Choice | Why |
 |---|---|---|
-| Build | Vite + React 18 + TypeScript (strict) | Target-job stack |
+| Build | Vite + React 19 + TypeScript (strict) | Target-job stack | Build | Vite + React 19 + TypeScript 6.0 (strict) | Target-job stack. TS pinned to 6.0: typescript-eslint doesn't support 7 yet. Don't upgrade until it does. ||
 | Routing | React Router | Standard |
 | Local DB | Dexie.js + `dexie-react-hooks` (`useLiveQuery`) | Typed IndexedDB, reactive queries, good Safari support |
 | Validation | Zod | Shared schemas for forms, import files, sync payloads |
@@ -38,6 +38,8 @@
 | Dates/TZ | Luxon | IANA timezones incl. historical DST for natal charts |
 | Astrology math | `astronomy-engine` (MIT) for planet ecliptic longitudes; ascendant/MC/Placidus houses implemented in a small `astro/` module | Offline, permissive license. **Avoid Swiss Ephemeris bindings (AGPL)** in case this becomes a product |
 | Tests | Vitest + Testing Library; Playwright e2e incl. WebKit + iPhone viewport | Catch Safari issues early |
+
+TypeScript is pinned to `~6.0` until typescript-eslint supports 7.x (its peer range is `<6.1`).
 
 ### Folder layout
 ```
@@ -49,9 +51,9 @@ web/
     features/     # clients/, sessions/, payments/, spreads/, crystals/, settings/
     seed/         # cards.es.json, spreads.json, crystals.es.json, zodiac.es.json, cities.json
       images/     # cards/thumb/*.webp, cards/full/*.webp, CREDITS.md
-  scripts/        # build-card-images.ts, build-cities.ts
-    i18n/
-  e2e/
+    i18n/         # i18next setup, locales/es.json
+  scripts/        # build-card-images.ts, build-cities.ts (web/scripts/)
+  e2e/            # Playwright specs (web/e2e/)
 ```
 
 ## Backend
