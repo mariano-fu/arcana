@@ -1,0 +1,38 @@
+# CLAUDE.md
+
+This repo is a spec-driven project. The specs are the source of truth.
+
+## Read before any work
+- `specs/constitution.md`: non-negotiable rules. If a task conflicts with it, stop and tell me.
+- `specs/spec.md`: what we're building (user stories, acceptance criteria).
+- `specs/plan.md`: how (stack, data model, sync protocol, folder layout).
+- `specs/tasks.md`: ordered task list. Work on ONE task at a time, the one I name.
+
+## How to work a task
+1. Restate the task and the acceptance criteria it touches. List the files you plan to create/change. Wait for my OK.
+2. Implement only that task. Don't start the next one, don't refactor unrelated code.
+3. Write/update tests for it. Run lint, type-check and tests; fix until green.
+4. Tick the task's checkbox in `specs/tasks.md`.
+5. Summarize: what changed, how to verify it manually, anything you had to assume.
+
+## If the spec is wrong or unclear
+Don't guess silently. Stop and ask, or propose a spec change. Spec changes go into `specs/` in the same commit as the code that needs them.
+
+## Conventions
+- Code, comments, commits, tests: English. All user-facing text: Spanish (Costa Rica, "usted"), via i18n keys, never hardcoded.
+- TypeScript strict; Python with type hints + mypy.
+- Money is integer minor units. Never floats.
+- Conventional commits (`feat:`, `fix:`, `test:`, `docs:`, `chore:`), one task per commit/PR, task ID in the message (e.g. `feat(payments): T1.8b payment status helpers`).
+- Never commit secrets (`.env` is gitignored; update `.env.example`).
+- Never put real client data in tests, fixtures, screenshots or seed files.
+
+## Git workflow
+- `main` is the default branch and always works. Never commit task work directly to `main`.
+- For each task: create a branch `t<id>-<short-name>` from `main` (e.g. `t1.8b-payment-status`), do the work, commit there, push, open a PR. Mariano reviews and merges.
+- Commit at the end of the task, once tests are green. Don't merge, don't push to `main`.
+- License: MIT.
+
+## Commands
+(fill in as the project grows)
+- web: `cd web && npm run dev | npm test | npm run lint | npm run typecheck`
+- api: `cd api && pytest | mypy . | ruff check .`
