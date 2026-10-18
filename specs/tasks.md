@@ -3,7 +3,7 @@
 Work top to bottom. Each task should be one agent session / one PR. `[P]` = can run in parallel with its neighbors. Each phase ends in something she can use.
 
 ## Phase 0 — Repo & foundations
-- [ ] T0.1 Monorepo: `web/`, `api/`, `deploy/`, `docs/`, `specs/` (these four files), `CLAUDE.md`. MIT or private license, `.editorconfig`, root README stub.
+- [x] T0.1 Monorepo: `web/`, `api/`, `deploy/`, `docs/`, `specs/` (these four files), `CLAUDE.md`. MIT or private license, `.editorconfig`, root README stub.
 - [ ] T0.2 `web/`: Vite + React + TS strict, Tailwind, ESLint + Prettier, Vitest, i18next with `es` locale file. Hello screen in Spanish.
 - [ ] T0.3 `web/`: `vite-plugin-pwa` config, manifest (name, icons, theme color), offline app shell.
 - [ ] T0.3b De-risk iOS early: serve the hello-world build from the homelab via `tailscale serve`, install it on her iPhone over Tailscale, turn Tailscale off and confirm the app still opens offline.
