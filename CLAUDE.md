@@ -27,7 +27,8 @@ Don't guess silently. Stop and ask, or propose a spec change. Spec changes go in
 - Never put real client data in tests, fixtures, screenshots or seed files.
 
 ## Git workflow
-- `main` is the default branch and always works. Never commit task work directly to `main`.
+- `main` is the default branch and always works. It is protected (admins included): no direct pushes, and every change, including spec-only and docs edits, goes through a branch and a PR whose `web` CI check passes.
+- The required check is the `web` job in `.github/workflows/ci.yml`. Renaming that job (or adding new required jobs) means updating the branch protection rule for `main` too, or merges will wait on a check that never runs.
 - For each task: create a branch `t<id>-<short-name>` from `main` (e.g. `t1.8b-payment-status`), do the work, commit there, push, open a PR. Mariano reviews and merges.
 - Commit at the end of the task, once tests are green. Don't merge, don't push to `main`.
 - License: MIT.
