@@ -8,7 +8,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [x] T0.3 `web/`: `vite-plugin-pwa` config, manifest (name, icons, theme color), offline app shell.
 - [x] T0.3b De-risk iOS early: serve the hello-world build from the homelab via `tailscale serve`, install it on her iPhone over Tailscale, turn Tailscale off and confirm the app still opens offline.
 - [x] T0.4 GitHub Actions: web lint + type-check + test + build.
-- [ ] T0.5 `docs/decisions/0001-offline-first.md` (ADR: why local DB + sync instead of API-first).
+- [x] T0.5 `docs/decisions/0001-offline-first.md` (ADR: why local DB + sync instead of API-first).
 
 ## Phase 1 — Usable on her phone with no backend
 - [ ] T1.1 Dexie schema v1 for all synced tables (plan.md data model), including `pending` flag and UUIDv7 ids. Repository layer with typed CRUD; every write stamps `updated_at`, `device_id`, `pending`.
@@ -31,6 +31,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [ ] T1.14 Settings: storage persistence request + status, export/import, versions.
 - [ ] T1.15 Playwright e2e on WebKit iPhone viewport: create client → session → Cruz Celta → reload offline → data still there. Runs in CI on Ubuntu (GitHub Actions), not locally: Playwright doesn't support Arch-based distros.
 - [ ] T4.7 Service-worker update toast ("Nueva versión disponible — recargar"). Moved up from Phase 4. Switches `registerType` in `web/pwa.config.ts` to `prompt`.
+- [ ] T1.16 Storage survival check on her iPhone: confirm `navigator.storage.persist()` was granted, and after a week of real use verify all data is intact; record results in `docs/spikes/`.
 - [ ] **Checkpoint:** she uses it for real readings for a week. Collect feedback, update `spec.md`.
 
 ## Phase 2 — Astrology & crystals (offline)

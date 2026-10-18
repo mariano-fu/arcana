@@ -28,7 +28,7 @@
 
 | Concern | Choice | Why |
 |---|---|---|
-| Build | Vite + React 19 + TypeScript (strict) | Target-job stack | Build | Vite + React 19 + TypeScript 6.0 (strict) | Target-job stack. TS pinned to 6.0: typescript-eslint doesn't support 7 yet. Don't upgrade until it does. ||
+| Build | Vite + React 19 + TypeScript 6.0 (strict) | Target-job stack. TS pinned to 6.0: typescript-eslint doesn't support 7 yet. Don't upgrade until it does. |
 | Routing | React Router | Standard |
 | Local DB | Dexie.js + `dexie-react-hooks` (`useLiveQuery`) | Typed IndexedDB, reactive queries, good Safari support |
 | Validation | Zod | Shared schemas for forms, import files, sync payloads |
