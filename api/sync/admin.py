@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Any
 
 from django.contrib import admin
+from django.db.models import QuerySet
 from django.http import HttpRequest
 
 from sync import models
@@ -10,10 +11,25 @@ if TYPE_CHECKING:
 
 
 class SyncedModelAdmin(admin.ModelAdmin[Any]):
-    """Shared columns are shown but never edited by hand (sync owns them)."""
+    """Shared columns are shown but never edited by hand (sync owns them).
+
+    No hard deletes (devices would never hear of them): the "tombstone" action marks rows
+    deleted instead, and the next sync deletes them on every device.
+    """
 
     readonly_fields = ("server_version",)
     ordering = ("-server_version",)
+    actions = ("tombstone",)
+
+    def has_delete_permission(self, request: HttpRequest, obj: Any = None) -> bool:
+        return False
+
+    @admin.action(description="Mark selected rows deleted (tombstone)")
+    def tombstone(self, request: HttpRequest, queryset: QuerySet[Any]) -> None:
+        rows = list(queryset.filter(deleted_at__isnull=True))
+        for row in rows:
+            row.tombstone()
+        self.message_user(request, f"Marked {len(rows)} row(s) deleted.")
 
     def get_list_filter(self, request: HttpRequest) -> tuple["_ListFilterT", ...]:
         # Every list can show live rows or tombstones.

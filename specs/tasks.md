@@ -57,18 +57,26 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [ ] T3.5 OpenAPI via drf-spectacular; generate TS types for the web client.
 - [ ] T3.6 `web/sync/` engine: push pending → apply response → pull pages → advance cursor. Single-flight, triggers (open, online, interval, manual). Unit tests with a fake server.
   - Note: Refresh-token rotation means a lost refresh response leaves the device with a blacklisted token. On a 401 from refresh: keep all local data, mark sync as ‘sesión expirada’, and prompt re-login in Settings; never clear IndexedDB on auth failure. Refreshes must be single-flight.
+  - Note: updated_at is strictly increasing per row: max(now, previous + 1 ms).
+  - Note: A 400 from /api/sync/ is not retried in a loop: show 'La sincronización está detenida' with details, keep local data and pending rows.
+  - Note: Split pushes at 500 rows or ~1 MB, whichever comes first.
+  - Note: If the server rejects a future updated_at, show 'Revise la fecha y hora del teléfono'.
 - [ ] T3.7 Conflict review screen ("Conflictos": show both versions, keep one or merge text).
+  - Note: Surface orphaned rows (child of a tombstoned parent) as 'Sesión de una ficha eliminada' with options to restore the ficha or delete the session.
+  - Note: Test: resolving a server-created conflict row from a device whose clock is behind the server still wins (relies on T3.6's max(now, previous + 1 ms)).
 - [ ] T3.8 Settings: login, last sync, sync now, clock-skew warning.
 - [ ] T3.9 Two-device e2e: two browser contexts, offline edits on both, sync, assert outcome.
 
 ## Phase 4 — Deploy & horoscopes
 - [ ] T4.1 `deploy/docker-compose.yml`: caddy (serves built PWA + proxies /api), api, db, cron. `.env.example`. Caddy must serve .webmanifest as application/manifest+json.
   - Note: Set REST_FRAMEWORK NUM_PROXIES = 1 behind Caddy so auth throttling keys on the client IP, not Caddy's; add a test.
+  - Note: The chain is tailscale serve → Caddy → gunicorn. Configure Caddy trusted_proxies and the matching NUM_PROXIES for the full chain, and test that throttling keys on the device's address, not a proxy's.
   - Note: Cron: run `manage.py flushexpiredtokens` daily; deploy runs `migrate` (simplejwt blacklist tables).
 - [ ] T4.2 Tailscale setup doc in `docs/deploy.md`: enable MagicDNS + HTTPS certificates, `tailscale serve` → Caddy, share the node with her account, ACL limiting her to the app port. Install on her iPhone from the ts.net URL.
 - [ ] T4.3 Nightly `pg_dump` backups + tested restore procedure.
 - [ ] T4.4 Spike (1 evening): call freehoroscopeapi.com for all 12 signs, check response shape and text length; translate a sample with DeepL Free (test `formality`), review quality. ADR with decision.
 - [ ] T4.5 `horoscopes` app: `HoroscopeSource` (freehoroscopeapi, manual) and `Translator` (DeepL Free, none) interfaces. Daily job: fetch → translate → upsert `text_en`/`text_es`; skip re-translation; DeepL quota check that falls back to English-only above 90%. Tests with mocked HTTP, including DeepL down and quota exceeded.
+  - Note: Horoscope job writes through the same locked sync-write helper.
 - [ ] T4.6 Horoscope on client detail (sun + moon/rising if known), Spanish with English original on long-press, synced and cached, dated when stale.
 
 ## Phase 5 — Polish & portfolio

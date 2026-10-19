@@ -4,7 +4,9 @@ import pytest
 from django.contrib import admin
 from django.test import Client
 from django.urls import reverse
+from django.utils import timezone
 
+from sync.models import SERVER_DEVICE_ID
 from sync.registry import synced_models
 from tests import factories
 
@@ -50,3 +52,29 @@ def test_admin_requires_login(client: Client) -> None:
     response = client.get(reverse("admin:sync_client_changelist"))
 
     assert response.status_code == 302
+
+
+def test_admin_cannot_hard_delete(admin_client: Client) -> None:
+    row = factories.ClientFactory()
+
+    response = admin_client.get(reverse("admin:sync_client_delete", args=[row.pk]))
+
+    assert response.status_code == 403
+    assert synced_models()["client"].objects.filter(pk=row.pk).exists()
+
+
+def test_admin_tombstone_action_marks_rows_deleted(admin_client: Client) -> None:
+    live, gone = factories.ClientFactory(), factories.ClientFactory(deleted_at=timezone.now())
+    gone_version = gone.server_version
+
+    response = admin_client.post(
+        reverse("admin:sync_client_changelist"),
+        {"action": "tombstone", "_selected_action": [str(live.pk), str(gone.pk)]},
+    )
+
+    assert response.status_code == 302
+    live.refresh_from_db()
+    gone.refresh_from_db()
+    assert live.deleted_at is not None
+    assert live.device_id == SERVER_DEVICE_ID
+    assert gone.server_version == gone_version  # Already a tombstone: left alone.
