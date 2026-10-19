@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "spreads": [
+    {
+      "key": "one-card",
+      "name": "1 carta",
+      "description": "Una sola carta para una pregunta concreta o como guía del día. Formule la pregunta con claridad antes de sacarla y lea la carta como la respuesta o el consejo central. Si sale invertida, preste atención a los bloqueos o a lo que pide revisarse.",
+      "positions": [
+        {
+          "index": 1,
+          "name": "Respuesta",
+          "meaning": "El mensaje central para la pregunta: qué energía domina la situación o qué conviene hacer ahora. Relacione las palabras clave de la carta directamente con lo que se preguntó.",
+          "layout": { "col": 0, "row": 0, "rotated": false }
+        }
+      ]
+    },
+    {
+      "key": "three-card",
+      "name": "3 cartas",
+      "description": "La tirada más versátil: sirve para casi cualquier pregunta y para lecturas rápidas. Lea primero cada carta en su posición y luego las tres como una historia: de dónde viene la situación, dónde está y hacia dónde va si nada cambia.",
+      "positions": [
+        {
+          "index": 1,
+          "name": "Pasado",
+          "meaning": "Lo que dio origen a la situación: hechos, decisiones o emociones que todavía influyen. Observe si es algo ya resuelto o algo que sigue pesando.",
+          "layout": { "col": 0, "row": 0, "rotated": false }
+        },
+        {
+          "index": 2,
+          "name": "Presente",
+          "meaning": "Cómo está la situación ahora y qué energía la mueve. Es el punto de partida de la lectura: busque qué está en manos de la persona consultante en este momento.",
+          "layout": { "col": 1, "row": 0, "rotated": false }
+        },
+        {
+          "index": 3,
+          "name": "Futuro",
+          "meaning": "Hacia dónde tiende la situación si sigue el rumbo actual. No es un destino fijo: léala como una tendencia que puede cambiar con las decisiones del presente.",
+          "layout": { "col": 2, "row": 0, "rotated": false }
+        }
+      ]
+    },
+    {
+      "key": "horseshoe",
+      "name": "Herradura",
+      "description": "Siete cartas en forma de arco para entender una pregunta concreta con más detalle y recibir un consejo. Las cartas 1 a 3 cuentan la línea del tiempo, la 4 (arriba, en el centro) es el consejo, y las 5 a 7 muestran lo que rodea a la persona consultante y hacia dónde va. Lea juntas la 4 y la 7: qué hacer y a dónde lleva.",
+      "positions": [
+        {
+          "index": 1,
+          "name": "Pasado",
+          "meaning": "Hechos o decisiones previas que dieron forma a la situación. Busque la raíz del asunto y lo que todavía influye.",
+          "layout": { "col": 0, "row": 3, "rotated": false }
+        },
+        {
+          "index": 2,
+          "name": "Presente",
+          "meaning": "El estado actual de la situación y cómo la vive la persona consultante ahora mismo.",
+          "layout": { "col": 1, "row": 2, "rotated": false }
+        },
+        {
+          "index": 3,
+          "name": "Futuro próximo",
+          "meaning": "Lo que se acerca en las próximas semanas si las cosas siguen como van. Léala como una tendencia, no como algo fijo.",
+          "layout": { "col": 2, "row": 1, "rotated": false }
+        },
+        {
+          "index": 4,
+          "name": "Consejo",
+          "meaning": "El centro del arco: la actitud o acción más útil ante la situación. Si sale invertida, suele indicar qué conviene dejar de hacer.",
+          "layout": { "col": 3, "row": 0, "rotated": false }
+        },
+        {
+          "index": 5,
+          "name": "Entorno",
+          "meaning": "Las personas y circunstancias externas que influyen: familia, pareja, trabajo. Observe si ayudan o si estorban.",
+          "layout": { "col": 4, "row": 1, "rotated": false }
+        },
+        {
+          "index": 6,
+          "name": "Esperanzas y temores",
+          "meaning": "Lo que la persona consultante desea o teme sobre el asunto, a veces ambas cosas a la vez. Ayuda a distinguir lo que espera de lo que de verdad está pasando.",
+          "layout": { "col": 5, "row": 2, "rotated": false }
+        },
+        {
+          "index": 7,
+          "name": "Resultado",
+          "meaning": "El desenlace más probable si se sigue el consejo y el rumbo actual. Léala junto con la carta 4.",
+          "layout": { "col": 6, "row": 3, "rotated": false }
+        }
+      ]
+    },
+    {
+      "key": "celtic-cross",
+      "name": "Cruz Celta",
+      "description": "La tirada clásica para analizar a fondo una pregunta importante o compleja; conviene tener tiempo para leerla con calma. La cruz (cartas 1 a 6) describe la situación y su momento en el tiempo; la columna de la derecha (cartas 7 a 10, de abajo hacia arriba) muestra a la persona consultante, su entorno y el resultado. Empiece por la 1 y la 2, y relacione cada carta con ellas.",
+      "positions": [
+        {
+          "index": 1,
+          "name": "Situación actual",
+          "meaning": "El corazón de la pregunta: qué está pasando ahora y qué tema domina la lectura. Las demás cartas se leen en relación con esta.",
+          "layout": { "col": 1, "row": 1, "rotated": false }
+        },
+        {
+          "index": 2,
+          "name": "Desafío",
+          "meaning": "Va cruzada sobre la carta 1. Muestra el obstáculo o la fuerza que se opone; aun si es una carta favorable, léala como lo que complica la situación.",
+          "layout": { "col": 1, "row": 1, "rotated": true }
+        },
+        {
+          "index": 3,
+          "name": "Base",
+          "meaning": "Debajo de la cruz. La raíz del asunto: causas profundas o lo que la persona consultante quizá no ve a simple vista.",
+          "layout": { "col": 1, "row": 2, "rotated": false }
+        },
+        {
+          "index": 4,
+          "name": "Pasado reciente",
+          "meaning": "A la izquierda. Lo que acaba de pasar o está terminando y todavía deja huella en la situación.",
+          "layout": { "col": 0, "row": 1, "rotated": false }
+        },
+        {
+          "index": 5,
+          "name": "Corona",
+          "meaning": "Encima de la cruz. Lo que la persona consultante busca de forma consciente: su meta, o lo mejor que puede lograr en este momento.",
+          "layout": { "col": 1, "row": 0, "rotated": false }
+        },
+        {
+          "index": 6,
+          "name": "Futuro próximo",
+          "meaning": "A la derecha. Lo que viene pronto, en las próximas semanas. Es un paso en el camino, no el resultado final.",
+          "layout": { "col": 2, "row": 1, "rotated": false }
+        },
+        {
+          "index": 7,
+          "name": "La persona consultante",
+          "meaning": "Abajo en la columna. Su actitud ante la situación: cómo se percibe y cómo está actuando.",
+          "layout": { "col": 3, "row": 3, "rotated": false }
+        },
+        {
+          "index": 8,
+          "name": "Entorno",
+          "meaning": "Cómo influyen las demás personas y las circunstancias externas, y cómo ven a la persona consultante.",
+          "layout": { "col": 3, "row": 2, "rotated": false }
+        },
+        {
+          "index": 9,
+          "name": "Esperanzas y temores",
+          "meaning": "Lo que desea o teme sobre el resultado; muchas veces es la misma cosa. Compárela con la carta 10 para ver si el temor tiene fundamento.",
+          "layout": { "col": 3, "row": 1, "rotated": false }
+        },
+        {
+          "index": 10,
+          "name": "Resultado",
+          "meaning": "Arriba en la columna. Hacia dónde lleva todo si se sigue el rumbo actual. Léala como la suma de la tirada, sobre todo de las cartas 1, 6 y 7.",
+          "layout": { "col": 3, "row": 0, "rotated": false }
+        }
+      ]
+    }
+  ]
+}

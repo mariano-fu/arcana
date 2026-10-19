@@ -1,4 +1,5 @@
 import i18n from '../i18n';
+import { masculineWords } from '../test/gender-neutral';
 import raw from './cards.es.json';
 import {
   cardName,
@@ -85,63 +86,7 @@ describe('cards seed', () => {
   });
 });
 
-// Meanings address the consultant as "usted" and must not assume a gender. These words are
-// masculine-only when they describe a person; ALLOWED_PHRASES lists uses that don't.
-const MASCULINE_WORDS = [
-  'sí mismo',
-  'seguro',
-  'quieto',
-  'tranquilo',
-  'cansado',
-  'agotado',
-  'atrapado',
-  'bloqueado',
-  'estancado',
-  'aislado',
-  'perdido',
-  'herido',
-  'heridos',
-  'solo',
-  'listo',
-  'dispuesto',
-  'preparado',
-  'abierto',
-  'cerrado',
-  'confiado',
-  'curioso',
-  'soñador',
-  'romántico',
-  'observador',
-  'estudioso',
-  'experto',
-  'lleno',
-  'otros',
-  'todos',
-  'un líder',
-  'un asesor',
-];
-const ALLOWED_PHRASES = [
-  'corazón abierto', // the heart, not the person
-  'lugar más tranquilo', // a place
-  'solo por lo que', // adverb
-];
-
-function masculineWords(text: string): string[] {
-  let rest = text.toLowerCase();
-  for (const phrase of ALLOWED_PHRASES) rest = rest.replaceAll(phrase, '');
-  return MASCULINE_WORDS.filter((word) =>
-    new RegExp(`(?<!\\p{L})${word}(?!\\p{L})`, 'u').test(rest),
-  );
-}
-
 describe('gender-neutral meanings', () => {
-  it('detects masculine-only words outside the allowlist', () => {
-    expect(masculineWords('Pérdida de fe en sí mismo.')).toContain('sí mismo');
-    expect(masculineWords('Se siente seguro y tranquilo.')).toEqual(['seguro', 'tranquilo']);
-    expect(masculineWords('Con el corazón abierto, al mismo tiempo.')).toEqual([]);
-    expect(masculineWords('Inseguridad y desconfianza.')).toEqual([]);
-  });
-
   it.each(cardsSeed.cards.map((c) => [c.key, c] as const))('%s', (_key, card) => {
     const texts = [card.upright, card.reversed, ...card.keywords];
     expect(texts.flatMap(masculineWords)).toEqual([]);
