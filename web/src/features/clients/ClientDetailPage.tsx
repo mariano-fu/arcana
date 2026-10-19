@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router';
 
 import { db, repos, type Client } from '../../db';
+import ClientPaymentSummary from '../payments/ClientPaymentSummary';
 import { createSession } from '../sessions/actions';
 import type { SessionRouteState } from '../sessions/form';
 import SessionTimeline from '../sessions/SessionTimeline';
@@ -124,6 +125,10 @@ function ClientDetail({ client }: { client: Client }) {
           <p className="whitespace-pre-wrap">{client.notes}</p>
         </Section>
       )}
+
+      <Section title={t('payments.section.title')}>
+        <ClientPaymentSummary clientId={client.id} />
+      </Section>
 
       <Section title={t('clients.detail.sessions')}>
         <div className="flex flex-col gap-3">

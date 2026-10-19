@@ -5,6 +5,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router';
 import { db, repos, type Client, type Currency, type Session } from '../../db';
 import { useClient } from '../clients/hooks';
 import { CURRENCIES, CURRENCY_SYMBOL, formatMoney } from '../payments';
+import SessionPayments from '../payments/SessionPayments';
 import { deleteSession } from './actions';
 import { useAutosave, type AutosaveState } from './autosave';
 import DeleteSessionDialog from './DeleteSessionDialog';
@@ -223,6 +224,8 @@ function SessionEditor({
           )}
         </Field>
       </div>
+
+      <SessionPayments session={session} />
 
       <Field label={t('sessions.field.notes')}>
         {(id) => (

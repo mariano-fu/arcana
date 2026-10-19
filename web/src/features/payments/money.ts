@@ -75,6 +75,11 @@ export function formatMoney(amountMinor: number, currency: Currency): string {
   return out;
 }
 
+/** An amount as she'd type it, without the symbol (a currency picker shows it), e.g. `15 000`. */
+export function formatMoneyInput(amountMinor: number, currency: Currency): string {
+  return formatMoney(amountMinor, currency).slice(CURRENCY_SYMBOL[currency].length);
+}
+
 const SYMBOLS = /^(?:US\$|USD|CRC|₡|\$)\s*/i;
 // `\s` also matches the no-break spaces Intl uses for grouping (U+00A0, U+202F).
 const SPACES = /\s/g;

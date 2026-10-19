@@ -1,4 +1,4 @@
-import { formatMoney, isMinorAmount, parseMoney, sumByCurrency } from '.';
+import { formatMoney, formatMoneyInput, isMinorAmount, parseMoney, sumByCurrency } from '.';
 
 const NBSP = ' ';
 
@@ -54,6 +54,19 @@ describe('formatMoney', () => {
 
   it('rejects float amounts', () => {
     expect(() => formatMoney(15000.5, 'CRC')).toThrow(RangeError);
+  });
+});
+
+describe('formatMoneyInput', () => {
+  it('drops the symbol and round-trips through parseMoney', () => {
+    expect(formatMoneyInput(1_500_000, 'CRC')).toBe(`15${NBSP}000`);
+    expect(formatMoneyInput(4_050, 'USD')).toBe('40,50');
+    for (const [amount, currency] of [
+      [1_500_050, 'CRC'],
+      [123_456, 'USD'],
+    ] as const) {
+      expect(parseMoney(formatMoneyInput(amount, currency))).toBe(amount);
+    }
   });
 });
 

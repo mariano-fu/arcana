@@ -163,6 +163,59 @@
       "pending": "Pendiente",
       "no_charge": "Sin cobro",
       "overpaid": "Saldo a favor"
+    },
+    "method": {
+      "label": "Método de pago",
+      "sinpe": "SINPE Móvil",
+      "cash": "Efectivo",
+      "transfer": "Transferencia",
+      "paypal": "PayPal",
+      "other": "Otro"
+    },
+    "section": {
+      "title": "Pagos",
+      "list": "Pagos de la sesión",
+      "empty": "Todavía no hay pagos registrados.",
+      "add": "Registrar pago"
+    },
+    "summary": {
+      "paidOfPrice": "Pagado {{paid}} de {{price}}.",
+      "remaining": "Falta {{amount}}.",
+      "credit": "Saldo a favor: {{amount}}.",
+      "otherCurrency": "Además, en otra moneda: {{amounts}}. No cuenta para el estado del pago."
+    },
+    "field": {
+      "amount": "Monto",
+      "amountHint": "Por ejemplo: 15 000 o 40,50.",
+      "amountPreview": "Se guarda como {{amount}}.",
+      "currency": "Moneda",
+      "paidAt": "Fecha del pago",
+      "reference": "Número de referencia",
+      "referenceHint": "Opcional, por ejemplo el comprobante de SINPE.",
+      "note": "Nota"
+    },
+    "error": {
+      "amount": "Indique un monto mayor que cero, por ejemplo: 15 000 o 40,50.",
+      "paidAt": "Indique la fecha del pago.",
+      "save": "No se pudo guardar el pago. Intente de nuevo."
+    },
+    "form": {
+      "addTitle": "Nuevo pago",
+      "editTitle": "Editar pago"
+    },
+    "item": {
+      "reference": "Ref. {{reference}}"
+    },
+    "delete": {
+      "button": "Eliminar pago",
+      "confirm": "¿Eliminar este pago de {{amount}}? Esto no se puede deshacer.",
+      "yes": "Sí, eliminar"
+    },
+    "client": {
+      "paid": "Total pagado",
+      "pending": "Pendiente",
+      "credit": "Saldo a favor",
+      "none": "No hay pagos ni saldos pendientes."
     }
   },
   "nav": {

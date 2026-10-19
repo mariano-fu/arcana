@@ -2,7 +2,9 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
 import { formatDate } from '../clients/format';
-import { formatMoney } from '../payments';
+import { formatMoney, paymentStatus } from '../payments';
+import { useClientPayments } from '../payments/hooks';
+import PaymentStatusBadge from '../payments/PaymentStatusBadge';
 import { formatDateTime } from './format';
 import { useClientSessions } from './hooks';
 
@@ -10,8 +12,9 @@ import { useClientSessions } from './hooks';
 export default function SessionTimeline({ clientId }: { clientId: string }) {
   const { t } = useTranslation();
   const sessions = useClientSessions(clientId);
+  const payments = useClientPayments(clientId);
 
-  if (sessions === undefined) return null;
+  if (sessions === undefined || payments === undefined) return null;
   if (sessions.length === 0) {
     return <p className="text-stone-600">{t('clients.detail.noSessions')}</p>;
   }
@@ -31,7 +34,10 @@ export default function SessionTimeline({ clientId }: { clientId: string }) {
                   : formatMoney(session.price_minor, session.currency)}
               </span>
             </span>
-            <span className="text-sm text-stone-600">{t(`sessions.type.${session.type}`)}</span>
+            <span className="flex items-center justify-between gap-3">
+              <span className="text-sm text-stone-600">{t(`sessions.type.${session.type}`)}</span>
+              <PaymentStatusBadge status={paymentStatus(session, payments).status} />
+            </span>
             {session.follow_up_date !== null && (
               <span className="text-sm text-stone-600">
                 {t('sessions.timeline.followUp', { date: formatDate(session.follow_up_date) })}
