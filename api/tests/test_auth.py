@@ -1,11 +1,9 @@
-from collections.abc import Iterator
 from datetime import timedelta
 from typing import Any
 
 import pytest
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.core.cache import cache
 from rest_framework.test import APIClient
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework_simplejwt.tokens import AccessToken
@@ -15,13 +13,6 @@ pytestmark = [pytest.mark.django_db, pytest.mark.urls("tests.test_health")]
 LOGIN = "/api/auth/token/"
 REFRESH = "/api/auth/token/refresh/"
 PASSWORD = "test-only-password"  # noqa: S105 - test fixture, not a real secret
-
-
-@pytest.fixture(autouse=True)
-def clear_throttle_counts() -> Iterator[None]:
-    cache.clear()
-    yield
-    cache.clear()
 
 
 @pytest.fixture
@@ -105,6 +96,7 @@ def test_refresh_rejects_garbage(user: User) -> None:
 @pytest.mark.parametrize("endpoint", [LOGIN, REFRESH])
 def test_auth_endpoints_are_throttled(user: User, endpoint: str) -> None:
     # The configured rate, not an override: DRF binds throttle rates at import time.
+    # The cache (throttle counts) is cleared before each test in conftest.py.
     limit, _ = ScopedRateThrottle().parse_rate(ScopedRateThrottle.THROTTLE_RATES["auth"])
     assert limit is not None
     client = APIClient()
@@ -112,3 +104,10 @@ def test_auth_endpoints_are_throttled(user: User, endpoint: str) -> None:
 
     assert statuses[:limit] == [400] * limit
     assert statuses[limit] == 429
+
+
+def test_health_stays_public_with_a_stale_token() -> None:
+    client = APIClient()
+    client.credentials(HTTP_AUTHORIZATION="Bearer not-a-token")
+
+    assert client.get("/api/health/").status_code == 200

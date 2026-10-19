@@ -61,6 +61,8 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 
 ## Phase 4 — Deploy & horoscopes
 - [ ] T4.1 `deploy/docker-compose.yml`: caddy (serves built PWA + proxies /api), api, db, cron. `.env.example`. Caddy must serve .webmanifest as application/manifest+json.
+  - Note: Set REST_FRAMEWORK NUM_PROXIES = 1 behind Caddy so auth throttling keys on the client IP, not Caddy's; add a test.
+  - Note: Cron: run `manage.py flushexpiredtokens` daily; deploy runs `migrate` (simplejwt blacklist tables).
 - [ ] T4.2 Tailscale setup doc in `docs/deploy.md`: enable MagicDNS + HTTPS certificates, `tailscale serve` → Caddy, share the node with her account, ACL limiting her to the app port. Install on her iPhone from the ts.net URL.
 - [ ] T4.3 Nightly `pg_dump` backups + tested restore procedure.
 - [ ] T4.4 Spike (1 evening): call freehoroscopeapi.com for all 12 signs, check response shape and text length; translate a sample with DeepL Free (test `formality`), review quality. ADR with decision.
