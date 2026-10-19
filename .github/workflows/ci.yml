@@ -53,7 +53,8 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgres://arcana:arcana@localhost:5432/arcana
-      SECRET_KEY: ci-only-not-a-real-secret
+      # JWTs are HMAC-SHA256 signed with it; PyJWT warns (an error under pytest) below 32 bytes.
+      SECRET_KEY: ci-only-not-a-real-secret-at-least-32-bytes
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.3.0

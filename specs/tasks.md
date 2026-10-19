@@ -51,14 +51,18 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [x] T3.2 Models mirroring the data model + global `server_version` sequence. Admin registered. References to seed-backed tables (`reading.spread_template_id`, crystal and intention tag references) are plain UUID fields, not foreign keys, since unedited seed rows never sync (plan.md, Backend).
 - [ ] T3.3 Auth: simplejwt login/refresh, throttling. Tests.
 - [ ] T3.4 `POST /api/sync/` implementing plan.md rules. Tests for every scenario listed in plan.md.
+  - Note: server_version is assigned in save(); the sync endpoint must write rows through save() or take nextval itself — no bulk_update.
 - [ ] T3.5 OpenAPI via drf-spectacular; generate TS types for the web client.
 - [ ] T3.6 `web/sync/` engine: push pending → apply response → pull pages → advance cursor. Single-flight, triggers (open, online, interval, manual). Unit tests with a fake server.
+  - Note: Refresh-token rotation means a lost refresh response leaves the device with a blacklisted token. On a 401 from refresh: keep all local data, mark sync as ‘sesión expirada’, and prompt re-login in Settings; never clear IndexedDB on auth failure. Refreshes must be single-flight.
 - [ ] T3.7 Conflict review screen ("Conflictos": show both versions, keep one or merge text).
 - [ ] T3.8 Settings: login, last sync, sync now, clock-skew warning.
 - [ ] T3.9 Two-device e2e: two browser contexts, offline edits on both, sync, assert outcome.
 
 ## Phase 4 — Deploy & horoscopes
 - [ ] T4.1 `deploy/docker-compose.yml`: caddy (serves built PWA + proxies /api), api, db, cron. `.env.example`. Caddy must serve .webmanifest as application/manifest+json.
+  - Note: Set REST_FRAMEWORK NUM_PROXIES = 1 behind Caddy so auth throttling keys on the client IP, not Caddy's; add a test.
+  - Note: Cron: run `manage.py flushexpiredtokens` daily; deploy runs `migrate` (simplejwt blacklist tables).
 - [ ] T4.2 Tailscale setup doc in `docs/deploy.md`: enable MagicDNS + HTTPS certificates, `tailscale serve` → Caddy, share the node with her account, ACL limiting her to the app port. Install on her iPhone from the ts.net URL.
 - [ ] T4.3 Nightly `pg_dump` backups + tested restore procedure.
 - [ ] T4.4 Spike (1 evening): call freehoroscopeapi.com for all 12 signs, check response shape and text length; translate a sample with DeepL Free (test `formality`), review quality. ADR with decision.

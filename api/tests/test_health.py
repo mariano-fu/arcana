@@ -40,7 +40,7 @@ def test_health_reports_database_outage() -> None:
 def test_endpoints_require_auth_by_default() -> None:
     response = APIClient().get("/api/protected/")
 
-    assert response.status_code == 403
+    assert response.status_code == 401
 
 
 @pytest.mark.django_db
