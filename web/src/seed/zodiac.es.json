@@ -1,0 +1,269 @@
+{
+  "version": 1,
+  "signs": [
+    {
+      "key": "aries",
+      "number": 1,
+      "name": "Aries",
+      "glyph": "♈",
+      "start": {
+        "month": 3,
+        "day": 21
+      },
+      "end": {
+        "month": 4,
+        "day": 19
+      },
+      "element": "fire",
+      "modality": "cardinal",
+      "ruler": "mars",
+      "traditional_ruler": "mars",
+      "traits": ["iniciativa", "valentía", "entusiasmo", "franqueza", "energía"],
+      "description": "Primer signo del zodiaco, Aries es la energía del comienzo: actúa primero y piensa después. Tiene iniciativa, valentía y un entusiasmo que contagia, y disfruta de los retos. Su sombra es la impaciencia: puede costarle terminar lo que empieza o escuchar antes de reaccionar.",
+      "compatible": ["gemini", "leo", "libra", "sagittarius", "aquarius"],
+      "challenging": ["cancer", "capricorn"]
+    },
+    {
+      "key": "taurus",
+      "number": 2,
+      "name": "Tauro",
+      "glyph": "♉",
+      "start": {
+        "month": 4,
+        "day": 20
+      },
+      "end": {
+        "month": 5,
+        "day": 20
+      },
+      "element": "earth",
+      "modality": "fixed",
+      "ruler": "venus",
+      "traditional_ruler": "venus",
+      "traits": ["estabilidad", "paciencia", "lealtad", "sensualidad", "constancia"],
+      "description": "Tauro busca estabilidad, placer y raíces firmes. Es constante, paciente y leal, con un gran aprecio por la belleza, la buena comida y la naturaleza. Su sombra es la terquedad: cuando algo cambia demasiado rápido, prefiere aferrarse a lo conocido.",
+      "compatible": ["cancer", "virgo", "scorpio", "capricorn", "pisces"],
+      "challenging": ["leo", "aquarius"]
+    },
+    {
+      "key": "gemini",
+      "number": 3,
+      "name": "Géminis",
+      "glyph": "♊",
+      "start": {
+        "month": 5,
+        "day": 21
+      },
+      "end": {
+        "month": 6,
+        "day": 20
+      },
+      "element": "air",
+      "modality": "mutable",
+      "ruler": "mercury",
+      "traditional_ruler": "mercury",
+      "traits": ["curiosidad", "comunicación", "ingenio", "adaptabilidad", "versatilidad"],
+      "description": "Géminis vive a través de la mente y la palabra: curiosidad, conversación y ganas de aprenderlo todo. Se adapta con facilidad, conecta ideas y personas, y rara vez se aburre. Su sombra es la dispersión: puede saltar de un tema a otro sin profundizar o cambiar de opinión según el momento.",
+      "compatible": ["aries", "leo", "libra", "sagittarius", "aquarius"],
+      "challenging": ["virgo", "pisces"]
+    },
+    {
+      "key": "cancer",
+      "number": 4,
+      "name": "Cáncer",
+      "glyph": "♋",
+      "start": {
+        "month": 6,
+        "day": 21
+      },
+      "end": {
+        "month": 7,
+        "day": 22
+      },
+      "element": "water",
+      "modality": "cardinal",
+      "ruler": "moon",
+      "traditional_ruler": "moon",
+      "traits": ["sensibilidad", "protección", "intuición", "memoria", "ternura"],
+      "description": "Cáncer es el signo del hogar, la familia y la memoria emocional. Cuida, protege y recuerda; su sensibilidad le permite percibir lo que otras personas sienten sin que lo digan. Su sombra es la susceptibilidad: tiende a guardarse las heridas y a refugiarse en su caparazón cuando se siente vulnerable.",
+      "compatible": ["taurus", "virgo", "scorpio", "capricorn", "pisces"],
+      "challenging": ["aries", "libra"]
+    },
+    {
+      "key": "leo",
+      "number": 5,
+      "name": "Leo",
+      "glyph": "♌",
+      "start": {
+        "month": 7,
+        "day": 23
+      },
+      "end": {
+        "month": 8,
+        "day": 22
+      },
+      "element": "fire",
+      "modality": "fixed",
+      "ruler": "sun",
+      "traditional_ruler": "sun",
+      "traits": ["generosidad", "creatividad", "confianza", "calidez", "liderazgo"],
+      "description": "Leo brilla con luz propia: generosidad, creatividad y un corazón cálido. Le gusta expresarse, celebrar y recibir reconocimiento, e inspira con su confianza y su lealtad. Su sombra es el orgullo: necesita aprobación y puede tomarse las críticas de forma muy personal.",
+      "compatible": ["aries", "gemini", "libra", "sagittarius", "aquarius"],
+      "challenging": ["taurus", "scorpio"]
+    },
+    {
+      "key": "virgo",
+      "number": 6,
+      "name": "Virgo",
+      "glyph": "♍",
+      "start": {
+        "month": 8,
+        "day": 23
+      },
+      "end": {
+        "month": 9,
+        "day": 22
+      },
+      "element": "earth",
+      "modality": "mutable",
+      "ruler": "mercury",
+      "traditional_ruler": "mercury",
+      "traits": ["análisis", "orden", "servicio", "practicidad", "precisión"],
+      "description": "Virgo encuentra sentido en el detalle, el orden y el servicio. Tiene una mente analítica y práctica, y le gusta mejorar las cosas y ser de utilidad. Su sombra es la autoexigencia: la búsqueda de perfección puede volverse crítica, hacia sí o hacia los demás.",
+      "compatible": ["taurus", "cancer", "scorpio", "capricorn", "pisces"],
+      "challenging": ["gemini", "sagittarius"]
+    },
+    {
+      "key": "libra",
+      "number": 7,
+      "name": "Libra",
+      "glyph": "♎",
+      "start": {
+        "month": 9,
+        "day": 23
+      },
+      "end": {
+        "month": 10,
+        "day": 22
+      },
+      "element": "air",
+      "modality": "cardinal",
+      "ruler": "venus",
+      "traditional_ruler": "venus",
+      "traits": ["armonía", "diplomacia", "justicia", "estética", "sociabilidad"],
+      "description": "Libra busca armonía, belleza y equilibrio en sus relaciones. Tiene un fuerte sentido de la justicia, buen gusto y facilidad para ver los dos lados de cada situación. Su sombra es la indecisión: por evitar el conflicto, puede postergar elecciones o dejar de lado lo que realmente quiere.",
+      "compatible": ["aries", "gemini", "leo", "sagittarius", "aquarius"],
+      "challenging": ["cancer", "capricorn"]
+    },
+    {
+      "key": "scorpio",
+      "number": 8,
+      "name": "Escorpio",
+      "glyph": "♏",
+      "start": {
+        "month": 10,
+        "day": 23
+      },
+      "end": {
+        "month": 11,
+        "day": 21
+      },
+      "element": "water",
+      "modality": "fixed",
+      "ruler": "pluto",
+      "traditional_ruler": "mars",
+      "traits": ["intensidad", "profundidad", "pasión", "lealtad", "transformación"],
+      "description": "Escorpio vive con intensidad: emociones profundas, lealtad total y una gran capacidad de transformación. Percibe lo que está oculto y no se conforma con lo superficial. Su sombra son los celos y el control: le cuesta confiar y puede guardar rencor cuando siente una traición.",
+      "compatible": ["taurus", "cancer", "virgo", "capricorn", "pisces"],
+      "challenging": ["leo", "aquarius"]
+    },
+    {
+      "key": "sagittarius",
+      "number": 9,
+      "name": "Sagitario",
+      "glyph": "♐",
+      "start": {
+        "month": 11,
+        "day": 22
+      },
+      "end": {
+        "month": 12,
+        "day": 21
+      },
+      "element": "fire",
+      "modality": "mutable",
+      "ruler": "jupiter",
+      "traditional_ruler": "jupiter",
+      "traits": ["optimismo", "libertad", "sinceridad", "aventura", "sabiduría"],
+      "description": "Sagitario es el signo de la búsqueda: viajes, filosofía y sentido de la vida. Tiene optimismo, humor y una sinceridad sin rodeos, y necesita libertad para crecer. Su sombra es la imprudencia: puede prometer más de lo que puede cumplir o decir verdades sin medir su impacto.",
+      "compatible": ["aries", "gemini", "leo", "libra", "aquarius"],
+      "challenging": ["virgo", "pisces"]
+    },
+    {
+      "key": "capricorn",
+      "number": 10,
+      "name": "Capricornio",
+      "glyph": "♑",
+      "start": {
+        "month": 12,
+        "day": 22
+      },
+      "end": {
+        "month": 1,
+        "day": 19
+      },
+      "element": "earth",
+      "modality": "cardinal",
+      "ruler": "saturn",
+      "traditional_ruler": "saturn",
+      "traits": ["disciplina", "responsabilidad", "ambición", "perseverancia", "prudencia"],
+      "description": "Capricornio construye paso a paso: disciplina, responsabilidad y metas a largo plazo. Es paciente y perseverante, y gana fuerza con los años. Su sombra es la rigidez: puede centrarse tanto en el deber que se olvida de disfrutar o de mostrar lo que siente.",
+      "compatible": ["taurus", "cancer", "virgo", "scorpio", "pisces"],
+      "challenging": ["aries", "libra"]
+    },
+    {
+      "key": "aquarius",
+      "number": 11,
+      "name": "Acuario",
+      "glyph": "♒",
+      "start": {
+        "month": 1,
+        "day": 20
+      },
+      "end": {
+        "month": 2,
+        "day": 18
+      },
+      "element": "air",
+      "modality": "fixed",
+      "ruler": "uranus",
+      "traditional_ruler": "saturn",
+      "traits": ["originalidad", "independencia", "amistad", "idealismo", "innovación"],
+      "description": "Acuario mira hacia el futuro: ideas originales, amistad y conciencia social. Valora su independencia y la de los demás, y se siente a gusto en grupos que comparten una causa. Su sombra es el desapego: puede parecer distante o defender sus ideas con terquedad.",
+      "compatible": ["aries", "gemini", "leo", "libra", "sagittarius"],
+      "challenging": ["taurus", "scorpio"]
+    },
+    {
+      "key": "pisces",
+      "number": 12,
+      "name": "Piscis",
+      "glyph": "♓",
+      "start": {
+        "month": 2,
+        "day": 19
+      },
+      "end": {
+        "month": 3,
+        "day": 20
+      },
+      "element": "water",
+      "modality": "mutable",
+      "ruler": "neptune",
+      "traditional_ruler": "jupiter",
+      "traits": ["empatía", "intuición", "imaginación", "compasión", "espiritualidad"],
+      "description": "Piscis es el signo de la empatía, la intuición y la imaginación. Siente con profundidad, tiene sensibilidad artística y espiritual, y conecta con facilidad con el dolor ajeno. Su sombra es la evasión: puede perder sus límites, idealizar a otras personas o escapar de la realidad cuando duele.",
+      "compatible": ["taurus", "cancer", "virgo", "scorpio", "capricorn"],
+      "challenging": ["gemini", "sagittarius"]
+    }
+  ]
+}
