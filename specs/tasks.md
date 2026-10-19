@@ -36,7 +36,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [ ] **Checkpoint:** she uses it for real readings for a week. Collect feedback, update `spec.md`.
 
 ## Phase 2 — Astrology & crystals (offline)
-- [ ] T2.1 `astro/` sun sign + cusp handling. Tests.
+- [x] T2.1 `astro/` sun sign + cusp handling. Tests.
 - [ ] T2.2 Cities dataset build script (GeoNames subset → `cities.json`). Offline city autocomplete in client form; manual lat/lng/tz fallback.
 - [ ] T2.3 `astro/` `toUtc` with historical timezones. Tests incl. Costa Rica DST years (CR used DST briefly — verify which years) and a Southern-hemisphere case.
 - [ ] T2.4 `astro/` planet positions via astronomy-engine + moon-sign uncertainty. Reference-chart tests (±1°).
@@ -48,7 +48,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 
 ## Phase 3 — Backend & sync
 - [x] T3.1 `api/`: Django 5 + DRF + Postgres, settings via env, pytest, mypy, ruff. Dockerfile. CI job.
-- [ ] T3.2 Models mirroring the data model + global `server_version` sequence. Admin registered. References to seed-backed tables (`reading.spread_template_id`, crystal and intention tag references) are plain UUID fields, not foreign keys, since unedited seed rows never sync (plan.md, Backend).
+- [x] T3.2 Models mirroring the data model + global `server_version` sequence. Admin registered. References to seed-backed tables (`reading.spread_template_id`, crystal and intention tag references) are plain UUID fields, not foreign keys, since unedited seed rows never sync (plan.md, Backend).
 - [ ] T3.3 Auth: simplejwt login/refresh, throttling. Tests.
 - [ ] T3.4 `POST /api/sync/` implementing plan.md rules. Tests for every scenario listed in plan.md.
 - [ ] T3.5 OpenAPI via drf-spectacular; generate TS types for the web client.
