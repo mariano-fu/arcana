@@ -6,8 +6,12 @@ variables take precedence over the file.
 
 from pathlib import Path
 
+import django_stubs_ext
 import environ
 from django.core.exceptions import ImproperlyConfigured
+
+# Lets generic Django classes (e.g. `ModelAdmin[Client]`) be subscripted at runtime for mypy.
+django_stubs_ext.monkeypatch()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -32,8 +36,11 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.postgres",
     "rest_framework",
     "core",
+    "sync",
+    "horoscopes",
 ]
 
 MIDDLEWARE = [
