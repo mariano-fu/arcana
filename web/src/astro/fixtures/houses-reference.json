@@ -1,0 +1,201 @@
+{
+  "source": {
+    "name": "Swiss Ephemeris via pyswisseph (generated outside this repo; values only)",
+    "library": "pyswisseph 20230604 (Swiss Ephemeris 2.10.03)",
+    "function": "swisseph.houses(tjdut, lat, lon, b'P'), i.e. swe_houses(tjd_ut, geolat, geolon, 'P', cusps, ascmc); tjdut = swisseph.julday(y, m, d, hour_utc, GREG_CAL); lon east-positive, lat north-positive",
+    "fallbackCases": "For the cases without 'cusps', swisseph.houses(..., b'P') raises (Placidus undefined above the polar circle), so Asc and MC come from swisseph.houses(..., b'O') (Porphyry); Asc and MC do not depend on the house system.",
+    "ephemeris": "None loaded (no ephemeris files, ephe path unset). swe_houses only uses sidereal time, obliquity and nutation from Swiss Ephemeris' built-in models.",
+    "utc": "Local date and time converted to UTC with Python zoneinfo (IANA tz database).",
+    "generated": "2026-10-19",
+    "note": "Synthetic births at real city coordinates; no real people. Longitudes in degrees on the ecliptic of date; cusps[0] is house 1."
+  },
+  "cases": [
+    {
+      "label": "San José, Costa Rica",
+      "date": "1987-04-12",
+      "time": "08:15",
+      "tz": "America/Costa_Rica",
+      "utc": "1987-04-12T14:15:00Z",
+      "lat": 9.9333,
+      "lng": -84.0833,
+      "ascendant": 65.725641,
+      "mc": 327.729831,
+      "cusps": [
+        65.725641, 92.583375, 119.017034, 147.729831, 179.90538, 213.666148, 245.725641, 272.583375,
+        299.017034, 327.729831, 359.90538, 33.666148
+      ]
+    },
+    {
+      "label": "San José, Costa Rica (1991 DST)",
+      "date": "1991-02-03",
+      "time": "21:40",
+      "tz": "America/Costa_Rica",
+      "utc": "1991-02-04T02:40:00Z",
+      "lat": 9.9333,
+      "lng": -84.0833,
+      "ascendant": 179.683262,
+      "mc": 89.713142,
+      "cusps": [
+        179.683262, 210.419877, 240.60688, 269.713142, 298.801677, 328.954534, 359.683262,
+        30.419877, 60.60688, 89.713142, 118.801677, 148.954534
+      ]
+    },
+    {
+      "label": "Buenos Aires, Argentina",
+      "date": "1975-09-22",
+      "time": "03:05",
+      "tz": "America/Argentina/Buenos_Aires",
+      "utc": "1975-09-22T06:05:00Z",
+      "lat": -34.6037,
+      "lng": -58.3816,
+      "ascendant": 105.393468,
+      "mc": 35.657543,
+      "cusps": [
+        105.393468, 144.836297, 184.059796, 215.657543, 240.589102, 262.533179, 285.393468,
+        324.836297, 4.059796, 35.657543, 60.589102, 82.533179
+      ]
+    },
+    {
+      "label": "Sydney, Australia",
+      "date": "2001-12-30",
+      "time": "17:50",
+      "tz": "Australia/Sydney",
+      "utc": "2001-12-30T06:50:00Z",
+      "lat": -33.8688,
+      "lng": 151.2093,
+      "ascendant": 68.682614,
+      "mc": 351.823754,
+      "cusps": [
+        68.682614, 100.520743, 136.351089, 171.823754, 202.211189, 227.092131, 248.682614,
+        280.520743, 316.351089, 351.823754, 22.211189, 47.092131
+      ]
+    },
+    {
+      "label": "Santiago, Chile",
+      "date": "1964-06-18",
+      "time": "11:20",
+      "tz": "America/Santiago",
+      "utc": "1964-06-18T15:20:00Z",
+      "lat": -33.4489,
+      "lng": -70.6693,
+      "ascendant": 145.042309,
+      "mc": 67.989411,
+      "cusps": [
+        145.042309, 188.366677, 222.181436, 247.989411, 270.617099, 294.391462, 325.042309,
+        8.366677, 42.181436, 67.989411, 90.617099, 114.391462
+      ]
+    },
+    {
+      "label": "Quito, Ecuador",
+      "date": "2010-08-05",
+      "time": "06:45",
+      "tz": "America/Guayaquil",
+      "utc": "2010-08-05T11:45:00Z",
+      "lat": -0.1807,
+      "lng": -78.4678,
+      "ascendant": 139.236391,
+      "mc": 54.079938,
+      "cusps": [
+        139.236391, 170.964541, 203.465593, 234.079938, 262.358877, 290.018626, 319.236391,
+        350.964541, 23.465593, 54.079938, 82.358877, 110.018626
+      ]
+    },
+    {
+      "label": "Madrid, Spain",
+      "date": "1998-11-27",
+      "time": "23:10",
+      "tz": "Europe/Madrid",
+      "utc": "1998-11-27T22:10:00Z",
+      "lat": 40.4168,
+      "lng": -3.7038,
+      "ascendant": 136.881393,
+      "mc": 37.773167,
+      "cusps": [
+        136.881393, 158.576662, 185.251227, 217.773167, 253.656336, 287.560036, 316.881393,
+        338.576662, 5.251227, 37.773167, 73.656336, 107.560036
+      ]
+    },
+    {
+      "label": "Tokyo, Japan",
+      "date": "1950-01-20",
+      "time": "05:30",
+      "tz": "Asia/Tokyo",
+      "utc": "1950-01-19T20:30:00Z",
+      "lat": 35.6895,
+      "lng": 139.6917,
+      "ascendant": 277.231748,
+      "mc": 207.839421,
+      "cusps": [
+        277.231748, 315.332075, 354.955541, 27.839421, 53.5559, 75.465403, 97.231748, 135.332075,
+        174.955541, 207.839421, 233.5559, 255.465403
+      ]
+    },
+    {
+      "label": "Ushuaia, Argentina",
+      "date": "2030-03-15",
+      "time": "19:25",
+      "tz": "America/Argentina/Ushuaia",
+      "utc": "2030-03-15T22:25:00Z",
+      "lat": -54.8019,
+      "lng": -68.303,
+      "ascendant": 156.765006,
+      "mc": 82.20687,
+      "cusps": [
+        156.765006, 217.789098, 244.497709, 262.20687, 278.325374, 298.012496, 336.765006,
+        37.789098, 64.497709, 82.20687, 98.325374, 118.012496
+      ]
+    },
+    {
+      "label": "Reykjavík, Iceland (Placidus just under the polar circle)",
+      "date": "1983-01-15",
+      "time": "13:30",
+      "tz": "Atlantic/Reykjavik",
+      "utc": "1983-01-15T13:30:00Z",
+      "lat": 64.1466,
+      "lng": -21.9426,
+      "ascendant": 88.559704,
+      "mc": 293.15303,
+      "cusps": [
+        88.559704, 96.22834, 103.751068, 113.15303, 128.346976, 166.536389, 268.559704, 276.22834,
+        283.751068, 293.15303, 308.346976, 346.536389
+      ]
+    },
+    {
+      "label": "Mexico City, Mexico (Asc near 0° Aries)",
+      "date": "2005-03-03",
+      "time": "07:51",
+      "tz": "America/Mexico_City",
+      "utc": "2005-03-03T13:51:00Z",
+      "lat": 19.4326,
+      "lng": -99.1332,
+      "ascendant": 0.069447,
+      "mc": 270.049515,
+      "cusps": [
+        0.069447, 35.562636, 64.619771, 90.049515, 115.485178, 144.559162, 180.069447, 215.562636,
+        244.619771, 270.049515, 295.485178, 324.559162
+      ]
+    },
+    {
+      "label": "Tromsø, Norway (summer, whole-sign fallback)",
+      "date": "1995-07-10",
+      "time": "10:00",
+      "tz": "Europe/Oslo",
+      "utc": "1995-07-10T08:00:00Z",
+      "lat": 69.6492,
+      "lng": 18.9553,
+      "ascendant": 168.347066,
+      "mc": 68.472261
+    },
+    {
+      "label": "Tromsø, Norway (winter, whole-sign fallback)",
+      "date": "2012-12-21",
+      "time": "15:00",
+      "tz": "Europe/Oslo",
+      "utc": "2012-12-21T14:00:00Z",
+      "lat": 69.6492,
+      "lng": 18.9553,
+      "ascendant": 122.066721,
+      "mc": 317.049216
+    }
+  ]
+}
