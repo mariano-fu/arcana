@@ -1,10 +1,11 @@
 import { db, repos, type Session } from '../../db';
-import { clearDb, newClient, newPayment } from '../clients/test-utils';
+import { clearDb, newClient, newPayment, newSession } from '../clients/test-utils';
 import {
   createSession,
   deleteSession,
   discardIfUntouched,
   getSessionDeletionSummary,
+  sweepFreshSessions,
 } from './actions';
 import { defaultSessionFields, pickSessionFields } from './form';
 
@@ -114,15 +115,15 @@ describe('deleteSession', () => {
 describe('discardIfUntouched', () => {
   async function created(archived = false) {
     const client = await repos.client.create(newClient({ archived }));
-    const result = await createSession(db, client.id);
-    return { client, ...result, fields: pickSessionFields(result.session) };
+    return { client, ...(await createSession(db, client.id)) };
   }
 
-  it('tombstones a session left exactly as created', async () => {
-    const { session, fields } = await created();
+  it('tombstones a session left exactly as created, and drops its marker', async () => {
+    const { session } = await created();
 
-    expect(await discardIfUntouched(db, session.id, fields, { clock })).toBe(true);
+    expect(await discardIfUntouched(db, session.id, { clock })).toBe(true);
     expect(await db.session.get(session.id)).toMatchObject({ deleted_at: NOW, pending: 1 });
+    expect(await db.meta.where('key').startsWith('fresh_session:').count()).toBe(0);
   });
 
   it('keeps a session with any edited field', async () => {
@@ -135,20 +136,26 @@ describe('discardIfUntouched', () => {
       { follow_up_note: 'Revisar en 1 mes' },
       { follow_up_date: '2026-11-19' },
     ]) {
-      const { session, fields } = await created();
+      const { session } = await created();
       await repos.session.update(session.id, patch);
 
-      expect(await discardIfUntouched(db, session.id, fields), JSON.stringify(patch)).toBe(false);
+      expect(await discardIfUntouched(db, session.id), JSON.stringify(patch)).toBe(false);
       expect(await repos.session.get(session.id)).toBeDefined();
     }
   });
 
-  it('discards a session whose edits were all undone', async () => {
-    const { session, fields } = await created();
-    await repos.session.update(session.id, { notes: 'x' });
-    await repos.session.update(session.id, { notes: '' });
+  it('discards a session whose edits were all undone, unless asked for unmodified', async () => {
+    const undone = await created();
+    const strict = await created();
+    for (const { session } of [undone, strict]) {
+      await repos.session.update(session.id, { notes: 'x' });
+      await repos.session.update(session.id, { notes: '' });
+    }
 
-    expect(await discardIfUntouched(db, session.id, fields)).toBe(true);
+    expect(await discardIfUntouched(db, undone.session.id)).toBe(true);
+    expect(await discardIfUntouched(db, strict.session.id, { requireUnmodified: true })).toBe(
+      false,
+    );
   });
 
   it('keeps a session with a reading or a payment', async () => {
@@ -157,23 +164,76 @@ describe('discardIfUntouched', () => {
     const withPayment = await created();
     await repos.payment.create(newPayment(withPayment.session));
 
-    expect(await discardIfUntouched(db, withReading.session.id, withReading.fields)).toBe(false);
-    expect(await discardIfUntouched(db, withPayment.session.id, withPayment.fields)).toBe(false);
+    expect(await discardIfUntouched(db, withReading.session.id)).toBe(false);
+    expect(await discardIfUntouched(db, withPayment.session.id)).toBe(false);
   });
 
   it('archives the client again when creating the session had unarchived them', async () => {
-    const { client, session, fields, unarchived } = await created(true);
+    const { client, session, unarchived } = await created(true);
     expect(unarchived).toBe(true);
 
-    await discardIfUntouched(db, session.id, fields, { rearchiveClient: true });
+    await discardIfUntouched(db, session.id);
 
     expect((await repos.client.get(client.id))?.archived).toBe(true);
   });
 
-  it('is a no-op for a session that is already gone', async () => {
-    const { session, fields } = await created();
+  it('only acts once: the first check removes the marker, kept or not', async () => {
+    const { session } = await created();
+    await repos.session.update(session.id, { notes: 'x' });
+    expect(await discardIfUntouched(db, session.id)).toBe(false);
+
+    await repos.session.update(session.id, { notes: '' });
+    expect(await discardIfUntouched(db, session.id)).toBe(false);
+    expect(await repos.session.get(session.id)).toBeDefined();
+  });
+
+  it('never touches a session without a marker (e.g. one synced from another device)', async () => {
+    const client = await repos.client.create(newClient());
+    const session = await repos.session.create(newSession(client.id));
+
+    expect(await discardIfUntouched(db, session.id)).toBe(false);
+    expect(await repos.session.get(session.id)).toBeDefined();
+  });
+
+  it('ignores a corrupt marker', async () => {
+    const { session } = await created();
+    await db.meta.put({ key: `fresh_session:${session.id}`, value: '{not json' });
+
+    expect(await discardIfUntouched(db, session.id)).toBe(false);
+    expect(await repos.session.get(session.id)).toBeDefined();
+  });
+
+  it('deleteSession drops the marker', async () => {
+    const { session } = await created();
     await deleteSession(db, session.id);
 
-    expect(await discardIfUntouched(db, session.id, fields)).toBe(false);
+    expect(await db.meta.get(`fresh_session:${session.id}`)).toBeUndefined();
+    expect(await discardIfUntouched(db, session.id)).toBe(false);
+  });
+});
+
+describe('sweepFreshSessions', () => {
+  it('discards sessions left in their just-created state when the app was closed', async () => {
+    const archived = await repos.client.create(newClient({ archived: true }));
+    const { session: fresh } = await createSession(db, archived.id);
+    const active = await repos.client.create(newClient());
+    const { session: edited } = await createSession(db, active.id);
+    await repos.session.update(edited.id, { notes: 'Tres de Espadas' });
+    const { session: paid } = await createSession(db, active.id);
+    await repos.payment.create(newPayment(paid));
+    const { session: open } = await createSession(db, active.id);
+    const old = await repos.session.create(newSession(active.id));
+
+    expect(await sweepFreshSessions(db, { except: open.id, clock })).toBe(1);
+
+    expect(await db.session.get(fresh.id)).toMatchObject({ deleted_at: NOW });
+    expect((await repos.client.get(archived.id))?.archived).toBe(true);
+    for (const kept of [edited, paid, open, old]) {
+      expect(await repos.session.get(kept.id)).toBeDefined();
+    }
+    // The open page's session keeps its marker for when she leaves it.
+    expect(await db.meta.where('key').startsWith('fresh_session:').primaryKeys()).toEqual([
+      `fresh_session:${open.id}`,
+    ]);
   });
 });

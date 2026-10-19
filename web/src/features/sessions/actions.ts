@@ -1,16 +1,48 @@
+import { z } from 'zod';
+
 import { getDeviceId, newId, nowIso, type ArcanaDB, type Clock, type Session } from '../../db';
-import { sumByCurrency, type CurrencyTotals } from '../payments';
-import {
-  defaultSessionFields,
-  pickSessionFields,
-  sameSessionFields,
-  type SessionFields,
-} from './form';
+import { CURRENCIES, sumByCurrency, type CurrencyTotals } from '../payments';
+import { defaultSessionFields, pickSessionFields, sameSessionFields, SESSION_TYPES } from './form';
 
 const live = (row: { deleted_at: string | null }) => row.deleted_at === null;
 
 async function stamp(db: ArcanaDB, clock: Clock) {
   return { updated_at: clock(), device_id: await getDeviceId(db), pending: 1 as const };
+}
+
+/**
+ * Local-only `meta` marker for a session still in its just-created state, so a mistaken
+ * "Nueva sesión" can be discarded later: on leaving the page, or on the next app start if the
+ * app was closed first. Only the device that created the session has it, so another device
+ * never discards a session she is still working on.
+ */
+const FRESH_SESSION_PREFIX = 'fresh_session:';
+const freshKey = (sessionId: string) => `${FRESH_SESSION_PREFIX}${sessionId}`;
+
+const freshSessionSchema = z.object({
+  /** The editable fields as created. */
+  created: z.object({
+    started_at: z.string(),
+    type: z.enum(SESSION_TYPES),
+    price_minor: z.number().nullable(),
+    currency: z.enum(CURRENCIES),
+    notes: z.string(),
+    follow_up_note: z.string(),
+    follow_up_date: z.string().nullable(),
+  }),
+  /** The session's `updated_at` as created. */
+  updated_at: z.string(),
+  /** Creating the session unarchived the client; discarding it archives them again. */
+  unarchived: z.boolean(),
+});
+
+function parseFreshMarker(value: string): z.infer<typeof freshSessionSchema> | null {
+  try {
+    const result = freshSessionSchema.safeParse(JSON.parse(value));
+    return result.success ? result.data : null;
+  } catch {
+    return null;
+  }
 }
 
 export interface CreatedSession {
@@ -29,7 +61,7 @@ export async function createSession(
   clock: Clock = nowIso,
 ): Promise<CreatedSession> {
   const stamped = await stamp(db, clock);
-  return db.transaction('rw', [db.client, db.session], async () => {
+  return db.transaction('rw', [db.client, db.session, db.meta], async () => {
     const client = await db.client.get(clientId);
     if (!client || client.deleted_at !== null) throw new Error(`client not found: ${clientId}`);
 
@@ -43,6 +75,12 @@ export async function createSession(
     };
     await db.session.add(session);
     if (client.archived) await db.client.put({ ...client, archived: false, ...stamped });
+    const fresh: z.infer<typeof freshSessionSchema> = {
+      created: pickSessionFields(session),
+      updated_at: session.updated_at,
+      unarchived: client.archived,
+    };
+    await db.meta.put({ key: freshKey(session.id), value: JSON.stringify(fresh) });
     return { session, unarchived: client.archived };
   });
 }
@@ -97,43 +135,59 @@ export async function deleteSession(
 ): Promise<void> {
   const stamped = await stamp(db, clock);
   const tombstone = { ...stamped, deleted_at: stamped.updated_at };
-  await db.transaction('rw', [db.session, db.payment, db.reading, db.card_draw], async () => {
-    const session = await db.session.get(sessionId);
-    if (!session || session.deleted_at !== null) return;
-    await tombstoneSession(db, session, tombstone);
-  });
+  await db.transaction(
+    'rw',
+    [db.session, db.payment, db.reading, db.card_draw, db.meta],
+    async () => {
+      await db.meta.delete(freshKey(sessionId));
+      const session = await db.session.get(sessionId);
+      if (!session || session.deleted_at !== null) return;
+      await tombstoneSession(db, session, tombstone);
+    },
+  );
 }
 
 export interface DiscardOptions {
-  /** The client was unarchived by creating this session; archive them again on discard. */
-  rearchiveClient?: boolean;
+  /**
+   * Also require `updated_at` to be unchanged, so a session edited and edited back is kept.
+   * The startup sweep uses this; leaving the page compares field values only.
+   */
+  requireUnmodified?: boolean;
   clock?: Clock;
 }
 
 /**
- * Silently discards a session she opened by mistake: tombstones it if its fields are still
- * exactly as created and it has no readings or payments. Returns whether it was discarded.
+ * Silently discards a session created by mistake: if it still has its "Nueva sesión" marker,
+ * its fields are exactly as created and it has no readings or payments, it is tombstoned (and
+ * a client it unarchived is archived again). The marker is removed either way: once checked,
+ * the session is no longer just created. Returns whether it was discarded.
  */
 export async function discardIfUntouched(
   db: ArcanaDB,
   sessionId: string,
-  created: SessionFields,
-  { rearchiveClient = false, clock = nowIso }: DiscardOptions = {},
+  { requireUnmodified = false, clock = nowIso }: DiscardOptions = {},
 ): Promise<boolean> {
   const stamped = await stamp(db, clock);
   const tombstone = { ...stamped, deleted_at: stamped.updated_at };
   return db.transaction(
     'rw',
-    [db.client, db.session, db.payment, db.reading, db.card_draw],
+    [db.client, db.session, db.payment, db.reading, db.card_draw, db.meta],
     async () => {
+      const marker = await db.meta.get(freshKey(sessionId));
+      if (!marker) return false;
+      await db.meta.delete(marker.key);
+      const fresh = parseFreshMarker(marker.value);
+      if (!fresh) return false;
+
       const session = await db.session.get(sessionId);
       if (!session || session.deleted_at !== null) return false;
-      if (!sameSessionFields(pickSessionFields(session), created)) return false;
+      if (!sameSessionFields(pickSessionFields(session), fresh.created)) return false;
+      if (requireUnmodified && session.updated_at !== fresh.updated_at) return false;
       const { readings, payments } = await getSessionDeletionSummary(db, sessionId);
       if (readings > 0 || payments > 0) return false;
 
       await tombstoneSession(db, session, tombstone);
-      if (rearchiveClient) {
+      if (fresh.unarchived) {
         const client = await db.client.get(session.client_id);
         if (client && client.deleted_at === null && !client.archived) {
           await db.client.put({ ...client, archived: true, ...stamped });
@@ -142,4 +196,23 @@ export async function discardIfUntouched(
       return true;
     },
   );
+}
+
+/**
+ * Startup sweep for the app-closed case: discards every session still in its just-created
+ * state (see `discardIfUntouched`, with `requireUnmodified`). `except` skips the session the
+ * app opened on, which leaving its page will handle. Returns how many were discarded.
+ */
+export async function sweepFreshSessions(
+  db: ArcanaDB,
+  { except, clock = nowIso }: { except?: string | null; clock?: Clock } = {},
+): Promise<number> {
+  const keys = await db.meta.where('key').startsWith(FRESH_SESSION_PREFIX).primaryKeys();
+  let discarded = 0;
+  for (const key of keys) {
+    const sessionId = key.slice(FRESH_SESSION_PREFIX.length);
+    if (sessionId === except) continue;
+    if (await discardIfUntouched(db, sessionId, { requireUnmodified: true, clock })) discarded++;
+  }
+  return discarded;
 }

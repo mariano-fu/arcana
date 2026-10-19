@@ -1,11 +1,11 @@
-import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate, useParams } from 'react-router';
 
 import { db, repos, type Client, type Currency, type Session } from '../../db';
 import { useClient } from '../clients/hooks';
 import { CURRENCIES, CURRENCY_SYMBOL, formatMoney } from '../payments';
-import { deleteSession, discardIfUntouched } from './actions';
+import { deleteSession } from './actions';
 import { useAutosave, type AutosaveState } from './autosave';
 import DeleteSessionDialog from './DeleteSessionDialog';
 import {
@@ -19,6 +19,7 @@ import {
   type SessionRouteState,
 } from './form';
 import { useSession } from './hooks';
+import { registerSessionFlush } from './leave';
 
 export default function SessionPage() {
   const { t } = useTranslation();
@@ -81,31 +82,15 @@ function SessionEditor({
   const [errors, setErrors] = useState<{ started_at?: boolean; price?: boolean }>({});
   const [saveState, setSaveState] = useState<AutosaveState>('idle');
   const [confirmingDelete, setConfirmingDelete] = useState(false);
-  const deleting = useRef(false);
   const autosave = useAutosave<Partial<SessionFields>>(
     (patch) => repos.session.update(session.id, patch),
     setSaveState,
   );
 
-  // Opened right after "Nueva sesión": if she leaves without changing anything, the session
-  // was a mistaken tap, so discard it. Deferred a tick so StrictMode's simulated unmount (which
-  // remounts straight away) doesn't count as leaving.
-  const mounted = useRef(false);
+  // Leaving the page waits for this before checking whether a new session was touched.
   useEffect(() => {
-    mounted.current = true;
-    return () => {
-      mounted.current = false;
-      if (!routeState) return;
-      setTimeout(() => {
-        if (mounted.current || deleting.current) return;
-        void autosave.flush().then(() =>
-          discardIfUntouched(db, session.id, routeState.created, {
-            rearchiveClient: routeState.unarchived,
-          }),
-        );
-      }, 0);
-    };
-  }, [autosave, routeState, session.id]);
+    registerSessionFlush(session.id, () => autosave.flush());
+  }, [autosave, session.id]);
 
   function set<K extends keyof SessionFormValues>(key: K, value: SessionFormValues[K]) {
     setValues((current) => ({ ...current, [key]: value }));
@@ -308,7 +293,6 @@ function SessionEditor({
         <DeleteSessionDialog
           sessionId={session.id}
           onDelete={() => {
-            deleting.current = true;
             void autosave
               .flush()
               .then(() => deleteSession(db, session.id))

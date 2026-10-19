@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router';
 
 import { db, repos, type Client } from '../../db';
 import { createSession } from '../sessions/actions';
-import { pickSessionFields, type SessionRouteState } from '../sessions/form';
+import type { SessionRouteState } from '../sessions/form';
 import SessionTimeline from '../sessions/SessionTimeline';
 import DeleteClientDialog from './DeleteClientDialog';
 import { deleteClient } from './deletion';
@@ -32,7 +32,7 @@ function ClientDetail({ client }: { client: Client }) {
 
   async function startSession() {
     const { session, unarchived } = await createSession(db, client.id);
-    const state: SessionRouteState = { created: pickSessionFields(session), unarchived };
+    const state: SessionRouteState = { unarchived };
     await navigate(`/sessions/${session.id}`, { state });
   }
 

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import type { Currency, IsoDateTime, Session } from '../../db';
-import { CURRENCIES, CURRENCY_SYMBOL, formatMoney, parseMoney } from '../payments';
+import { CURRENCY_SYMBOL, formatMoney, parseMoney } from '../payments';
 
 /** The session fields she edits on the session page. */
 export type SessionFields = Pick<
@@ -82,21 +82,8 @@ export function parsePriceInput(input: string): number | null | undefined {
   return parseMoney(input) ?? undefined;
 }
 
-const createdFieldsSchema = z.object({
-  started_at: z.string(),
-  type: z.enum(SESSION_TYPES),
-  price_minor: z.number().nullable(),
-  currency: z.enum(CURRENCIES),
-  notes: z.string(),
-  follow_up_note: z.string(),
-  follow_up_date: z.string().nullable(),
-});
-
-/** Router state set by "Nueva sesión": the session as created, for the discard-on-leave check. */
-const sessionRouteStateSchema = z.object({
-  created: createdFieldsSchema,
-  unarchived: z.boolean(),
-});
+/** Router state set by "Nueva sesión", for the "La ficha se desarchivó" notice. */
+const sessionRouteStateSchema = z.object({ unarchived: z.boolean() });
 
 export type SessionRouteState = z.infer<typeof sessionRouteStateSchema>;
 

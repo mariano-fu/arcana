@@ -58,9 +58,8 @@ describe('sameSessionFields', () => {
 
 describe('parseSessionRouteState', () => {
   it('accepts the state set by "Nueva sesión" and rejects anything else', () => {
-    const state = { created: defaultSessionFields('2026-10-10T15:00:00.000Z'), unarchived: true };
-    expect(parseSessionRouteState(state)).toEqual(state);
+    expect(parseSessionRouteState({ unarchived: true })).toEqual({ unarchived: true });
     expect(parseSessionRouteState(null)).toBeNull();
-    expect(parseSessionRouteState({ created: {}, unarchived: false })).toBeNull();
+    expect(parseSessionRouteState({ unarchived: 'yes' })).toBeNull();
   });
 });
