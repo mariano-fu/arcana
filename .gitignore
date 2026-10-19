@@ -30,3 +30,6 @@ staticfiles/
 *.swp
 .DS_Store
 Thumbs.db
+
+# Card image build cache (web/scripts/build-card-images.ts)
+.cache/

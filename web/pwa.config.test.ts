@@ -31,8 +31,8 @@ describe('PWA manifest', () => {
 });
 
 describe('PWA offline shell', () => {
-  it('precaches the app shell and falls back to index.html for navigations', () => {
-    expect(pwaOptions.workbox?.globPatterns).toEqual(['**/*.{js,css,html,svg,png,ico}']);
+  it('precaches the app shell and card images, and falls back to index.html for navigations', () => {
+    expect(pwaOptions.workbox?.globPatterns).toEqual(['**/*.{js,css,html,svg,png,ico,webp}']);
     expect(pwaOptions.workbox?.navigateFallback).toBe('index.html');
   });
 

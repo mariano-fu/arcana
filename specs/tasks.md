@@ -17,7 +17,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [x] T1.3 [P] Seed data: `spreads.json` (1, 3, Herradura 7, Cruz Celta 10) with Spanish position names and meanings.
 - [x] T1.4 [P] Seed data: `zodiac.es.json` (12 signs: fechas, elemento, modalidad, regente, rasgos, compatibilidades).
 - [x] T1.5 [P] Seed data: `crystals.es.json` (~50) + intention tags. She reviews.
-- [ ] T1.5b [P] Card images: download the 1909 RWS scans, record sources in `CREDITS.md`, `scripts/build-card-images.ts` → thumb + full WebP per card key. Check total ≤ 5 MB. Add to service-worker precache.
+- [x] T1.5b [P] Card images: download the 1909 RWS scans, record sources in `CREDITS.md`, `scripts/build-card-images.ts` → thumb + full WebP per card key. Check total ≤ 5 MB. Add to service-worker precache.
 - [ ] T1.6 Seed loader with versioning and the "don't overwrite user-modified rows" rule. Tests.
 - [ ] T1.7 Clients: list (search, sort by last visit), create/edit form (with "No sabe la hora"), detail page shell, archive/delete. Any bottom navigation must respect the bottom safe-area inset (home indicator), and the status bar color must match the app background.
 - [ ] T1.8 Sessions: create from client, autosave notes, type, price + currency, follow-up. Client timeline.

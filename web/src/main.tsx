@@ -4,6 +4,8 @@ import { registerSW } from 'virtual:pwa-register';
 
 import './i18n';
 import './index.css';
+// Pulls every card image into the build so the service worker precaches it (T1.5b).
+import './seed/images/card-images.ts';
 import App from './App.tsx';
 
 const root = document.getElementById('root');
