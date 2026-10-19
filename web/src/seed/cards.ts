@@ -1,10 +1,8 @@
 // Tarot card seed: schema, types and the parsed `cards.es.json`.
 //
-// Astrology follows the Golden Dawn correspondences. Majors: planet or sign; the three
-// "mother letter" cards (El Loco, El Colgado, El Juicio) carry only their element, and
-// planetary majors have no element. Minors 2-10: decan. Aces and Pajes: none. Court cards
-// follow the visual RWS convention: Caballero (on horseback) takes the range of the mounted
-// Golden Dawn Knight, Rey takes the Golden Dawn Prince's, Reina the Queen's.
+// Astrology follows the Golden Dawn (Book T) system; the seed records it in
+// `astrology_system` (see specs/plan.md for the rules). Courts map GD Knight -> Rey and
+// GD Prince -> Caballero. Aces and Pajes have no astrology.
 //
 // Minor card names are not stored here: they are built from the rank and suit labels in
 // es.json (see `cardName`), so renaming a suit or court rank is a one-line edit.
@@ -69,6 +67,10 @@ export const cardSchema = z
 
 export const cardsFileSchema = z.strictObject({
   version: z.int().positive(),
+  astrology_system: z.strictObject({
+    id: z.literal('golden-dawn-book-t'),
+    notes: z.array(text).min(1),
+  }),
   cards: z
     .array(cardSchema)
     .length(DECK_SIZE)

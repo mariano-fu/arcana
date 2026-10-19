@@ -59,6 +59,22 @@ describe('cards seed', () => {
     }
   });
 
+  it('maps Golden Dawn courts as GD Knight -> Rey, GD Prince -> Caballero', () => {
+    const courts: Record<Suit, [caballero: string, rey: string]> = {
+      wands: ['20° Cáncer – 20° Leo', '20° Escorpio – 20° Sagitario'],
+      cups: ['20° Libra – 20° Escorpio', '20° Acuario – 20° Piscis'],
+      swords: ['20° Capricornio – 20° Acuario', '20° Tauro – 20° Géminis'],
+      pentacles: ['20° Aries – 20° Tauro', '20° Leo – 20° Virgo'],
+    };
+    expect(cardsSeed.astrology_system.id).toBe('golden-dawn-book-t');
+    for (const suit of SUITS) {
+      expect(byKey(cards, `${suit}-12`).astrology).toBe(courts[suit][0]);
+      expect(byKey(cards, `${suit}-14`).astrology).toBe(courts[suit][1]);
+      expect(byKey(cards, `${suit}-11`).astrology).toBeNull();
+      expect(byKey(cards, `${suit}-01`).astrology).toBeNull();
+    }
+  });
+
   it('builds minor names from the es.json rank and suit labels', () => {
     const name = (key: string) => cardName(byKey(cards, key), t);
     expect(name('major-00')).toBe('El Loco');
@@ -107,7 +123,6 @@ const MASCULINE_WORDS = [
 const ALLOWED_PHRASES = [
   'corazón abierto', // the heart, not the person
   'lugar más tranquilo', // a place
-  'solo queda', // adverb
   'solo por lo que', // adverb
 ];
 

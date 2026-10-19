@@ -2,7 +2,7 @@
 
 Lea cada carta y anote debajo de «Correcciones» lo que quiera cambiar: nombres, palabras clave o significados. Si una carta está bien, deje el espacio en blanco.
 
-_Generado a partir de cards.es.json (versión 1). Las correcciones que anote aquí se pasan luego al archivo de datos._
+_Generado a partir de cards.es.json (versión 2). Las correcciones que anote aquí se pasan luego al archivo de datos._
 
 ## Arcanos Mayores
 
@@ -168,7 +168,7 @@ _Generado a partir de cards.es.json (versión 1). Las correcciones que anote aqu
 
 **Palabras clave:** final, transformación, transición, renovación
 
-**Al derecho:** Un ciclo se cierra para dar espacio a algo nuevo. Rara vez habla de una muerte física: señala una transformación profunda e inevitable.
+**Al derecho:** Un ciclo se cierra para dar espacio a algo nuevo. Rara vez habla de una muerte física: señala una transformación profunda, un cierre y una transición.
 
 **Invertida:** Aferrarse a lo que ya terminó retrasa el cambio. Puede reflejar miedo a soltar o una transición que se vive a medias.
 
@@ -194,7 +194,7 @@ _Generado a partir de cards.es.json (versión 1). Las correcciones que anote aqu
 
 **Al derecho:** Vínculos, hábitos o deseos que atan más de lo que usted quisiera admitir. Muestra la sombra para que pueda reconocerla.
 
-**Invertida:** Toma de conciencia y comienzo de la liberación. Se rompen cadenas que parecían imposibles de soltar, aunque el proceso pida honestidad.
+**Invertida:** Toma de conciencia y comienzo de la liberación, aunque no siempre inmediata. También puede señalar la negación de una dependencia o la dificultad para romper un patrón.
 
 **Correcciones:**
 
@@ -206,7 +206,7 @@ _Generado a partir de cards.es.json (versión 1). Las correcciones que anote aqu
 
 **Al derecho:** Un cambio súbito derriba estructuras que no eran sólidas. Aunque sacude, despeja el terreno para construir sobre la verdad.
 
-**Invertida:** Se evita una crisis que igual termina llegando, o el derrumbe se vive por dentro. Puede indicar que lo peor ya pasó y que queda reconstruir.
+**Invertida:** Resistencia al cambio o una crisis que se vive por dentro. Puede indicar que lo peor ya pasó y que toca una reconstrucción gradual.
 
 **Correcciones:**
 
@@ -240,7 +240,7 @@ _Generado a partir de cards.es.json (versión 1). Las correcciones que anote aqu
 
 **Palabras clave:** alegría, éxito, vitalidad, claridad
 
-**Al derecho:** Una de las cartas más luminosas. Anuncia éxito, alegría sencilla, salud y la claridad para ver las cosas como son.
+**Al derecho:** Una de las cartas más luminosas. Sugiere éxito, alegría sencilla, vitalidad y la claridad para ver las cosas como son.
 
 **Invertida:** La alegría está presente pero opacada por el pesimismo o el cansancio. Puede hablar de un éxito que llega con retraso o de un optimismo exagerado.
 
@@ -406,7 +406,7 @@ _Generado a partir de cards.es.json (versión 1). Las correcciones que anote aqu
 
 ### Caballero de Bastos
 
-`wands-12` · Elemento: Fuego · Astrología: 20° Escorpio – 20° Sagitario
+`wands-12` · Elemento: Fuego · Astrología: 20° Cáncer – 20° Leo
 
 **Palabras clave:** acción, aventura, pasión, impulsividad
 
@@ -430,7 +430,7 @@ _Generado a partir de cards.es.json (versión 1). Las correcciones que anote aqu
 
 ### Rey de Bastos
 
-`wands-14` · Elemento: Fuego · Astrología: 20° Cáncer – 20° Leo
+`wands-14` · Elemento: Fuego · Astrología: 20° Escorpio – 20° Sagitario
 
 **Palabras clave:** liderazgo, visión, emprendimiento, honor
 
@@ -576,7 +576,7 @@ _Generado a partir de cards.es.json (versión 1). Las correcciones que anote aqu
 
 ### Caballero de Copas
 
-`cups-12` · Elemento: Agua · Astrología: 20° Acuario – 20° Piscis
+`cups-12` · Elemento: Agua · Astrología: 20° Libra – 20° Escorpio
 
 **Palabras clave:** romance, propuesta, idealismo, encanto
 
@@ -600,7 +600,7 @@ _Generado a partir de cards.es.json (versión 1). Las correcciones que anote aqu
 
 ### Rey de Copas
 
-`cups-14` · Elemento: Agua · Astrología: 20° Libra – 20° Escorpio
+`cups-14` · Elemento: Agua · Astrología: 20° Acuario – 20° Piscis
 
 **Palabras clave:** equilibrio emocional, madurez, diplomacia, calma
 
@@ -702,7 +702,7 @@ _Generado a partir de cards.es.json (versión 1). Las correcciones que anote aqu
 
 **Palabras clave:** limitación, miedo, bloqueo mental, sensación de encierro
 
-**Al derecho:** Siente que no hay salida, aunque las ataduras son más mentales que reales. El miedo paraliza más que las circunstancias.
+**Al derecho:** Siente que no hay salida. La sensación de encierro puede estar reforzada por el miedo o por las circunstancias, y ver las opciones es el primer paso para salir.
 
 **Invertida:** Empieza a ver opciones y a liberarse de creencias que le limitan. Recupera poder sobre su situación.
 
@@ -726,7 +726,7 @@ _Generado a partir de cards.es.json (versión 1). Las correcciones que anote aqu
 
 **Palabras clave:** final, tocar fondo, agotamiento, cierre
 
-**Al derecho:** El punto más bajo de una situación. Duele, pero marca un final definitivo: a partir de aquí solo queda levantarse.
+**Al derecho:** El punto más bajo de una situación. Duele, pero puede marcar el final doloroso de una etapa y el comienzo de la recuperación.
 
 **Invertida:** Recuperación lenta después de una crisis. También puede indicar resistencia a aceptar que algo terminó.
 
@@ -746,7 +746,7 @@ _Generado a partir de cards.es.json (versión 1). Las correcciones que anote aqu
 
 ### Caballero de Espadas
 
-`swords-12` · Elemento: Aire · Astrología: 20° Tauro – 20° Géminis
+`swords-12` · Elemento: Aire · Astrología: 20° Capricornio – 20° Acuario
 
 **Palabras clave:** rapidez mental, determinación, debate, impulso
 
@@ -770,7 +770,7 @@ _Generado a partir de cards.es.json (versión 1). Las correcciones que anote aqu
 
 ### Rey de Espadas
 
-`swords-14` · Elemento: Aire · Astrología: 20° Capricornio – 20° Acuario
+`swords-14` · Elemento: Aire · Astrología: 20° Tauro – 20° Géminis
 
 **Palabras clave:** autoridad intelectual, verdad, ética, razón
 
@@ -916,7 +916,7 @@ _Generado a partir de cards.es.json (versión 1). Las correcciones que anote aqu
 
 ### Caballero de Oros
 
-`pentacles-12` · Elemento: Tierra · Astrología: 20° Leo – 20° Virgo
+`pentacles-12` · Elemento: Tierra · Astrología: 20° Aries – 20° Tauro
 
 **Palabras clave:** constancia, responsabilidad, método, paciencia
 
@@ -940,7 +940,7 @@ _Generado a partir de cards.es.json (versión 1). Las correcciones que anote aqu
 
 ### Rey de Oros
 
-`pentacles-14` · Elemento: Tierra · Astrología: 20° Aries – 20° Tauro
+`pentacles-14` · Elemento: Tierra · Astrología: 20° Leo – 20° Virgo
 
 **Palabras clave:** prosperidad, éxito material, seguridad, buena administración
 
