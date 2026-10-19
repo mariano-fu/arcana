@@ -24,6 +24,7 @@ Non-negotiable principles. Every spec, plan, task and code change must comply. I
 ## 5. Content is data, not code
 - Tarot cards, spreads, crystals, zodiac profiles live in versioned seed data files (JSON), not in components.
 - She can edit crystal and card notes in the app; her edits never get overwritten by seed updates.
+- Seed content makes no health or medical claims: nothing is presented as curing, healing, treating or relieving a physical or mental condition. Crystals and astrology are described through associations and traditional uses ("se asocia con…", "tradicionalmente se usa para…"). A test rejects cure/treatment words in crystal texts; tarot meanings may still speak of emotional pain and healing.
 
 ## 6. Quality bar (this is a portfolio project)
 - TypeScript strict mode; Python type hints + mypy.

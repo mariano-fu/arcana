@@ -17,7 +17,8 @@
     "format": "prettier --write .",
     "generate-pwa-assets": "pwa-assets-generator",
     "build:cards-review": "node scripts/build-cards-review.ts",
-    "build:spreads-review": "node scripts/build-spreads-review.ts"
+    "build:spreads-review": "node scripts/build-spreads-review.ts",
+    "build:crystals-review": "node scripts/build-crystals-review.ts"
   },
   "dependencies": {
     "dexie": "^4.4.6",

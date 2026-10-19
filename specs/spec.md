@@ -92,14 +92,15 @@ A tarot reader starting a small business needs one place to keep track of her cl
 ## Feature 5 — Crystals (Cristales)
 
 **User stories**
-- US-5.1: I can browse/search a crystal library: name, color, chakra(s), associated signs, intentions/issues it supports, short description, care/cleansing notes.
+- US-5.1: I can browse/search a crystal library: name, color, chakra(s), associated signs, intentions it supports, short description, care/cleansing notes.
 - US-5.2: On a client's profile, I see crystals recommended for their sun sign (and moon/rising if known).
-- US-5.3: I can pick one or more issues ("ansiedad", "amor", "protección", "dinero", "sueño", "confianza"…) and get crystals ranked by how well they match the issues + the client's signs.
-- US-5.4: I can add, edit or hide crystals and issue tags (her own beliefs and knowledge win over the seed data).
+- US-5.3: I can pick one or more intentions, phrased as what the person seeks ("calma", "amor", "protección", "abundancia", "descanso", "confianza"…), and get crystals ranked by how well they match the intentions + the client's signs.
+- US-5.4: I can add, edit or hide crystals and intention tags (her own beliefs and knowledge win over the seed data).
 
 **Acceptance criteria**
 - Seed library of ~50 commonly recommended crystals in Spanish. She doesn't own crystals yet, so the library is purely a recommendation reference — no stock, prices or sales in v1.
 - Ranking is explainable: each recommendation shows why ("Signo: Escorpio · Intención: protección").
+- Crystal texts describe associations and traditional uses ("se asocia con…", "tradicionalmente se usa para…"), never health or medical claims (see constitution §5).
 - The crystal data model leaves room for a future inventory/sales feature without migrating existing recommendations (see Future).
 
 ## Feature 6 — Sync & backup

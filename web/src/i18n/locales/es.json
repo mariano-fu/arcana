@@ -89,5 +89,71 @@
       "neptune": "Neptuno",
       "pluto": "Plutón"
     }
+  },
+  "crystals": {
+    "chakra": {
+      "root": "Raíz",
+      "sacral": "Sacro",
+      "solarPlexus": "Plexo solar",
+      "heart": "Corazón",
+      "throat": "Garganta",
+      "thirdEye": "Tercer ojo",
+      "crown": "Corona"
+    },
+    "color": {
+      "white": "Blanco",
+      "clear": "Transparente",
+      "pink": "Rosado",
+      "red": "Rojo",
+      "orange": "Anaranjado",
+      "yellow": "Amarillo",
+      "gold": "Dorado",
+      "green": "Verde",
+      "blue": "Azul",
+      "purple": "Morado",
+      "brown": "Café",
+      "black": "Negro",
+      "grey": "Gris",
+      "silver": "Plateado",
+      "multicolor": "Multicolor"
+    },
+    "intention": {
+      "calm": "Calma",
+      "rest": "Descanso",
+      "love": "Amor",
+      "selfLove": "Amor propio",
+      "protection": "Protección",
+      "abundance": "Abundancia",
+      "confidence": "Confianza",
+      "clarity": "Claridad",
+      "focus": "Concentración",
+      "creativity": "Creatividad",
+      "intuition": "Intuición",
+      "grounding": "Arraigo",
+      "balance": "Equilibrio",
+      "communication": "Comunicación",
+      "joy": "Alegría",
+      "motivation": "Motivación",
+      "transformation": "Transformación",
+      "newBeginnings": "Nuevos comienzos",
+      "energyCleansing": "Limpieza energética",
+      "spirituality": "Conexión espiritual"
+    },
+    "field": {
+      "colors": "Colores",
+      "chakras": "Chakras",
+      "signs": "Signos",
+      "intentions": "Intenciones",
+      "description": "Descripción",
+      "care": "Cuidado y limpieza"
+    },
+    "review": {
+      "title": "Revisión de los cristales",
+      "intro": "Lea cada cristal y anote debajo de «Correcciones» lo que quiera cambiar: colores, chakras, signos, intenciones, descripción o cuidados. Primero aparece la lista de intenciones, por si quiere renombrar, quitar o agregar alguna. Si algo está bien, deje el espacio en blanco.",
+      "generated": "Generado a partir de crystals.es.json (versión {{version}}). Las correcciones que anote aquí se pasan luego al archivo de datos.",
+      "intentions": "Intenciones",
+      "intentionsIntro": "Cada intención describe lo que la persona busca. Entre paréntesis, cuántos cristales la tienen.",
+      "corrections": "Correcciones"
+    }
   }
 }
