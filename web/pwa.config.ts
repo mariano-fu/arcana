@@ -39,7 +39,7 @@ export const pwaOptions: Partial<VitePWAOptions> = {
     // Everything the shell needs is precached from our own origin; no
     // runtime caching of third-party resources (constitution §2). The plugin
     // adds manifest.webmanifest itself, and the glob already covers the icons.
-    globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
+    globPatterns: ['**/*.{js,css,html,svg,png,ico,webp}'],
     navigateFallback: 'index.html',
     navigateFallbackDenylist: [/^\/api\//],
     cleanupOutdatedCaches: true,
