@@ -1,12 +1,11 @@
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 
-import type { Client, Currency } from '../../db';
+import type { Client } from '../../db';
+import { CURRENCIES, formatMoney } from '../payments';
 import type { DeletionSummary } from './deletion';
-import { formatList, formatMoney } from './format';
+import { formatList } from './format';
 import { useDeletionSummary } from './hooks';
-
-const CURRENCIES: Currency[] = ['CRC', 'USD'];
 
 interface Props {
   client: Client;

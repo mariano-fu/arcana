@@ -1,10 +1,11 @@
-import { getDeviceId, nowIso, type ArcanaDB, type Clock, type Currency } from '../../db';
+import { getDeviceId, nowIso, type ArcanaDB, type Clock } from '../../db';
+import { sumByCurrency, type CurrencyTotals } from '../payments';
 
 export interface DeletionSummary {
   sessions: number;
   payments: number;
   /** Total paid per currency (minor units); currencies are never summed together. */
-  paidByCurrency: Partial<Record<Currency, number>>;
+  paidByCurrency: CurrencyTotals;
 }
 
 /** What deleting a client would remove, for the confirmation dialog. Tombstones aren't counted. */
@@ -21,12 +22,7 @@ export async function getDeletionSummary(db: ArcanaDB, clientId: string): Promis
       .filter((row) => row.deleted_at === null)
       .toArray(),
   ]);
-  const paidByCurrency: Partial<Record<Currency, number>> = {};
-  for (const payment of payments) {
-    paidByCurrency[payment.currency] =
-      (paidByCurrency[payment.currency] ?? 0) + payment.amount_minor;
-  }
-  return { sessions, payments: payments.length, paidByCurrency };
+  return { sessions, payments: payments.length, paidByCurrency: sumByCurrency(payments) };
 }
 
 /**

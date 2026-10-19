@@ -147,7 +147,7 @@ describe('client detail', () => {
 
     // Testing Library collapses the es-CR thousands separator (no-break space) to a space.
     expect(
-      await within(dialog).findByText('Se eliminarán 4 sesiones y 3 pagos (₡45 000 y US$20).'),
+      await within(dialog).findByText('Se eliminarán 4 sesiones y 3 pagos (₡45 000 y US$20,00).'),
     ).toBeVisible();
     expect(within(dialog).getByText(es.clients.delete.suggestArchive)).toBeVisible();
   });

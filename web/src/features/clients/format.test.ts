@@ -1,11 +1,4 @@
-import { formatDate, formatList, formatMoney } from './format';
-
-describe('formatMoney', () => {
-  it('formats colones and dollars in es-CR, decimals only when needed', () => {
-    expect(formatMoney(4500000, 'CRC')).toBe('₡45 000');
-    expect(formatMoney(2050, 'USD')).toBe('US$20,50');
-  });
-});
+import { formatDate, formatList } from './format';
 
 describe('formatDate', () => {
   it('formats a calendar date without shifting it by timezone', () => {
