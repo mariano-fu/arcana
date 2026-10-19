@@ -1,5 +1,6 @@
 import { moonLongitude, moonSignUncertain, PLANET_KEYS, planetPositions } from '.';
 import reference from './fixtures/horizons-reference.json';
+import { lastInstantBeforeIngress } from './test-utils.ts';
 
 /** Smallest angle between two longitudes, in degrees. */
 const angularDistance = (a: number, b: number) => {
@@ -61,6 +62,24 @@ describe('planetPositions', () => {
   it('rejects an invalid Date', () => {
     expect(() => planetPositions(new Date(Number.NaN))).toThrow(RangeError);
     expect(() => moonLongitude(new Date(Number.NaN))).toThrow(RangeError);
+  });
+});
+
+describe('planetPositions at a sign boundary', () => {
+  it('keeps the Moon in Capricorn with degree < 30 just before it enters Aquarius', () => {
+    const moon = (utc: Date) => planetPositions(utc).moon;
+    const instant = lastInstantBeforeIngress(
+      moon,
+      new Date('2024-03-07T00:30:00Z'),
+      new Date('2024-03-07T00:50:00Z'),
+    );
+    const last = moon(instant);
+    expect(last.sign).toBe('capricorn');
+    expect(last.degree).toBeGreaterThan(29.999);
+    expect(last.degree).toBeLessThan(30);
+    const next = moon(new Date(instant.getTime() + 1));
+    expect(next.sign).toBe('aquarius');
+    expect(next.degree).toBeLessThan(0.001);
   });
 });
 

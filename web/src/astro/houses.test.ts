@@ -2,6 +2,7 @@ import { e_tilt, MakeTime } from 'astronomy-engine';
 
 import { ascendantAndHouses, signForLongitude, toUtc } from '.';
 import reference from './fixtures/houses-reference.json';
+import { lastInstantBeforeIngress } from './test-utils.ts';
 
 /** Smallest angle between two longitudes, in degrees. */
 const angularDistance = (a: number, b: number) => {
@@ -11,6 +12,9 @@ const angularDistance = (a: number, b: number) => {
 
 /** Degrees from `from` to `to`, going forward through the zodiac, in [0, 360). */
 const forward = (from: number, to: number) => (((to - from) % 360) + 360) % 360;
+
+/** Degrees. The implementation matches the reference to ~0.0001°. */
+const TOLERANCE = 0.01;
 
 const placidusCases = reference.cases.filter((c) => c.cusps !== undefined);
 const fallbackCases = reference.cases.filter((c) => c.cusps === undefined);
@@ -34,17 +38,17 @@ describe('ascendantAndHouses against the Swiss Ephemeris reference', () => {
       expect(result.system).toBe('placidus');
     });
 
-    it('has the ascendant and MC within 1°', () => {
-      expect(angularDistance(result.ascendant.longitude, ascendant)).toBeLessThan(1);
-      expect(angularDistance(result.mc.longitude, mc)).toBeLessThan(1);
+    it('has the ascendant and MC within 0.01°', () => {
+      expect(angularDistance(result.ascendant.longitude, ascendant)).toBeLessThan(TOLERANCE);
+      expect(angularDistance(result.mc.longitude, mc)).toBeLessThan(TOLERANCE);
     });
 
     const errors = result.cusps.map((cusp, i) =>
       angularDistance(cusp.longitude, cusps[i] ?? Number.NaN),
     );
 
-    it.each(Array.from({ length: 12 }, (_, i) => i + 1))('has cusp %i within 1°', (house) => {
-      expect(errors[house - 1]).toBeLessThan(1);
+    it.each(Array.from({ length: 12 }, (_, i) => i + 1))('has cusp %i within 0.01°', (house) => {
+      expect(errors[house - 1]).toBeLessThan(TOLERANCE);
     });
   });
 
@@ -55,9 +59,9 @@ describe('ascendantAndHouses against the Swiss Ephemeris reference', () => {
       expect(result.system).toBe('whole-sign');
     });
 
-    it('has the ascendant and MC within 1°', () => {
-      expect(angularDistance(result.ascendant.longitude, ascendant)).toBeLessThan(1);
-      expect(angularDistance(result.mc.longitude, mc)).toBeLessThan(1);
+    it('has the ascendant and MC within 0.01°', () => {
+      expect(angularDistance(result.ascendant.longitude, ascendant)).toBeLessThan(TOLERANCE);
+      expect(angularDistance(result.mc.longitude, mc)).toBeLessThan(TOLERANCE);
     });
 
     it("starts the 1st house at 0° of the ascendant's sign, one sign per house", () => {
@@ -128,4 +132,33 @@ describe('ascendantAndHouses', () => {
     expect(() => ascendantAndHouses(utc, Number.NaN, 0)).toThrow(RangeError);
     expect(() => ascendantAndHouses(utc, 0, 181)).toThrow(RangeError);
   });
+});
+
+describe('ascendantAndHouses at sign boundaries', () => {
+  // San José, Costa Rica, 1991-02-04 ~02:40Z: Asc ≈ 29°41′ Virgo, cusp 11 ≈ 28°49′ Cancer.
+  const [lat, lng] = [9.9333, -84.0833];
+  const from = new Date('1991-02-04T02:40:00Z');
+  const to = new Date('1991-02-04T03:00:00Z');
+  const cusp11 = (utc: Date) => {
+    const cusp = ascendantAndHouses(utc, lat, lng).cusps[10];
+    if (cusp === undefined) throw new Error('missing cusp 11');
+    return cusp;
+  };
+
+  it.each([
+    ['ascendant', 'virgo', 'libra', (utc: Date) => ascendantAndHouses(utc, lat, lng).ascendant],
+    ['cusp 11', 'cancer', 'leo', cusp11],
+  ] as const)(
+    'keeps the %s in %s with degree < 30 just before %s',
+    (_, before, after, position) => {
+      const instant = lastInstantBeforeIngress(position, from, to);
+      const last = position(instant);
+      expect(last.sign).toBe(before);
+      expect(last.degree).toBeGreaterThan(29.999);
+      expect(last.degree).toBeLessThan(30);
+      const next = position(new Date(instant.getTime() + 1));
+      expect(next.sign).toBe(after);
+      expect(next.degree).toBeLessThan(0.001);
+    },
+  );
 });
