@@ -2,7 +2,8 @@ import threading
 import uuid
 
 import pytest
-from django.db import IntegrityError, connection, transaction
+from django.apps import apps
+from django.db import IntegrityError, connection, models, transaction
 
 from horoscopes.models import SERVER_DEVICE_ID
 from sync.models import SYNC_LOCK_KEY, SYNCED_TABLE_NAMES, CardDraw, Client, Reading
@@ -143,3 +144,49 @@ def test_bulk_writes_that_skip_save_are_refused(method: str) -> None:
 
     with pytest.raises(TypeError, match="save"):
         getattr(Client.objects.all(), method)()
+
+
+def test_hard_deletes_are_refused() -> None:
+    client = factories.ClientFactory()
+
+    with pytest.raises(TypeError, match="tombstones"):
+        client.delete()
+    with pytest.raises(TypeError, match="tombstones"):
+        Client.objects.filter(pk=client.pk).delete()
+    assert Client.objects.filter(pk=client.pk).exists()
+
+
+def test_no_foreign_key_can_cascade_a_hard_delete_into_synced_rows() -> None:
+    # Collector cascades and SET_NULL skip delete()/save(), so only PROTECT is safe, both
+    # for foreign keys on synced rows and for foreign keys pointing at them.
+    synced = set(synced_models().values())
+    checked = 0
+    for model in apps.get_models():
+        for field in model._meta.get_fields():
+            if not field.is_relation or not (model in synced or field.related_model in synced):
+                continue
+            assert not field.many_to_many, f"{model.__name__}.{field.name}"
+            if field.concrete:
+                on_delete = getattr(field.remote_field, "on_delete", None)
+                assert on_delete is models.PROTECT, f"{model.__name__}.{field.name}"
+                checked += 1
+    assert (
+        checked >= 5
+    )  # session.client, payment.session/client, reading.session, card_draw.reading
+
+
+def test_tombstone_is_stamped_by_the_server_in_milliseconds() -> None:
+    client = factories.ClientFactory()
+    version = client.server_version
+
+    client.tombstone()
+
+    client.refresh_from_db()
+    assert client.deleted_at == client.updated_at
+    assert client.updated_at.microsecond % 1000 == 0
+    assert client.device_id == SERVER_DEVICE_ID
+    assert client.server_version > version
+
+
+def test_server_written_horoscopes_get_millisecond_timestamps() -> None:
+    assert factories.HoroscopeFactory().updated_at.microsecond % 1000 == 0

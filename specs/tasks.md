@@ -63,6 +63,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
   - Note: If the server rejects a future updated_at, show 'Revise la fecha y hora del teléfono'.
 - [ ] T3.7 Conflict review screen ("Conflictos": show both versions, keep one or merge text).
   - Note: Surface orphaned rows (child of a tombstoned parent) as 'Sesión de una ficha eliminada' with options to restore the ficha or delete the session.
+  - Note: Test: resolving a server-created conflict row from a device whose clock is behind the server still wins (relies on T3.6's max(now, previous + 1 ms)).
 - [ ] T3.8 Settings: login, last sync, sync now, clock-skew warning.
 - [ ] T3.9 Two-device e2e: two browser contexts, offline edits on both, sync, assert outcome.
 

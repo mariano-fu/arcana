@@ -8,8 +8,7 @@ from typing import Any
 
 from django.db import IntegrityError, connection, transaction
 
-from horoscopes.models import SERVER_DEVICE_ID
-from sync.models import Conflict, SyncedModel, synced_write
+from sync.models import SERVER_DEVICE_ID, Conflict, SyncedModel, synced_write, to_ms
 from sync.registry import synced_models
 from sync.serializers import format_timestamp, record_serializer
 
@@ -55,6 +54,7 @@ def sync(
     device_id: uuid.UUID, cursor: int, changes: Sequence[Mapping[str, Any]], now: dt.datetime
 ) -> SyncResult:
     """Apply a device's pending rows, then return the next page of rows it hasn't seen."""
+    now = to_ms(now)
     with synced_write():
         validated = _validate(changes, now)
         result = SyncResult()
@@ -163,8 +163,11 @@ def _apply(
         stored.save()
         written.add((table, stored.pk))
         result.applied.append(stored.pk)
-    elif data["updated_at"] == stored.updated_at and stored.device_id == device_id:
-        result.applied.append(stored.pk)  # The same write again (a retried push): no-op.
+    elif data["updated_at"] == stored.updated_at and (
+        stored.device_id == device_id or _same_content(stored, data)
+    ):
+        # The same write again (a retried push, or a pulled row echoed back): no-op.
+        result.applied.append(stored.pk)
     else:  # Rule 3: reject; the device gets the server's row back.
         if unseen:
             _keep_losing_text(
@@ -179,6 +182,13 @@ def _apply(
                 returned,
             )
         returned[(table, stored.pk)] = stored
+
+
+def _same_content(stored: SyncedModel, data: Mapping[str, Any]) -> bool:
+    """Every pushed field equals the stored one; `device_id` is the pusher's, not the row's."""
+    return all(
+        getattr(stored, name) == value for name, value in data.items() if name != "device_id"
+    )
 
 
 def _keep_losing_text(
@@ -201,17 +211,16 @@ def _keep_losing_text(
         )
         conflict = Conflict.objects.filter(pk=conflict_id).first()
         if conflict is None:  # Insert only if absent: a retry must not reopen or duplicate it.
-            created = now.replace(microsecond=now.microsecond // 1000 * 1000)
             conflict = Conflict(
                 id=conflict_id,
-                updated_at=created,
+                updated_at=now,
                 device_id=SERVER_DEVICE_ID,
                 table=table,
                 record_id=record_id,
                 field=name,
                 losing_value=value,
                 losing_device_id=losing_device_id,
-                created_at=created,
+                created_at=now,
             )
             conflict.save()
         result.conflicts.append(conflict)

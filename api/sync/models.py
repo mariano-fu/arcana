@@ -6,16 +6,31 @@ templates, crystals, intention tags, cards) are plain values, never foreign keys
 unedited seed rows never sync, so the referenced row may not exist here.
 """
 
+import datetime as dt
+import uuid
 from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import Any, ClassVar, NoReturn
 
 from django.contrib.postgres.fields import ArrayField
 from django.db import connection, models, transaction
+from django.utils import timezone
 
 SERVER_VERSION_SEQUENCE = "server_version_seq"
+# Rows the server writes itself carry the nil UUID as their device.
+SERVER_DEVICE_ID = uuid.UUID(int=0)
 # pg_advisory_xact_lock key ("Arcn") held by every transaction that writes a synced table.
 SYNC_LOCK_KEY = 0x4172636E
+
+
+def to_ms(value: dt.datetime) -> dt.datetime:
+    """Millisecond precision, like the client's JS dates, so equal timestamps compare equal."""
+    return value.replace(microsecond=value.microsecond // 1000 * 1000)
+
+
+def now_ms() -> dt.datetime:
+    """The server's clock for every timestamp it generates."""
+    return to_ms(timezone.now())
 
 
 @contextmanager
@@ -46,11 +61,21 @@ def next_server_version() -> int:
     return int(row[0])
 
 
+HARD_DELETE_REFUSED = "Synced rows are never hard-deleted: devices only learn of tombstones."
+
+
 class SyncedQuerySet(models.QuerySet[Any]):
-    """Bulk writes skip `save()`, so they would skip the lock and the `server_version` bump."""
+    """Bulk writes skip `save()`, so they would skip the lock and the `server_version` bump.
+
+    Hard deletes are refused too: a deleted row never reaches a pull, so devices would keep
+    it forever. Deletes are tombstones (`deleted_at`), written through `save()`.
+    """
 
     def _refuse(self, *args: Any, **kwargs: Any) -> NoReturn:
         raise TypeError("Synced rows are written one by one through save() (synced_write).")
+
+    def delete(self) -> NoReturn:
+        raise TypeError(HARD_DELETE_REFUSED)
 
     update = _refuse
     bulk_update = _refuse
@@ -76,6 +101,15 @@ class SyncedModel(models.Model):
         with synced_write():
             self.server_version = next_server_version()
             super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> NoReturn:
+        raise TypeError(HARD_DELETE_REFUSED)
+
+    def tombstone(self) -> None:
+        """Delete the server's way: a tombstone stamped with the server's clock and device."""
+        self.deleted_at = self.updated_at = now_ms()
+        self.device_id = SERVER_DEVICE_ID
+        self.save()
 
 
 class Currency(models.TextChoices):

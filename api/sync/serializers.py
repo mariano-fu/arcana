@@ -7,7 +7,7 @@ from typing import Any, ClassVar
 from django.db import models
 from rest_framework import serializers
 
-from sync.models import SyncedModel
+from sync.models import SyncedModel, to_ms
 from sync.registry import synced_models
 
 PUSH_LIMIT = 500
@@ -23,6 +23,10 @@ def format_timestamp(value: dt.datetime) -> str:
 
 
 class TimestampField(serializers.DateTimeField):
+    def to_internal_value(self, value: Any) -> dt.datetime:
+        # Before any comparison: a µs-precise timestamp must equal its ms echo.
+        return to_ms(super().to_internal_value(value))
+
     def to_representation(self, value: dt.datetime) -> str:
         return format_timestamp(value)
 

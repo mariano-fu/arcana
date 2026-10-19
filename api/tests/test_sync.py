@@ -10,8 +10,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from rest_framework.test import APIClient
 
-from horoscopes.models import SERVER_DEVICE_ID
-from sync.models import CardNote, Client, Conflict, Session, SyncedModel
+from sync.models import SERVER_DEVICE_ID, CardNote, Client, Conflict, Session, SyncedModel
 from sync.serializers import format_timestamp, record_serializer
 from sync.service import PULL_PAGE_SIZE
 from tests import factories
@@ -117,6 +116,27 @@ def test_response_reports_server_time_and_millisecond_timestamps(api: APIClient)
     assert record["updated_at"] == format_timestamp(at(1))
 
 
+def test_timestamps_are_compared_in_milliseconds(api: APIClient) -> None:
+    client = new_client(updated_at=at(1))
+    micro = change(client)
+    micro["record"]["updated_at"] = micro["record"]["updated_at"].replace(".000Z", ".000999Z")
+
+    ok(push(api, DEVICE_A, [micro]))
+    version = stored(Client, client.id).server_version
+    body = ok(push(api, DEVICE_B, [change(client)]))  # The ms echo, from another device.
+
+    assert stored(Client, client.id).updated_at == at(1)
+    assert body["applied"] == [str(client.id)]
+    assert stored(Client, client.id).server_version == version
+
+
+def test_server_time_has_millisecond_precision(api: APIClient) -> None:
+    server_time = ok(push(api, DEVICE_A, []))["server_time"]
+
+    assert server_time.endswith("Z")
+    assert len(server_time) == len("2026-10-19T12:00:00.000Z")
+
+
 def test_upload_limit_fits_a_full_push() -> None:
     assert settings.DATA_UPLOAD_MAX_MEMORY_SIZE == 10 * 1024 * 1024
 
@@ -207,6 +227,35 @@ def test_equal_updated_at_from_another_device_is_rejected(api: APIClient) -> Non
 
     assert body["applied"] == []
     assert stored(Client, client.id).name == "B"
+
+
+def test_pulled_row_echoed_back_unchanged_is_a_no_op(api: APIClient) -> None:
+    # Client-made rows carry ms timestamps throughout (factory defaults would carry µs).
+    client = factories.ClientFactory(device_id=DEVICE_B, updated_at=at(1), created_at=at(0))
+    pull = ok(push(api, DEVICE_A, []))
+    record = pulled(pull, "client")[str(client.id)]
+
+    body = ok(push(api, DEVICE_A, [{"table": "client", "record": record}], cursor=pull["cursor"]))
+
+    assert body["applied"] == [str(client.id)]
+    assert stored(Client, client.id).server_version == client.server_version
+
+
+def test_server_created_conflict_round_trips_as_a_no_op(api: APIClient) -> None:
+    client = factories.ClientFactory(device_id=DEVICE_A, updated_at=at(1), notes="From A")
+    created = ok(push(api, DEVICE_B, [change(client, notes="From B", updated_at=at(2))]))
+    record = pulled(created, "conflict")[str(Conflict.objects.get().id)]
+    version = record["server_version"]
+    assert record["updated_at"] == record["created_at"]
+    assert dt.datetime.fromisoformat(record["updated_at"]).microsecond % 1000 == 0
+
+    echo = ok(push(api, DEVICE_A, [{"table": "conflict", "record": record}], cursor=version))
+
+    assert echo["applied"] == [record["id"]]
+    assert pulled(echo, "conflict") == {}
+    conflict = Conflict.objects.get()
+    assert (conflict.server_version, conflict.resolved) == (version, False)
+    assert conflict.device_id == SERVER_DEVICE_ID
 
 
 def test_same_push_twice_is_idempotent(api: APIClient) -> None:

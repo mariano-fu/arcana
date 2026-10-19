@@ -1,9 +1,9 @@
-from django.utils import timezone
 from rest_framework.decorators import api_view
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from sync import service
+from sync.models import now_ms
 from sync.serializers import SyncRequestSerializer, format_timestamp, record_serializer
 
 
@@ -16,7 +16,7 @@ def sync(request: Request) -> Response:
     """
     body = SyncRequestSerializer(data=request.data)
     body.is_valid(raise_exception=True)
-    now = timezone.now()
+    now = now_ms()
     try:
         result = service.sync(
             body.validated_data["device_id"],

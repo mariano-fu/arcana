@@ -2,12 +2,10 @@ import uuid
 from typing import ClassVar
 
 from django.db import models
-from django.utils import timezone
 
-from sync.models import SyncedModel
+from sync.models import SERVER_DEVICE_ID, SyncedModel, now_ms
 
-# Rows the server writes itself carry the nil UUID as their device.
-SERVER_DEVICE_ID = uuid.UUID(int=0)
+__all__ = ["SERVER_DEVICE_ID", "Horoscope"]
 
 
 class Horoscope(SyncedModel):
@@ -17,7 +15,7 @@ class Horoscope(SyncedModel):
         DAY = "day"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    updated_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=now_ms)
     device_id = models.UUIDField(default=SERVER_DEVICE_ID)
     date = models.DateField()
     sign = models.TextField(help_text="Zodiac seed key, e.g. scorpio.")
