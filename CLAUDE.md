@@ -12,7 +12,7 @@ This repo is a spec-driven project. The specs are the source of truth.
 1. Restate the task and the acceptance criteria it touches. List the files you plan to create/change. Wait for my OK.
 2. Implement only that task. Don't start the next one, don't refactor unrelated code.
 3. Write/update tests for it. Run lint, type-check and tests; fix until green.
-4. Tick the task's checkbox in `specs/tasks.md`.
+4. Don't tick the checkbox; state in the PR that the task is done.
 5. Summarize: what changed, how to verify it manually, anything you had to assume.
 
 ## If the spec is wrong or unclear
