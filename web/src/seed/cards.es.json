@@ -1,5 +1,13 @@
 {
-  "version": 1,
+  "version": 2,
+  "astrology_system": {
+    "id": "golden-dawn-book-t",
+    "notes": [
+      "Attributions follow the Golden Dawn (Book T) system: decans for pips 2–10; courts use the “20° to 20°” ranges, with GD Knight → RWS Rey and GD Prince → RWS Caballero.",
+      "‘Elemento’ on the majors is the sign’s element for zodiac cards and ‘—’ for planet cards. The exceptions follow GD’s own elemental attributions: the three elemental trumps El Loco (Aire), El Colgado (Agua) and El Juicio (Fuego), and El Mundo (Saturno + Tierra).",
+      "Uranus, Neptune and Pluto are deliberately left out (modern additions, not original GD)."
+    ]
+  },
   "cards": [
     {
       "key": "major-00",
@@ -166,7 +174,7 @@
       "element": "water",
       "astrology": "Escorpio",
       "keywords": ["final", "transformación", "transición", "renovación"],
-      "upright": "Un ciclo se cierra para dar espacio a algo nuevo. Rara vez habla de una muerte física: señala una transformación profunda e inevitable.",
+      "upright": "Un ciclo se cierra para dar espacio a algo nuevo. Rara vez habla de una muerte física: señala una transformación profunda, un cierre y una transición.",
       "reversed": "Aferrarse a lo que ya terminó retrasa el cambio. Puede reflejar miedo a soltar o una transición que se vive a medias."
     },
     {
@@ -191,7 +199,7 @@
       "astrology": "Capricornio",
       "keywords": ["apego", "tentación", "sombra", "dependencia"],
       "upright": "Vínculos, hábitos o deseos que atan más de lo que usted quisiera admitir. Muestra la sombra para que pueda reconocerla.",
-      "reversed": "Toma de conciencia y comienzo de la liberación. Se rompen cadenas que parecían imposibles de soltar, aunque el proceso pida honestidad."
+      "reversed": "Toma de conciencia y comienzo de la liberación, aunque no siempre inmediata. También puede señalar la negación de una dependencia o la dificultad para romper un patrón."
     },
     {
       "key": "major-16",
@@ -203,7 +211,7 @@
       "astrology": "Marte",
       "keywords": ["ruptura", "revelación", "crisis", "liberación"],
       "upright": "Un cambio súbito derriba estructuras que no eran sólidas. Aunque sacude, despeja el terreno para construir sobre la verdad.",
-      "reversed": "Se evita una crisis que igual termina llegando, o el derrumbe se vive por dentro. Puede indicar que lo peor ya pasó y que queda reconstruir."
+      "reversed": "Resistencia al cambio o una crisis que se vive por dentro. Puede indicar que lo peor ya pasó y que toca una reconstrucción gradual."
     },
     {
       "key": "major-17",
@@ -238,7 +246,7 @@
       "element": null,
       "astrology": "Sol",
       "keywords": ["alegría", "éxito", "vitalidad", "claridad"],
-      "upright": "Una de las cartas más luminosas. Anuncia éxito, alegría sencilla, salud y la claridad para ver las cosas como son.",
+      "upright": "Una de las cartas más luminosas. Sugiere éxito, alegría sencilla, vitalidad y la claridad para ver las cosas como son.",
       "reversed": "La alegría está presente pero opacada por el pesimismo o el cansancio. Puede hablar de un éxito que llega con retraso o de un optimismo exagerado."
     },
     {
@@ -392,7 +400,7 @@
       "number": 12,
       "suit": "wands",
       "element": "fire",
-      "astrology": "20° Escorpio – 20° Sagitario",
+      "astrology": "20° Cáncer – 20° Leo",
       "keywords": ["acción", "aventura", "pasión", "impulsividad"],
       "upright": "Energía arrolladora que se lanza a la aventura. Habla de viajes, cambios rápidos y pasión por lo nuevo.",
       "reversed": "Impulsividad, prisa o proyectos abandonados a medio camino. Le invita a canalizar ese fuego antes de quemarse."
@@ -414,7 +422,7 @@
       "number": 14,
       "suit": "wands",
       "element": "fire",
-      "astrology": "20° Cáncer – 20° Leo",
+      "astrology": "20° Escorpio – 20° Sagitario",
       "keywords": ["liderazgo", "visión", "emprendimiento", "honor"],
       "upright": "Liderazgo con visión que inspira con el ejemplo. Habla de emprender, tomar el mando y llevar una idea a gran escala.",
       "reversed": "Autoritarismo, impaciencia o expectativas imposibles. Puede reflejar un liderazgo que se impone en vez de inspirar."
@@ -546,7 +554,7 @@
       "number": 12,
       "suit": "cups",
       "element": "water",
-      "astrology": "20° Acuario – 20° Piscis",
+      "astrology": "20° Libra – 20° Escorpio",
       "keywords": ["romance", "propuesta", "idealismo", "encanto"],
       "upright": "Llega una propuesta, sobre todo afectiva o artística. Representa el romanticismo de quien sigue a su corazón.",
       "reversed": "Promesas poco realistas o un encanto que no se sostiene. Puede advertir sobre celos o expectativas idealizadas."
@@ -568,7 +576,7 @@
       "number": 14,
       "suit": "cups",
       "element": "water",
-      "astrology": "20° Libra – 20° Escorpio",
+      "astrology": "20° Acuario – 20° Piscis",
       "keywords": ["equilibrio emocional", "madurez", "diplomacia", "calma"],
       "upright": "Dominio sereno de las emociones. Representa a alguien que aconseja con calma y mantiene la cabeza fría sin perder la calidez.",
       "reversed": "Emociones reprimidas o manipulación afectiva. Puede indicar cambios de humor o frialdad como forma de defenderse."
@@ -658,7 +666,7 @@
       "element": "air",
       "astrology": "Júpiter en Géminis",
       "keywords": ["limitación", "miedo", "bloqueo mental", "sensación de encierro"],
-      "upright": "Siente que no hay salida, aunque las ataduras son más mentales que reales. El miedo paraliza más que las circunstancias.",
+      "upright": "Siente que no hay salida. La sensación de encierro puede estar reforzada por el miedo o por las circunstancias, y ver las opciones es el primer paso para salir.",
       "reversed": "Empieza a ver opciones y a liberarse de creencias que le limitan. Recupera poder sobre su situación."
     },
     {
@@ -680,7 +688,7 @@
       "element": "air",
       "astrology": "Sol en Géminis",
       "keywords": ["final", "tocar fondo", "agotamiento", "cierre"],
-      "upright": "El punto más bajo de una situación. Duele, pero marca un final definitivo: a partir de aquí solo queda levantarse.",
+      "upright": "El punto más bajo de una situación. Duele, pero puede marcar el final doloroso de una etapa y el comienzo de la recuperación.",
       "reversed": "Recuperación lenta después de una crisis. También puede indicar resistencia a aceptar que algo terminó."
     },
     {
@@ -700,7 +708,7 @@
       "number": 12,
       "suit": "swords",
       "element": "air",
-      "astrology": "20° Tauro – 20° Géminis",
+      "astrology": "20° Capricornio – 20° Acuario",
       "keywords": ["rapidez mental", "determinación", "debate", "impulso"],
       "upright": "Avanza a toda velocidad detrás de una idea. Habla de ambición, debate y acción directa.",
       "reversed": "Impaciencia, agresividad verbal o decisiones precipitadas. Conviene escuchar antes de lanzarse."
@@ -722,7 +730,7 @@
       "number": 14,
       "suit": "swords",
       "element": "air",
-      "astrology": "20° Capricornio – 20° Acuario",
+      "astrology": "20° Tauro – 20° Géminis",
       "keywords": ["autoridad intelectual", "verdad", "ética", "razón"],
       "upright": "Piensa con lógica y decide con ética. Representa a una figura de autoridad justa, como una persona asesora o una profesional con experiencia.",
       "reversed": "Uso del intelecto para manipular o imponerse. Puede indicar decisiones frías que ignoran el lado humano."
@@ -854,7 +862,7 @@
       "number": 12,
       "suit": "pentacles",
       "element": "earth",
-      "astrology": "20° Leo – 20° Virgo",
+      "astrology": "20° Aries – 20° Tauro",
       "keywords": ["constancia", "responsabilidad", "método", "paciencia"],
       "upright": "Avanza despacio pero con paso firme. Representa el trabajo metódico, la rutina confiable y el compromiso a largo plazo.",
       "reversed": "Estancamiento, aburrimiento o terquedad. La prudencia se convierte en inmovilidad."
@@ -876,7 +884,7 @@
       "number": 14,
       "suit": "pentacles",
       "element": "earth",
-      "astrology": "20° Aries – 20° Tauro",
+      "astrology": "20° Leo – 20° Virgo",
       "keywords": ["prosperidad", "éxito material", "seguridad", "buena administración"],
       "upright": "Éxito sólido construido con esfuerzo y buena administración. Representa a quien da seguridad y sabe hacer crecer los recursos.",
       "reversed": "Avaricia, materialismo o rigidez con el dinero. Puede indicar que el éxito se mide solo por lo que se posee."
