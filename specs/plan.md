@@ -200,7 +200,8 @@ Backend `horoscopes` app, two independent interfaces so each side can be swapped
 - HTTPS only, via `tailscale serve` certs. Network access limited to the tailnet; Tailscale ACLs restrict her devices to the app port only.
 - Still require app auth (JWT) — the tailnet is one layer, not the only one.
 - JWT in IndexedDB (no cookies needed, same origin). Short access TTL (15 min), refresh 30 days.
-- Rate limit `/api/auth/` (DRF throttling).
+- Endpoints: `POST /api/auth/token/` (username + password → access + refresh) and `POST /api/auth/token/refresh/` (refresh → new access + new refresh; the old refresh token is blacklisted). The API accepts only JWT (`Authorization: Bearer`), no session auth.
+- Rate limit `/api/auth/` (DRF throttling, `AUTH_THROTTLE_RATE`, default 10/min per endpoint). The bucket is keyed by `REMOTE_ADDR` (the proxy) until T4.1 sets `NUM_PROXIES`.
 - Optional app PIN: gate UI only (data at rest in IndexedDB is not encrypted; document this honestly in README).
 - Django admin reachable only on the tailnet (ACL: Mariano's devices only), with a separate strong admin password.
 

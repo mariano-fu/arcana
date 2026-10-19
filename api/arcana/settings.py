@@ -4,6 +4,7 @@ Locally, values can also come from `api/.env` (see `.env.example`); real environ
 variables take precedence over the file.
 """
 
+from datetime import timedelta
 from pathlib import Path
 
 import django_stubs_ext
@@ -24,7 +25,7 @@ SECRET_KEY: str = env.str("SECRET_KEY", default="")
 if not SECRET_KEY:
     if not DEBUG:
         raise ImproperlyConfigured("SECRET_KEY must be set when DEBUG is off.")
-    SECRET_KEY = "insecure-dev-only-key"  # noqa: S105 - only reachable with DEBUG on
+    SECRET_KEY = "insecure-dev-only-key-not-for-production"  # noqa: S105 - only reachable with DEBUG on
 
 ALLOWED_HOSTS: list[str] = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
 CSRF_TRUSTED_ORIGINS: list[str] = env.list("CSRF_TRUSTED_ORIGINS", default=[])
@@ -38,6 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.postgres",
     "rest_framework",
+    "rest_framework_simplejwt.token_blacklist",
     "core",
     "sync",
     "horoscopes",
@@ -108,13 +110,28 @@ SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 
 REST_FRAMEWORK = {
-    # Auth on every endpoint except the health check (constitution §2). JWT comes in T3.3.
+    # Auth on every endpoint except the health check (constitution §2). JWT only: the PWA keeps
+    # its tokens in IndexedDB, so the API needs no session cookies (and no CSRF surface).
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser"],
+    # Scoped per view (core/auth.py). Clients are told apart by REMOTE_ADDR (NUM_PROXIES unset),
+    # which behind Caddy is the proxy: one shared bucket per scope, fine for a single-user app
+    # and not dodgeable via X-Forwarded-For. Counts live in each worker's local-memory cache,
+    # so the effective limit is the rate times the number of gunicorn workers.
+    "DEFAULT_THROTTLE_RATES": {"auth": env.str("AUTH_THROTTLE_RATE", default="10/min")},
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
+    # Each refresh returns a new refresh token and blacklists the old one.
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": True,
 }
 
 # Containers log to stdout/stderr; Docker collects it.
