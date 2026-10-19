@@ -155,5 +155,14 @@
       "intentionsIntro": "Cada intención describe lo que la persona busca. Entre paréntesis, cuántos cristales la tienen.",
       "corrections": "Correcciones"
     }
+  },
+  "payments": {
+    "status": {
+      "paid": "Pagado",
+      "partial": "Parcial",
+      "pending": "Pendiente",
+      "no_charge": "Sin cobro",
+      "overpaid": "Saldo a favor"
+    }
   }
 }
