@@ -1,10 +1,11 @@
+import threading
 import uuid
 
 import pytest
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, connection, transaction
 
 from horoscopes.models import SERVER_DEVICE_ID
-from sync.models import SYNCED_TABLE_NAMES, CardDraw, Reading
+from sync.models import SYNC_LOCK_KEY, SYNCED_TABLE_NAMES, CardDraw, Client, Reading
 from sync.registry import synced_models
 from tests import factories
 
@@ -108,3 +109,37 @@ def test_missing_parent_fails_at_commit() -> None:
 
     assert not Reading.objects.exists()
     assert not CardDraw.objects.exists()
+
+
+def other_connection_can_take_sync_lock() -> bool:
+    result: list[bool] = []
+
+    def try_lock() -> None:
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT pg_try_advisory_xact_lock(%s)", [SYNC_LOCK_KEY])
+                result.append(cursor.fetchone()[0])
+        finally:
+            connection.close()
+
+    thread = threading.Thread(target=try_lock)
+    thread.start()
+    thread.join()
+    return result[0]
+
+
+def test_synced_writes_hold_the_sync_lock_until_commit() -> None:
+    # The test runs inside one open transaction, so the lock taken by save() is still held.
+    assert other_connection_can_take_sync_lock()
+
+    factories.ClientFactory()
+
+    assert not other_connection_can_take_sync_lock()
+
+
+@pytest.mark.parametrize("method", ["update", "bulk_update", "bulk_create"])
+def test_bulk_writes_that_skip_save_are_refused(method: str) -> None:
+    factories.ClientFactory()
+
+    with pytest.raises(TypeError, match="save"):
+        getattr(Client.objects.all(), method)()

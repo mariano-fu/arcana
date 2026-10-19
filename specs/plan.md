@@ -147,15 +147,25 @@ POST /api/sync/
   "applied":   ["<id>", …],
   "conflicts": [{ "table": "client", "id": "…", "field": "notes" }],
   "changes":   [ { "table": …, "record": … } ],   // server_version > cursor, excluding rows this request just wrote
-  "cursor":    1907
+  "cursor":    1907,
+  "server_time": "2026-10-19T12:00:00.000Z"
 }
 ```
+
+Single tenant: the server holds one practice's data. Any authenticated account syncs that one dataset; rows have no owner column. Multi-user is out of scope.
 
 Server rules per incoming record:
 1. If no existing row → insert, assign `server_version`.
 2. If incoming `updated_at` > stored `updated_at` → overwrite. For free-text fields (`notes`, `follow_up_note`, `card_draw.note`, `card_note.note`, `payment.note`): if the stored value differs and was written by a different device since this device's cursor, store the losing value in `conflict`.
-3. If incoming is older → reject that record, return the server's version in `changes`.
-4. Tombstones follow the same rules; a delete wins over an older edit.
+3. If incoming is older → reject that record, return the server's version in `changes` (even if it is at or below the cursor). Equal `updated_at`: from the same device it is the same write again (a retried push) and counts as applied without writing; from another device the server's row wins. A rejected record's free-text fields get the same conflict check as rule 2, with the incoming value as the loser, so a device never silently loses text it typed.
+4. Tombstones follow the same rules; a delete wins over an older edit. A child pushed for a tombstoned parent (a session for a deleted client) is accepted; the parent stays tombstoned and both are pulled (T3.7 surfaces it).
+
+Details:
+- **Conflict rows** are created by the server (`device_id` = nil UUID, `resolved = false`) with a deterministic id: UUIDv5 of `"<table>:<record_id>:<field>:<losing_updated_at>:<losing_device_id>"` under a fixed namespace (`CONFLICT_ID_NAMESPACE` in `sync/service.py`, never changed), inserted only if absent. A retried push therefore never duplicates or reopens a conflict. Conflict rows detected by a push come back in that push's `changes`, along with `conflicts: [{table, id, field}]`.
+- **Wire format:** records are full rows with model field names; foreign keys travel as `<name>_id`. Pulled records include `server_version`; incoming `server_version` is ignored and `device_id` is taken from the request, not the record. Timestamps are sent as `YYYY-MM-DDTHH:MM:SS.sssZ` (JS `toISOString()`).
+- **Pull:** rows with `server_version > cursor` from every table, ordered, at most 500. Rows this request wrote are left out but still advance `cursor` (the last `server_version` in the page, or the request's cursor if the page is empty).
+- **Rejected pushes:** a push is applied all or nothing. Any bad record → `400`, nothing applied, `{records: [{index, table, id, code, detail}]}` with `code` one of `invalid`, `server_owned` (pushes to `horoscope`), `clock_ahead` (`updated_at` more than 24 h after server time), `constraint`, `missing_parent` (foreign key to a row that exists neither on the server nor in the push). Malformed requests (unknown table, more than 500 changes) → `400` with DRF field errors. Request bodies may be up to 10 MB (`DATA_UPLOAD_MAX_MEMORY_SIZE`).
+- **One writer at a time:** every write to a synced table goes through `synced_write()` (`sync/models.py`): a transaction holding a Postgres advisory lock, in which `SyncedModel.save()` takes the next `server_version`. The sync view runs push and pull in one such transaction, and the admin, the horoscope job and management commands write through `save()` too. Without it, a transaction that took a lower `server_version` could commit after a pull read a higher one, and the cursor would skip that row. Bulk queryset writes (`update`, `bulk_update`, `bulk_create`) on synced models raise, since they bypass `save()`.
 
 Client rules:
 - Every local write sets `updated_at = now`, `pending = true`.

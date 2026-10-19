@@ -104,6 +104,9 @@ STORAGES = {
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# A sync push holds up to 500 full rows (notes, spread snapshots); the default 2.5 MB is tight.
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+
 # HTTPS is terminated by `tailscale serve` and Caddy in front of gunicorn.
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SESSION_COOKIE_SECURE = not DEBUG

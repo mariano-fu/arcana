@@ -6,22 +6,55 @@ templates, crystals, intention tags, cards) are plain values, never foreign keys
 unedited seed rows never sync, so the referenced row may not exist here.
 """
 
-from typing import Any, ClassVar
+from collections.abc import Iterator
+from contextlib import contextmanager
+from typing import Any, ClassVar, NoReturn
 
 from django.contrib.postgres.fields import ArrayField
-from django.db import connection, models
+from django.db import connection, models, transaction
 
 SERVER_VERSION_SEQUENCE = "server_version_seq"
+# pg_advisory_xact_lock key ("Arcn") held by every transaction that writes a synced table.
+SYNC_LOCK_KEY = 0x4172636E
+
+
+@contextmanager
+def synced_write() -> Iterator[None]:
+    """Transaction holding the sync lock. Every write to a synced table runs inside one.
+
+    Writers take `server_version` values from a sequence; without the lock, a transaction
+    that took a lower value could commit after a pull has already read a higher one, and
+    that pull's cursor would skip the row forever. The lock is held until commit, and pulls
+    take it too, so they only ever see a gap-free prefix. Re-entrant within a transaction.
+    """
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT pg_advisory_xact_lock(%s)", [SYNC_LOCK_KEY])
+        yield
 
 
 def next_server_version() -> int:
-    """Next value of the global sequence shared by every synced table (the pull cursor)."""
+    """Next value of the global sequence shared by every synced table (the pull cursor).
+
+    Call it inside `synced_write()`; `SyncedModel.save()` does.
+    """
     with connection.cursor() as cursor:
         cursor.execute("SELECT nextval(%s)", [SERVER_VERSION_SEQUENCE])
         row = cursor.fetchone()
     if row is None:  # nextval always returns a row; this only narrows the type.
         raise RuntimeError(f"nextval({SERVER_VERSION_SEQUENCE}) returned no row")
     return int(row[0])
+
+
+class SyncedQuerySet(models.QuerySet[Any]):
+    """Bulk writes skip `save()`, so they would skip the lock and the `server_version` bump."""
+
+    def _refuse(self, *args: Any, **kwargs: Any) -> NoReturn:
+        raise TypeError("Synced rows are written one by one through save() (synced_write).")
+
+    update = _refuse
+    bulk_update = _refuse
+    bulk_create = _refuse
 
 
 class SyncedModel(models.Model):
@@ -33,13 +66,16 @@ class SyncedModel(models.Model):
     server_version = models.BigIntegerField(unique=True, editable=False)
     device_id = models.UUIDField(help_text="Device that last wrote the row.")
 
+    objects = SyncedQuerySet.as_manager()
+
     class Meta:
         abstract = True
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         # Every write takes a fresh value, so the cursor sees inserts and updates alike.
-        self.server_version = next_server_version()
-        super().save(*args, **kwargs)
+        with synced_write():
+            self.server_version = next_server_version()
+            super().save(*args, **kwargs)
 
 
 class Currency(models.TextChoices):
