@@ -34,6 +34,9 @@ Don't guess silently. Stop and ask, or propose a spec change. Spec changes go in
 - License: MIT.
 - When Mariano replies “approved” to a finished task, merge its branch into main (via gh pr merge --merge if a PR exists), delete the branch, pull main, then branch for the next task.
 
+## Parallel work
+Other agents may be working in other worktrees at the same time. Only touch files your task needs. Don’t tick checkboxes in specs/tasks.md; say in the PR that the task is done, and Mariano ticks them after merging. Keep plan.md edits minimal and in the section your task owns. Before opening a PR, rebase on the latest main and resolve any conflicts.
+
 ## Commands
 (fill in as the project grows)
 - web: `cd web && npm run dev | npm test | npm run lint | npm run typecheck`
