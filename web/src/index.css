@@ -4,3 +4,10 @@
 @theme {
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
+
+/* Same color as the theme-color meta / manifest (pwa.config.ts), so the iOS status bar
+   blends into the app. */
+html,
+body {
+  background-color: #fafaf9;
+}

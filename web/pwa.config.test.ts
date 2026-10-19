@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+
 import { describe, expect, it } from 'vitest';
 
 import { BACKGROUND_COLOR, pwaOptions, THEME_COLOR } from './pwa.config.ts';
@@ -27,6 +29,18 @@ describe('PWA manifest', () => {
     expect(sizes).toContain('192x192');
     expect(sizes).toContain('512x512');
     expect(icons.some((icon) => icon.purpose === 'maskable')).toBe(true);
+  });
+});
+
+describe('status bar color', () => {
+  const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
+
+  it('matches the app background everywhere it is set', () => {
+    expect(THEME_COLOR).toBe(BACKGROUND_COLOR);
+    expect(read('./index.html')).toContain(
+      `<meta name="theme-color" content="${BACKGROUND_COLOR}" />`,
+    );
+    expect(read('./src/index.css')).toContain(`background-color: ${BACKGROUND_COLOR};`);
   });
 });
 

@@ -1,0 +1,13 @@
+import { formatDate, formatList } from './format';
+
+describe('formatDate', () => {
+  it('formats a calendar date without shifting it by timezone', () => {
+    expect(formatDate('1990-04-01')).toBe('1 de abril de 1990');
+  });
+});
+
+describe('formatList', () => {
+  it('joins with commas and "y"', () => {
+    expect(formatList(['4 sesiones', '3 pagos'])).toBe('4 sesiones y 3 pagos');
+  });
+});
