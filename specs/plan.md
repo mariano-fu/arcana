@@ -169,7 +169,7 @@ Tests must cover: concurrent edits on two devices, delete vs. edit, offline for 
 
 Pure functions, no UI:
 - `sunSign(birthDate, utc?)` → always from the Sun's ecliptic longitude (astronomy-engine), never from the date table (which is only for displaying ranges). With `utc` (time and place known, via `toUtc`): the sign at that instant. Date-only: compute the longitude at the day's two extreme instants (its start in UTC+14 and its end in UTC−12); same sign → `cusp: false`; different → `cusp: true`, primary sign = the sign at 12:00 UTC that day, `alternative` = the other.
-- `toUtc(date, time | null, ianaTz)` → Luxon; when time is null, use 12:00 local and mark result `timeKnown: false`.
+- `toUtc(date, time | null, ianaTz)` → Luxon; when time is null, use 12:00 local and mark result `timeKnown: false`. A local time inside a DST gap (never existed) is shifted forward by the gap; a local time that occurred twice resolves to the earlier instant. The result's `adjusted` (`'none' | 'gap' | 'ambiguous'`) says which rule applied.
 - `planetPositions(utc)` → sun, moon, mercury … pluto ecliptic longitudes via astronomy-engine → sign + degree.
 - `moonSignUncertain(date, tz)` → true if the moon changes sign during that local day.
 - `ascendantAndHouses(utc, lat, lng)` → only when time known; Placidus (confirmed as her system), whole-sign as fallback near polar latitudes where Placidus is undefined.
