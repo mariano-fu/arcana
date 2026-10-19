@@ -99,6 +99,37 @@ describe('buildPaymentsCsv', () => {
     ]);
   });
 
+  it('prefixes text cells starting with = + - @ with a quote, leaving amounts untouched', () => {
+    const csv = buildPaymentsCsv(
+      [
+        payment('p1', {
+          client_id: 'evil',
+          amount_minor: 1_050,
+          reference: '+50688887777',
+          note: '-5 pendiente',
+        }),
+      ],
+      new Map([['evil', '=HYPERLINK("http://x","clic")']]),
+      { ...labels, method: { ...labels.method, sinpe: '@SINPE' } },
+    );
+
+    const [, row] = csv.slice(1).split('\r\n');
+    expect(row?.split(';')).toEqual([
+      '2026-10-10',
+      `"'=HYPERLINK(""http://x"",""clic"")"`,
+      '10,50',
+      'CRC',
+      "'@SINPE",
+      "'+50688887777",
+      "'-5 pendiente",
+    ]);
+  });
+
+  it('never prefixes an amount, even a negative one', () => {
+    const csv = buildPaymentsCsv([payment('p1', { amount_minor: -1_050 })], names, labels);
+    expect(csv).toContain(';-10,50;CRC;');
+  });
+
   it('names a missing client instead of leaving the cell blank', () => {
     const csv = buildPaymentsCsv([payment('p1', { client_id: 'gone' })], names, labels);
     expect(csv).toContain(';(cliente eliminado);');

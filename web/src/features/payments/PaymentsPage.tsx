@@ -4,7 +4,7 @@ import { Link, useSearchParams } from 'react-router';
 import type { Client, Payment, PaymentMethod } from '../../db';
 import { formatDate, formatDay } from '../clients/format';
 import { buildPaymentsCsv } from './csv';
-import { downloadTextFile } from './download';
+import { saveTextFile } from './download';
 import { PAYMENT_METHODS } from './form';
 import { useClientsById, useMonthPayments, usePendingBalances } from './hooks';
 import { CURRENCIES, formatMoney } from './money';
@@ -76,7 +76,7 @@ export default function PaymentsPage() {
         }}
       />
 
-      <section className={sectionClass}>
+      <section className={sectionClass} aria-busy={payments === undefined}>
         <h2 className={headingClass}>{t('payments.page.income.title')}</h2>
         {/* Month picker stays mounted while a new month loads; only its data waits. */}
         {payments && <MonthIncome payments={payments} monthLabel={monthLabel} />}
@@ -87,7 +87,7 @@ export default function PaymentsPage() {
         <PendingList pending={pending} clients={clients} />
       </section>
 
-      <section className={sectionClass}>
+      <section className={sectionClass} aria-busy={payments === undefined}>
         <h2 className={headingClass}>{t('payments.page.list.title', { month: monthLabel })}</h2>
         {payments && (
           <MonthPayments
@@ -247,7 +247,8 @@ function MonthPayments({
         unknownClient: t('payments.page.csv.unknownClient'),
       },
     );
-    downloadTextFile(t('payments.page.export.filename', { month }), csv, 'text/csv;charset=utf-8');
+    // The BOM marks the encoding; a `;charset=` parameter can make share targets refuse the file.
+    void saveTextFile(t('payments.page.export.filename', { month }), csv, 'text/csv');
   }
 
   return (

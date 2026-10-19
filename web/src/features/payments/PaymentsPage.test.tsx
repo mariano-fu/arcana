@@ -1,10 +1,13 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { MockInstance } from 'vitest';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 
 import { routes } from '../../app/routes';
 import { repos, type NewRow, type Payment, type Session } from '../../db';
 import es from '../../i18n/locales/es.json';
+import { stubProperty } from '../../test/stub-property';
+import { useTimeZone } from '../../test/time-zone';
 import { clearDb, newClient, newPayment, newSession } from '../clients/test-utils';
 import { formatMoney } from './money';
 import { currentMonth, formatMonth } from './report';
@@ -64,7 +67,16 @@ async function seed() {
 async function openPayments(query = '?month=2026-10') {
   const router = renderAt(`/payments${query}`);
   await screen.findByRole('heading', { level: 1, name: es.payments.page.title });
+  await monthLoaded();
   return router;
+}
+
+/** Waits for the selected month's payments (the income section is busy until then). */
+async function monthLoaded(month?: string) {
+  if (month !== undefined) await screen.findByText(month);
+  await waitFor(() => {
+    expect(incomeSection()).toHaveAttribute('aria-busy', 'false');
+  });
 }
 
 function section(name: string): HTMLElement {
@@ -82,16 +94,6 @@ const paymentRows = (month?: string) =>
     .getAllByRole('listitem')
     .map((item) => item.textContent);
 
-/** jsdom has no object URLs: stubs one of URL's statics, returns a restore function. */
-function stubUrlStatic(name: 'createObjectURL' | 'revokeObjectURL', value: unknown): () => void {
-  const before = Object.getOwnPropertyDescriptor(URL, name);
-  Object.defineProperty(URL, name, { value, configurable: true, writable: true });
-  return () => {
-    if (before) Object.defineProperty(URL, name, before);
-    else Reflect.deleteProperty(URL, name);
-  };
-}
-
 beforeEach(clearDb);
 
 describe('Pagos screen', () => {
@@ -103,6 +105,7 @@ describe('Pagos screen', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: es.payments.page.title }),
     ).toBeVisible();
+    await monthLoaded();
     expect(screen.getByText(formatMonth(currentMonth()))).toBeVisible();
     expect(incomeSection()).toHaveTextContent(
       es.payments.page.income.none.replace('{{month}}', formatMonth(currentMonth())),
@@ -199,7 +202,7 @@ describe('Pagos screen', () => {
 
     await user.click(screen.getByRole('button', { name: es.payments.page.month.previous }));
 
-    expect(await screen.findByText('septiembre de 2026')).toBeVisible();
+    await monthLoaded('septiembre de 2026');
     expect(router.state.location.search).toBe('?month=2026-09');
     expect(
       within(incomeSection())
@@ -210,7 +213,7 @@ describe('Pagos screen', () => {
 
     await user.click(screen.getByRole('button', { name: es.payments.page.month.next }));
     await user.click(screen.getByRole('button', { name: es.payments.page.month.next }));
-    expect(await screen.findByText('noviembre de 2026')).toBeVisible();
+    await monthLoaded('noviembre de 2026');
     expect(paymentRows('noviembre de 2026')).toHaveLength(1);
   });
 
@@ -219,38 +222,124 @@ describe('Pagos screen', () => {
     expect(screen.getByText(formatMonth(currentMonth()))).toBeVisible();
   });
 
-  it("exports every payment of the month as CSV, ignoring the list's filters", async () => {
-    await seed();
-    const user = userEvent.setup();
-    let blob: Blob | undefined;
-    const createObjectURL = vi.fn((b: Blob) => {
-      blob = b;
-      return 'blob:payments';
-    });
-    const restoreCreate = stubUrlStatic('createObjectURL', createObjectURL);
-    const restoreRevoke = stubUrlStatic('revokeObjectURL', vi.fn());
-    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+  describe('CSV export', () => {
+    const restores: (() => void)[] = [];
+    const stub = (target: object, name: string, value: unknown) => {
+      restores.push(stubProperty(target, name, value));
+    };
+    let click: MockInstance<HTMLAnchorElement['click']>;
+    let downloaded: Blob | undefined;
 
-    try {
+    beforeEach(() => {
+      downloaded = undefined;
+      stub(
+        URL,
+        'createObjectURL',
+        vi.fn((blob: Blob) => {
+          downloaded = blob;
+          return 'blob:payments';
+        }),
+      );
+      stub(URL, 'revokeObjectURL', vi.fn());
+      click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      click.mockRestore();
+      while (restores.length > 0) restores.pop()?.();
+    });
+
+    const expectedRows = [
+      'Fecha;Cliente;Monto;Moneda;Método;Referencia;Nota',
+      '2026-10-10;Carla Prueba;15000,00;CRC;SINPE Móvil;998877;',
+      '2026-10-12;Carla Prueba;10,00;USD;PayPal;;Propina',
+      '',
+    ];
+
+    /** The file's bytes: a UTF-8 BOM, then the rows (CRLF). */
+    async function expectCsv(file: Blob | undefined) {
+      const bytes = new Uint8Array((await file?.arrayBuffer()) ?? new ArrayBuffer(0));
+      expect([...bytes.slice(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
+      expect(new TextDecoder().decode(bytes).split('\r\n')).toEqual(expectedRows);
+    }
+
+    it("downloads every payment of the month, ignoring the list's filters", async () => {
+      await seed();
+      const user = userEvent.setup();
       await openPayments('?month=2026-10&method=paypal');
+
       await user.click(screen.getByRole('button', { name: es.payments.page.export.button }));
 
-      expect(click).toHaveBeenCalledOnce();
+      await waitFor(() => {
+        expect(click).toHaveBeenCalledOnce();
+      });
       const link = click.mock.contexts[0] as HTMLAnchorElement;
       expect(link.download).toBe('pagos-2026-10.csv');
       expect(link.href).toBe('blob:payments');
-      expect(blob?.type).toBe('text/csv;charset=utf-8');
-      const text = new TextDecoder().decode(await blob?.arrayBuffer());
-      expect(text.split('\r\n')).toEqual([
-        'Fecha;Cliente;Monto;Moneda;Método;Referencia;Nota',
-        '2026-10-10;Carla Prueba;15000,00;CRC;SINPE Móvil;998877;',
-        '2026-10-12;Carla Prueba;10,00;USD;PayPal;;Propina',
-        '',
-      ]);
-    } finally {
-      click.mockRestore();
-      restoreCreate();
-      restoreRevoke();
-    }
+      expect(downloaded?.type).toBe('text/csv');
+      await expectCsv(downloaded);
+    });
+
+    it('shares the file instead where the browser can (iOS web app)', async () => {
+      await seed();
+      const user = userEvent.setup();
+      const share = vi.fn<(data: { files: File[] }) => Promise<void>>(() => Promise.resolve());
+      stub(navigator, 'canShare', (data: { files?: File[] }) => data.files?.length === 1);
+      stub(navigator, 'share', share);
+      await openPayments('?month=2026-10&method=paypal');
+
+      await user.click(screen.getByRole('button', { name: es.payments.page.export.button }));
+
+      await waitFor(() => {
+        expect(share).toHaveBeenCalledOnce();
+      });
+      const file = share.mock.calls[0]?.[0].files[0];
+      expect(file?.name).toBe('pagos-2026-10.csv');
+      expect(file?.type).toBe('text/csv');
+      await expectCsv(file);
+      expect(click).not.toHaveBeenCalled();
+    });
+  });
+});
+
+describe('Pagos screen in Costa Rica time', () => {
+  useTimeZone('America/Costa_Rica');
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('files a payment recorded at 23:30 on the last day of the month in that month', async () => {
+    // 31 Oct 2026 at 23:30 in Costa Rica (UTC−6) is already 1 Nov in UTC. Only Date is faked,
+    // so IndexedDB and Testing Library timers still run.
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-01T05:30:00Z'));
+    const user = userEvent.setup();
+    const session = await sessionFor('Dora Prueba', {
+      started_at: new Date().toISOString(),
+      price_minor: 1_500_000,
+    });
+
+    // Record it with the form's defaults, as she would right after the reading.
+    const router = renderAt(`/sessions/${session.id}`);
+    await user.click(await screen.findByRole('button', { name: es.payments.section.add }));
+    const add = screen.getByRole('form', { name: es.payments.form.addTitle });
+    await user.click(within(add).getByRole('button', { name: es.common.save }));
+    await waitFor(async () => {
+      expect((await repos.payment.list()).map((p) => p.paid_at)).toEqual(['2026-10-31']);
+    });
+
+    await router.navigate('/payments');
+    await monthLoaded('octubre de 2026');
+    expect(
+      within(incomeSection())
+        .getAllByRole('listitem')
+        .map((i) => i.textContent),
+    ).toEqual([formatMoney(1_500_000, 'CRC')]);
+    expect(paymentRows()).toHaveLength(1);
+    expect(paymentRows()[0]).toContain('Dora Prueba');
+
+    await user.click(screen.getByRole('button', { name: es.payments.page.month.next }));
+    await monthLoaded('noviembre de 2026');
+    expect(incomeSection()).toHaveTextContent('No hay pagos registrados en noviembre de 2026.');
   });
 });

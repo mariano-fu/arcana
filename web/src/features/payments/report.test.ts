@@ -1,4 +1,6 @@
 import type { Payment, Session } from '../../db';
+import { useTimeZone } from '../../test/time-zone';
+import { todayLocal } from './form';
 import {
   currentMonth,
   filterPayments,
@@ -191,5 +193,25 @@ describe('pendingBalances', () => {
       payment('p2', { currency: 'USD', amount_minor: 4_000 }),
     ];
     expect(pendingBalances(sessions, payments).map((b) => b.balance_minor)).toEqual([1_500_000]);
+  });
+});
+
+describe('months in Costa Rica time (America/Costa_Rica, UTC−6, no DST)', () => {
+  useTimeZone('America/Costa_Rica');
+  // 31 Oct 2026 at 23:30 in Costa Rica is already 1 Nov in UTC.
+  const lastNightOfOctober = new Date('2026-11-01T05:30:00Z');
+
+  it('keeps 23:30 on the last day of the month in that month, not the UTC one', () => {
+    expect(lastNightOfOctober.toISOString().slice(0, 7)).toBe('2026-11');
+    expect(todayLocal(lastNightOfOctober)).toBe('2026-10-31');
+    expect(currentMonth(lastNightOfOctober)).toBe('2026-10');
+  });
+
+  it("groups that payment's date into the local month", () => {
+    const [first, last] = monthRange('2026-10');
+    const paidAt = todayLocal(lastNightOfOctober);
+    expect(paidAt >= first && paidAt <= last).toBe(true);
+    const [novFirst] = monthRange('2026-11');
+    expect(paidAt < novFirst).toBe(true);
   });
 });
