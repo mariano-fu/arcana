@@ -54,5 +54,16 @@
       "generated": "Generado a partir de cards.es.json (versión {{version}}). Las correcciones que anote aquí se pasan luego al archivo de datos.",
       "corrections": "Correcciones"
     }
+  },
+  "spreads": {
+    "cardCount_one": "{{count}} carta",
+    "cardCount_other": "{{count}} cartas",
+    "review": {
+      "title": "Revisión de las tiradas",
+      "intro": "Lea cada tirada y cada posición, y anote debajo de «Correcciones» lo que quiera cambiar: nombres, descripciones o significados. El esquema muestra dónde va cada carta (1×2 es la carta 2 cruzada sobre la 1). Si algo está bien, deje el espacio en blanco.",
+      "generated": "Generado a partir de spreads.json (versión {{version}}). Las correcciones que anote aquí se pasan luego al archivo de datos.",
+      "layout": "Disposición",
+      "corrections": "Correcciones"
+    }
   }
 }

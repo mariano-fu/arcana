@@ -66,15 +66,35 @@ export interface Payment extends SyncedRow {
   note: string;
 }
 
+/** A spread position as it was when a reading was created. */
+export interface SpreadSnapshotPosition {
+  /** 1-based; matches `CardDraw.position_index`. */
+  index: number;
+  name: string;
+  meaning: string;
+}
+
+/**
+ * Copy of the spread taken when the reading is created and never changed afterwards. Past
+ * readings display from this, never from the current template.
+ */
+export interface SpreadSnapshot {
+  name: string;
+  positions: SpreadSnapshotPosition[];
+}
+
 export interface Reading extends SyncedRow {
   session_id: string;
+  /** Reference only; the template may have changed or been deleted since. */
   spread_template_id: string;
+  spread_snapshot: SpreadSnapshot;
   label: string | null;
   created_at: IsoDateTime;
 }
 
 export interface CardDraw extends SyncedRow {
   reading_id: string;
+  /** 1-based; matches `index` in the reading's `spread_snapshot.positions`. */
   position_index: number;
   /** Seed card key, e.g. `major-00`, `cups-07`. */
   card_id: string;
@@ -82,14 +102,26 @@ export interface CardDraw extends SyncedRow {
   note: string;
 }
 
+/** Grid cell for a position: 0-based `col`/`row`; `rotated` lays the card crosswise. */
+export interface SpreadLayout {
+  col: number;
+  row: number;
+  rotated: boolean;
+}
+
 export interface SpreadPosition {
+  /** 1-based position number shown to her; matches `CardDraw.position_index`. */
   index: number;
   name: string;
   meaning: string;
+  /** Null when a custom spread has no grid placement. */
+  layout: SpreadLayout | null;
 }
 
 export interface SpreadTemplate extends SyncedRow {
   name: string;
+  /** When to use the spread and how to read it. Empty for custom spreads without one. */
+  description: string;
   positions: SpreadPosition[];
   is_seed: boolean;
   seed_key: string | null;
