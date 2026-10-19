@@ -1,0 +1,233 @@
+{
+  "source": {
+    "name": "NASA JPL Horizons System",
+    "url": "https://ssd.jpl.nasa.gov/api/horizons.api",
+    "ephemeris": "DE441, mar099, jup365_merged, sat441l, ura184_merged, nep098_merged, plu060_merged",
+    "retrieved": "2026-10-19",
+    "script": "web/scripts/fetch-horizons-reference.ts",
+    "query": {
+      "format": "json",
+      "MAKE_EPHEM": "YES",
+      "OBJ_DATA": "NO",
+      "EPHEM_TYPE": "OBSERVER",
+      "CENTER": "500@399",
+      "QUANTITIES": "31",
+      "TIME_TYPE": "UT",
+      "TLIST_TYPE": "JD",
+      "ANG_FORMAT": "DEG",
+      "CAL_FORMAT": "CAL",
+      "TIME_DIGITS": "SECONDS",
+      "CSV_FORMAT": "YES"
+    },
+    "bodies": {
+      "sun": "10",
+      "moon": "301",
+      "mercury": "199",
+      "venus": "299",
+      "mars": "499",
+      "jupiter": "599",
+      "saturn": "699",
+      "uranus": "799",
+      "neptune": "899",
+      "pluto": "999"
+    },
+    "note": "Geocentric apparent longitude on the true ecliptic of date (QUANTITIES 31, ObsEcLon), degrees."
+  },
+  "cases": [
+    {
+      "utc": "1950-03-11T06:00:00Z",
+      "longitudes": {
+        "sun": 350.0984608,
+        "moon": 261.9020199,
+        "mercury": 335.5268788,
+        "venus": 309.0229479,
+        "mars": 186.4325246,
+        "jupiter": 322.7238642,
+        "saturn": 165.7286277,
+        "uranus": 90.938548,
+        "neptune": 196.6778239,
+        "pluto": 136.2661714
+      }
+    },
+    {
+      "utc": "1957-10-04T19:28:00Z",
+      "longitudes": {
+        "sun": 191.2999597,
+        "moon": 326.6273631,
+        "mercury": 177.2128019,
+        "venus": 233.9773351,
+        "mars": 186.8929623,
+        "jupiter": 191.9581304,
+        "saturn": 249.9182409,
+        "uranus": 130.8235796,
+        "neptune": 211.5573432,
+        "pluto": 151.4497198
+      }
+    },
+    {
+      "utc": "1963-07-20T14:45:00Z",
+      "longitudes": {
+        "sun": 117.1654413,
+        "moon": 113.9745759,
+        "mercury": 124.817676,
+        "venus": 106.0851239,
+        "mars": 176.0729651,
+        "jupiter": 18.8335603,
+        "saturn": 321.4453119,
+        "uranus": 153.2765636,
+        "neptune": 222.8960315,
+        "pluto": 160.4044106
+      }
+    },
+    {
+      "utc": "1969-07-20T20:17:00Z",
+      "longitudes": {
+        "sun": 117.9107302,
+        "moon": 187.8737519,
+        "mercury": 115.8428987,
+        "venus": 75.0374087,
+        "mars": 242.7732832,
+        "jupiter": 180.7462243,
+        "saturn": 38.0979955,
+        "uranus": 180.6900011,
+        "neptune": 236.0229075,
+        "pluto": 173.0071871
+      }
+    },
+    {
+      "utc": "1977-01-15T03:30:00Z",
+      "longitudes": {
+        "sun": 294.8760122,
+        "moon": 235.3277543,
+        "mercury": 277.449081,
+        "venus": 341.6192066,
+        "mars": 280.6186823,
+        "jupiter": 51.1735696,
+        "saturn": 134.8846642,
+        "uranus": 221.3570324,
+        "neptune": 255.1173172,
+        "pluto": 194.1901498
+      }
+    },
+    {
+      "utc": "1984-11-02T22:10:00Z",
+      "longitudes": {
+        "sun": 220.6731371,
+        "moon": 337.1586658,
+        "mercury": 234.689467,
+        "venus": 256.6227194,
+        "mars": 290.476779,
+        "jupiter": 279.1595219,
+        "saturn": 228.070262,
+        "uranus": 251.8563728,
+        "neptune": 269.4292363,
+        "pluto": 212.4168095
+      }
+    },
+    {
+      "utc": "1991-05-27T09:05:00Z",
+      "longitudes": {
+        "sun": 65.5943384,
+        "moon": 233.2992123,
+        "mercury": 44.5248343,
+        "venus": 109.9994742,
+        "mars": 120.5059388,
+        "jupiter": 128.2859171,
+        "saturn": 306.7572483,
+        "uranus": 283.2152645,
+        "neptune": 286.3865355,
+        "pluto": 228.5164351
+      }
+    },
+    {
+      "utc": "1998-08-30T16:40:00Z",
+      "longitudes": {
+        "sun": 157.1073114,
+        "moon": 252.5143416,
+        "mercury": 138.9630508,
+        "venus": 141.2238464,
+        "mars": 126.3452435,
+        "jupiter": 355.1711349,
+        "saturn": 33.4344038,
+        "uranus": 309.7277223,
+        "neptune": 299.8353656,
+        "pluto": 245.3540249
+      }
+    },
+    {
+      "utc": "2004-02-29T00:15:00Z",
+      "longitudes": {
+        "sun": 339.7492054,
+        "moon": 79.1385861,
+        "mercury": 336.2538436,
+        "venus": 23.5553189,
+        "mars": 46.3428031,
+        "jupiter": 164.5117836,
+        "saturn": 96.340934,
+        "uranus": 333.183193,
+        "neptune": 313.8521923,
+        "pluto": 262.0777626
+      }
+    },
+    {
+      "utc": "2011-12-10T11:55:00Z",
+      "longitudes": {
+        "sun": 258.0645049,
+        "moon": 76.796569,
+        "mercury": 245.0062875,
+        "venus": 287.311895,
+        "mars": 163.2309804,
+        "jupiter": 30.7777281,
+        "saturn": 206.6227872,
+        "uranus": 0.6419855,
+        "neptune": 328.405029,
+        "pluto": 276.5638246
+      }
+    },
+    {
+      "utc": "2019-06-21T05:00:00Z",
+      "longitudes": {
+        "sun": 89.5665411,
+        "moon": 313.5954349,
+        "mercury": 114.4987139,
+        "venus": 74.8053479,
+        "mars": 113.1451738,
+        "jupiter": 258.1482051,
+        "saturn": 288.5410734,
+        "uranus": 35.5561932,
+        "neptune": 348.7241379,
+        "pluto": 292.442758
+      }
+    },
+    {
+      "utc": "2025-09-07T18:30:00Z",
+      "longitudes": {
+        "sun": 165.3894383,
+        "moon": 345.5836487,
+        "mercury": 160.0754317,
+        "venus": 135.7150014,
+        "mars": 200.3329969,
+        "jupiter": 109.0523374,
+        "saturn": 359.5380072,
+        "uranus": 61.4626625,
+        "neptune": 1.1873854,
+        "pluto": 301.6634823
+      }
+    },
+    {
+      "utc": "2030-12-31T23:59:00Z",
+      "longitudes": {
+        "sun": 280.3543936,
+        "moon": 15.3811006,
+        "mercury": 258.0599457,
+        "venus": 298.0562907,
+        "mars": 202.493642,
+        "jupiter": 255.3743731,
+        "saturn": 62.932201,
+        "uranus": 80.0653925,
+        "neptune": 10.6033462,
+        "pluto": 310.7242554
+      }
+    }
+  ]
+}
