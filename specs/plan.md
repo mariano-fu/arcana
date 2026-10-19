@@ -71,13 +71,15 @@ web/
 | Exposure | Tailscale only. `tailscale serve` on the homelab terminates HTTPS with an auto-provisioned cert for `https://<host>.<tailnet>.ts.net` and proxies to Caddy. PWA and `/api` share that origin → no CORS. Her iPhone and laptop run the Tailscale client (server node shared with her account, or she joins the tailnet). Nothing is reachable from the public internet |
 | Backups | Nightly `pg_dump` to a second disk, 30-day retention |
 
+References to seed-backed tables (`reading.spread_template_id`, and any crystal or intention tag references) are plain UUID fields on the server, not foreign keys: unedited seed rows never sync (see "Seed vs. user edits"), so the referenced row may not exist on the server.
+
 ## Data model
 
 All synced tables share these columns:
 
 | Column | Type | Notes |
 |---|---|---|
-| `id` | UUID (v7, generated on the client) | Lets devices create records offline without collisions |
+| `id` | UUID (v7, generated on the client) | Lets devices create records offline without collisions. The one exception is seed rows (see "Seed vs. user edits") |
 | `updated_at` | timestamptz (client clock) | Used for last-write-wins |
 | `deleted_at` | timestamptz null | Tombstone |
 | `server_version` | bigint | Server-assigned from a global sequence on every write; pull cursor |
@@ -85,7 +87,7 @@ All synced tables share these columns:
 
 Local-only (IndexedDB, never sent to the server):
 - `pending` (`0|1`, not boolean, because IndexedDB can't index booleans): 1 while a row has unsynced changes. The sync push reads `where('pending').equals(1)`, tombstones included.
-- `meta` key/value table: `device_id` (UUIDv7 created on first run), later `seed_version` and the sync cursor.
+- `meta` key/value table: `device_id` (UUIDv7 created on first run), `seed_version:spreads` and `seed_version:crystals` (the bundled `version` last loaded, see "Seed vs. user edits"), later the sync cursor.
 
 Local conventions: field names stay snake_case so rows go to the sync API as-is; timestamps are ISO 8601 UTC strings (sort lexically, which last-write-wins relies on); `server_version` is null until first sync. Deletes are soft (`deleted_at` set, row re-stamped `pending`), and repository reads hide tombstones by default.
 
@@ -97,7 +99,7 @@ Tables:
 - **card_draw**: reading_id, position_index (1-based, matches `index` in the reading's `spread_snapshot.positions`), card_id (seed key, e.g. `major-00`, `cups-07`), reversed (bool), note
 - **spread_template**: name, description (when to use it and how to read it; may be empty for custom spreads), positions (JSON: `[{index, name, meaning, layout}]`), is_seed, seed_key. `index` is the 1-based position number shown to her. Position numbers are 1-based everywhere: template positions, `reading.spread_snapshot.positions[].index` and `card_draw.position_index`. `layout` is `{col, row, rotated}` (0-based grid cell; `rotated` lays the card crosswise, e.g. the Cruz Celta's Desafío over card 1) or null for a custom spread without placement. Seed spreads are read-only; to change one she copies it into a custom spread (`is_seed = false`, `seed_key = null`).
 - **crystal**: seed_key (null if user-created), name, colors, chakras, signs, intentions (tag keys), description, care, hidden, user_modified (bool). No inventory fields in v1. Future inventory goes in a separate `crystal_stock` table (crystal_id, quantity, cost_minor, price_minor, currency), so recommendations never depend on stock data.
-- **intention_tag**: key, label
+- **intention_tag**: key, label (null for a seed tag she hasn't renamed: the UI shows the `es.json` label for the key, `crystals.intention.*`; her own tags and seed tags she renamed store a real label)
 - **card_note**: card_id, note (her personal notes per card)
 - **conflict**: table, record_id, field, losing_value, losing_device_id, created_at, resolved (bool)
 - **horoscope** (server-owned, read-only on clients): date, sign, period (`day`), text_en, text_es, source, translator
@@ -110,7 +112,7 @@ Spreads (`seed/spreads.json`, schema in `seed/spreads.ts`): key, name, descripti
 
 Zodiac (`seed/zodiac.es.json`, schema in `seed/zodiac.ts`): 12 signs in zodiac order with key (English, e.g. `scorpio`; crystals reference these), number, Spanish name, glyph, `start`/`end` (`{month, day}`, inclusive standard date table, Capricornio wraps the year; cusp handling is `sunSign`'s job), element, modality (`cardinal|fixed|mutable`), `ruler` (modern: Plutón, Urano, Neptuno for Escorpio, Acuario, Piscis) and `traditional_ruler` (classical seven only), traits (nouns, so they stay gender-neutral), description (strengths and shadow) and `compatible` (same element plus the complementary one: fire ↔ air, earth ↔ water; symmetric, 5 signs each) and `challenging` (the two square signs: same modality, three signs away, element neither its own nor the complementary one, e.g. Aries → Cáncer, Capricornio; symmetric, never also compatible). Planet and modality labels live in `es.json` (`astro.planet.*`, `zodiac.modality.*`, `zodiac.field.challenging` = "Signos desafiantes"). Texts pass the gender-neutral check.
 
-Crystals (`seed/crystals.es.json`, schema in `seed/crystals.ts`): about 50 commonly recommended crystals, recommendation-only (no stock, price or quantity fields; the schema is strict, so they fail validation). Each has key (English kebab-case, e.g. `rose-quartz`; matches `crystal.seed_key`), Spanish name, colors, chakras, signs (zodiac seed keys), intentions, description and care (cleansing, plus water or sun sensitivity). Colors, chakras (the 7 main ones: `root, sacral, solarPlexus, heart, throat, thirdEye, crown`) and intentions are key enums with Spanish labels in `es.json` (`crystals.color.*`, `crystals.chakra.*`, `crystals.intention.*`). Intention keys name what the person seeks (`calm`, `rest`, `abundance`, `confidence`…), never a problem; T1.6 seeds `intention_tag` rows from these keys and labels. Every sign has ≥ 3 crystals, every chakra ≥ 2 and every intention ≥ 3, so the recommender always has candidates. Descriptions frame associations and traditional uses ("se asocia con…", "tradicionalmente se usa para…"); a test rejects health-claim words (shared helper `src/test/health-claims.ts`: cura, sana, trata, alivia, enfermedad…) and the texts pass the gender-neutral check. `docs/review/crystals-es.md` is generated (`npm run build:crystals-review`), listing the intention tags first, and a test fails if it is stale.
+Crystals (`seed/crystals.es.json`, schema in `seed/crystals.ts`): about 50 commonly recommended crystals, recommendation-only (no stock, price or quantity fields; the schema is strict, so they fail validation). Each has key (English kebab-case, e.g. `rose-quartz`; matches `crystal.seed_key`), Spanish name, colors, chakras, signs (zodiac seed keys), intentions, description and care (cleansing, plus water or sun sensitivity). Colors, chakras (the 7 main ones: `root, sacral, solarPlexus, heart, throat, thirdEye, crown`) and intentions are key enums with Spanish labels in `es.json` (`crystals.color.*`, `crystals.chakra.*`, `crystals.intention.*`). Intention keys name what the person seeks (`calm`, `rest`, `abundance`, `confidence`…), never a problem; T1.6 seeds an `intention_tag` row per key, with `label: null` (see `intention_tag`). Every sign has ≥ 3 crystals, every chakra ≥ 2 and every intention ≥ 3, so the recommender always has candidates. Descriptions frame associations and traditional uses ("se asocia con…", "tradicionalmente se usa para…"); a test rejects health-claim words (shared helper `src/test/health-claims.ts`: cura, sana, trata, alivia, enfermedad…) and the texts pass the gender-neutral check. `docs/review/crystals-es.md` is generated (`npm run build:crystals-review`), listing the intention tags first, and a test fails if it is stale.
 
 ### Card images
 - Source: scans of the original 1909 Rider-Waite-Smith deck (Pamela Colman Smith artwork, public domain), e.g. the set on Wikimedia Commons. Record the exact source URL and license of each file in `web/src/seed/images/CREDITS.md`; never pull from modern commercial editions.
@@ -119,7 +121,13 @@ Crystals (`seed/crystals.es.json`, schema in `seed/crystals.ts`): about 50 commo
 - Reversed cards: same file, rotated with CSS (`transform: rotate(180deg)`).
 
 ### Seed vs. user edits (Principle 5)
-On app start, compare bundled seed version with local `seed_version`. For crystals: insert new seed rows; update existing seed rows **only if `user_modified = false`**; never delete her rows. For spreads: seed spreads are read-only in the app, so seed rows are always updated to the bundled version (no `user_modified` flag); her custom spreads (`is_seed = false`) are never touched, and copies she made of a seed spread are independent custom rows.
+On app start (`seed/loader.ts`, `loadSeed`), compare each bundled seed's `version` with the one stored in `meta` (`seed_version:spreads`, `seed_version:crystals`; intention tags follow the crystals version) and load only the seeds that differ, in one transaction, so running it twice or from two tabs is safe.
+- **Ids:** seed rows are the one exception to UUIDv7 ids. Their id is a UUIDv5 of `"<table>:<seed_key>"` under a fixed namespace (`SEED_ID_NAMESPACE`, never changed), so every device creates the same rows and syncing never duplicates them; `reading.spread_template_id` points to the same spread everywhere.
+- **Not synced by default:** the loader writes seed rows with `pending = 0`, because each device derives them from its own bundle. Only her edits (made through the repositories, `pending = 1`) sync. Rows that already exist keep their `pending` and `server_version`.
+- **Crystals:** insert new seed rows; update existing seed rows **only if `user_modified = false`**, and then only the seed content (name, colors, chakras, signs, intentions, description, care), never `hidden`. Never touch her own crystals (`seed_key = null`).
+- **Spreads:** seed spreads are read-only in the app, so seed rows are always updated to the bundled version (no `user_modified` flag); her custom spreads (`is_seed = false`) are never touched, and copies she made of a seed spread are independent custom rows.
+- **Intention tags:** add-only. A seed key with no row (looked up by `key`) gets one with `label: null`; existing rows, renamed or not, are never updated.
+- **Deletes:** a seed row she deleted (tombstone) stays deleted, and rows dropped from a newer seed are kept. The loader never deletes anything.
 
 ## Sync protocol
 

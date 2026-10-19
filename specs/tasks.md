@@ -18,7 +18,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [x] T1.4 [P] Seed data: `zodiac.es.json` (12 signs: fechas, elemento, modalidad, regente, rasgos, compatibilidades).
 - [x] T1.5 [P] Seed data: `crystals.es.json` (~50) + intention tags. She reviews.
 - [x] T1.5b [P] Card images: download the 1909 RWS scans, record sources in `CREDITS.md`, `scripts/build-card-images.ts` → thumb + full WebP per card key. Check total ≤ 5 MB. Add to service-worker precache.
-- [ ] T1.6 Seed loader with versioning and the "don't overwrite user-modified rows" rule. Tests.
+- [x] T1.6 Seed loader with versioning and the "don't overwrite user-modified rows" rule. Tests.
 - [ ] T1.7 Clients: list (search, sort by last visit), create/edit form (with "No sabe la hora"), detail page shell, archive/delete. Any bottom navigation must respect the bottom safe-area inset (home indicator), and the status bar color must match the app background.
 - [ ] T1.8 Sessions: create from client, autosave notes, type, price + currency, follow-up. Client timeline.
 - [ ] T1.8b Payments core: `paymentStatus()` and money helpers (integer minor units, per-currency totals, ₡/US$ formatting in es-CR). Unit tests incl. partial, overpaid, mixed currencies, free reading.
@@ -48,7 +48,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 
 ## Phase 3 — Backend & sync
 - [ ] T3.1 `api/`: Django 5 + DRF + Postgres, settings via env, pytest, mypy, ruff. Dockerfile. CI job.
-- [ ] T3.2 Models mirroring the data model + global `server_version` sequence. Admin registered.
+- [ ] T3.2 Models mirroring the data model + global `server_version` sequence. Admin registered. References to seed-backed tables (`reading.spread_template_id`, crystal and intention tag references) are plain UUID fields, not foreign keys, since unedited seed rows never sync (plan.md, Backend).
 - [ ] T3.3 Auth: simplejwt login/refresh, throttling. Tests.
 - [ ] T3.4 `POST /api/sync/` implementing plan.md rules. Tests for every scenario listed in plan.md.
 - [ ] T3.5 OpenAPI via drf-spectacular; generate TS types for the web client.
