@@ -5,6 +5,7 @@ import { useDiscardSessionOnLeave } from '../features/sessions/leave';
 
 const NAV_ITEMS = [
   { to: '/', key: 'nav.home', end: true },
+  { to: '/payments', key: 'nav.payments', end: false },
   { to: '/clients', key: 'nav.clients', end: false },
 ] as const;
 
