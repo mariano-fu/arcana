@@ -30,3 +30,41 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+
+  # Not a required check yet: add it to main's branch protection once this job is on main.
+  api:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: arcana
+          POSTGRES_PASSWORD: arcana
+          POSTGRES_DB: arcana
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U arcana"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://arcana:arcana@localhost:5432/arcana
+      SECRET_KEY: ci-only-not-a-real-secret
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
+        with:
+          working-directory: api
+          enable-cache: true
+          cache-dependency-glob: api/uv.lock
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy .
+      - run: uv run python manage.py makemigrations --check --dry-run
+      - run: uv run pytest
+      - run: docker build -t arcana-api:ci .
