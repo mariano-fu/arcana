@@ -1,0 +1,525 @@
+{
+  "version": 1,
+  "crystals": [
+    {
+      "key": "amethyst",
+      "name": "Amatista",
+      "colors": ["purple"],
+      "chakras": ["crown", "thirdEye"],
+      "signs": ["pisces", "aquarius", "virgo", "capricorn"],
+      "intentions": ["calm", "rest", "intuition", "spirituality"],
+      "description": "Cuarzo de tonos violeta, de los más conocidos en el mundo de los cristales. Se asocia con la serenidad, la intuición y la vida espiritual. Tradicionalmente se coloca cerca de la cama o se usa en la meditación para invitar al descanso y a una mente más clara.",
+      "care": "Se puede lavar con agua tibia y secar con un paño suave. Evite el sol directo prolongado, porque su color puede perder intensidad. Tradicionalmente se recarga con una noche bajo la luz de la luna."
+    },
+    {
+      "key": "rose-quartz",
+      "name": "Cuarzo rosa",
+      "colors": ["pink"],
+      "chakras": ["heart"],
+      "signs": ["taurus", "libra"],
+      "intentions": ["love", "selfLove", "calm", "balance"],
+      "description": "Cuarzo de color rosa suave, conocido como la piedra del amor. Se asocia con la ternura, el amor propio y la reconciliación. Tradicionalmente se usa para atraer relaciones afectuosas y para recordar la importancia de darse cariño.",
+      "care": "Se puede lavar con agua tibia y secar con un paño suave. Evite el sol directo prolongado, porque su color puede perder intensidad. Tradicionalmente se recarga con una noche bajo la luz de la luna."
+    },
+    {
+      "key": "clear-quartz",
+      "name": "Cuarzo transparente",
+      "colors": ["clear"],
+      "chakras": ["crown"],
+      "signs": ["aries", "leo"],
+      "intentions": ["clarity", "focus", "energyCleansing", "spirituality"],
+      "description": "Cuarzo incoloro y transparente, también llamado cristal de roca. Se asocia con la claridad mental y se considera un amplificador de la intención y de otras piedras. Tradicionalmente se usa en la meditación y para limpiar la energía de un espacio.",
+      "care": "Se puede lavar con agua tibia y secar con un paño suave. Tradicionalmente se recarga con una noche bajo la luz de la luna. Muchas personas lo usan también para limpiar otras piedras."
+    },
+    {
+      "key": "citrine",
+      "name": "Citrino",
+      "colors": ["yellow", "orange"],
+      "chakras": ["solarPlexus", "sacral"],
+      "signs": ["aries", "gemini", "leo", "libra"],
+      "intentions": ["abundance", "confidence", "joy", "motivation"],
+      "description": "Cuarzo de color amarillo a ámbar, asociado con el sol y la prosperidad. Se le relaciona con el optimismo, la seguridad personal y la iniciativa. Tradicionalmente se guarda en la caja o en el lugar de trabajo para atraer abundancia.",
+      "care": "Se puede lavar con agua tibia y secar con un paño suave. Evite el sol directo prolongado, porque su color puede perder intensidad. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco."
+    },
+    {
+      "key": "black-tourmaline",
+      "name": "Turmalina negra",
+      "colors": ["black"],
+      "chakras": ["root"],
+      "signs": ["capricorn", "scorpio", "libra"],
+      "intentions": ["protection", "grounding", "energyCleansing", "calm"],
+      "description": "Piedra negra y estriada, de las más recomendadas para la protección. Se asocia con poner límites y con mantener los pies en la tierra. Tradicionalmente se coloca en la entrada de la casa o se lleva consigo en ambientes pesados.",
+      "care": "Admite un enjuague rápido con agua si se seca bien enseguida. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco. También se puede limpiar energéticamente sobre una placa de selenita o de cuarzo."
+    },
+    {
+      "key": "obsidian",
+      "name": "Obsidiana negra",
+      "colors": ["black"],
+      "chakras": ["root"],
+      "signs": ["scorpio", "sagittarius", "capricorn"],
+      "intentions": ["protection", "transformation", "grounding", "clarity"],
+      "description": "Vidrio volcánico de color negro brillante. Se asocia con la protección y con mirar de frente lo que está escondido. Tradicionalmente se usa en procesos de cambio profundo y para soltar lo que ya no sirve.",
+      "care": "Se puede lavar con agua tibia y secar con un paño suave. Manipúlela con cuidado: sus bordes pueden ser filosos y se astilla con los golpes. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco."
+    },
+    {
+      "key": "tigers-eye",
+      "name": "Ojo de tigre",
+      "colors": ["gold", "brown"],
+      "chakras": ["solarPlexus", "sacral"],
+      "signs": ["leo", "capricorn", "gemini"],
+      "intentions": ["confidence", "protection", "focus", "motivation"],
+      "description": "Piedra de bandas doradas y cafés que brillan al moverla. Se asocia con la valentía, la determinación y la protección. Tradicionalmente se lleva como amuleto para tomar decisiones con firmeza y mantener la concentración en una meta.",
+      "care": "Se puede lavar con agua tibia y secar con un paño suave. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco."
+    },
+    {
+      "key": "carnelian",
+      "name": "Cornalina",
+      "colors": ["orange", "red"],
+      "chakras": ["sacral", "root"],
+      "signs": ["aries", "taurus", "leo", "virgo"],
+      "intentions": ["creativity", "motivation", "confidence", "joy"],
+      "description": "Ágata de color naranja a rojizo, cálida y translúcida. Se asocia con la vitalidad, el impulso creativo y el entusiasmo. Tradicionalmente se usa para animarse a empezar proyectos y para expresarse con más soltura.",
+      "care": "Se puede lavar con agua tibia y secar con un paño suave. Tradicionalmente se recarga con una noche bajo la luz de la luna."
+    },
+    {
+      "key": "red-jasper",
+      "name": "Jaspe rojo",
+      "colors": ["red"],
+      "chakras": ["root"],
+      "signs": ["aries", "taurus", "scorpio"],
+      "intentions": ["grounding", "motivation", "balance", "protection"],
+      "description": "Piedra opaca de color rojo terroso. Se asocia con la constancia, la estabilidad y la energía que se sostiene en el tiempo. Tradicionalmente se usa para mantenerse en el presente y avanzar paso a paso.",
+      "care": "Se puede lavar con agua tibia y secar con un paño suave. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco."
+    },
+    {
+      "key": "hematite",
+      "name": "Hematita",
+      "colors": ["grey", "silver", "black"],
+      "chakras": ["root"],
+      "signs": ["aries", "capricorn", "aquarius"],
+      "intentions": ["grounding", "focus", "protection", "balance"],
+      "description": "Mineral de hierro de brillo metálico gris plateado, pesado al tacto. Se asocia con el arraigo y con volver al cuerpo y al momento presente. Tradicionalmente se usa después de jornadas intensas o de la meditación para sentirse con los pies en la tierra.",
+      "care": "Evite el agua: es un mineral de hierro y puede oxidarse. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco. También se puede limpiar energéticamente sobre una placa de selenita o de cuarzo."
+    },
+    {
+      "key": "labradorite",
+      "name": "Labradorita",
+      "colors": ["grey", "multicolor"],
+      "chakras": ["thirdEye", "throat"],
+      "signs": ["leo", "scorpio", "sagittarius"],
+      "intentions": ["intuition", "transformation", "protection", "spirituality"],
+      "description": "Piedra gris que muestra destellos azules, verdes y dorados según la luz. Se asocia con la magia, la intuición y los cambios de etapa. Tradicionalmente se usa en el trabajo espiritual y para proteger la propia energía.",
+      "care": "Admite un enjuague rápido con agua si se seca bien enseguida. Tradicionalmente se recarga con una noche bajo la luz de la luna."
+    },
+    {
+      "key": "moonstone",
+      "name": "Piedra luna",
+      "colors": ["white", "multicolor"],
+      "chakras": ["sacral", "thirdEye", "crown"],
+      "signs": ["cancer", "libra", "scorpio"],
+      "intentions": ["intuition", "newBeginnings", "balance", "calm"],
+      "description": "Piedra lechosa con un brillo azulado que recuerda a la luna. Se asocia con los ciclos, la intuición y la energía femenina. Tradicionalmente se usa en los inicios de una etapa y para conectar con los propios ritmos.",
+      "care": "Admite un enjuague rápido con agua si se seca bien enseguida. Tradicionalmente se recarga con una noche bajo la luz de la luna. Muchas personas prefieren recargarla en luna llena."
+    },
+    {
+      "key": "selenite",
+      "name": "Selenita",
+      "colors": ["white"],
+      "chakras": ["crown"],
+      "signs": ["taurus", "cancer"],
+      "intentions": ["energyCleansing", "calm", "clarity", "spirituality"],
+      "description": "Variedad de yeso blanca y sedosa, a menudo en barras o placas. Se asocia con la luz, la paz y la limpieza energética. Tradicionalmente se usa como placa para limpiar otras piedras y para armonizar un espacio.",
+      "care": "Evite el agua: es muy blanda y se disuelve o se deteriora. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco. Se considera una piedra que no necesita recargarse."
+    },
+    {
+      "key": "green-aventurine",
+      "name": "Aventurina verde",
+      "colors": ["green"],
+      "chakras": ["heart"],
+      "signs": ["aries", "taurus", "virgo"],
+      "intentions": ["abundance", "newBeginnings", "joy", "balance"],
+      "description": "Cuarzo verde con pequeños destellos brillantes. Se asocia con la buena suerte, las oportunidades y la prosperidad. Tradicionalmente se lleva en la billetera o se usa al empezar un negocio o un proyecto.",
+      "care": "Se puede lavar con agua tibia y secar con un paño suave. Evite el sol directo prolongado, porque su color puede perder intensidad. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco."
+    },
+    {
+      "key": "jade",
+      "name": "Jade",
+      "colors": ["green"],
+      "chakras": ["heart"],
+      "signs": ["taurus", "virgo", "libra", "pisces"],
+      "intentions": ["abundance", "balance", "calm", "love"],
+      "description": "Piedra verde muy apreciada en culturas de Asia y de Mesoamérica. Se asocia con la armonía, la prosperidad y la buena fortuna. Tradicionalmente se regala como amuleto de suerte y se usa para cultivar la serenidad.",
+      "care": "Se puede lavar con agua tibia y secar con un paño suave. Tradicionalmente se recarga con una noche bajo la luz de la luna."
+    },
+    {
+      "key": "malachite",
+      "name": "Malaquita",
+      "colors": ["green"],
+      "chakras": ["heart", "solarPlexus"],
+      "signs": ["taurus", "scorpio", "capricorn"],
+      "intentions": ["transformation", "protection", "newBeginnings"],
+      "description": "Mineral de cobre de un verde intenso con bandas claras y oscuras. Se asocia con la transformación y con atreverse a cambiar. Tradicionalmente se usa como piedra de protección durante los cambios de etapa.",
+      "care": "Evite el agua: es porosa y pierde el brillo. No la lije ni la pula en casa: su polvo no debe inhalarse. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco."
+    },
+    {
+      "key": "lapis-lazuli",
+      "name": "Lapislázuli",
+      "colors": ["blue", "gold"],
+      "chakras": ["throat", "thirdEye"],
+      "signs": ["sagittarius", "libra", "virgo"],
+      "intentions": ["communication", "clarity", "intuition", "spirituality"],
+      "description": "Piedra azul profundo con motas doradas de pirita, valorada desde el antiguo Egipto. Se asocia con la sabiduría, la verdad y la expresión honesta. Tradicionalmente se usa para buscar respuestas interiores y para decir lo que se piensa con claridad.",
+      "care": "Evite el agua: es porosa y el agua puede opacarla. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco. Tradicionalmente se recarga con una noche bajo la luz de la luna."
+    },
+    {
+      "key": "sodalite",
+      "name": "Sodalita",
+      "colors": ["blue", "white"],
+      "chakras": ["throat", "thirdEye"],
+      "signs": ["sagittarius", "virgo"],
+      "intentions": ["communication", "clarity", "calm", "focus"],
+      "description": "Piedra azul con vetas blancas, parecida al lapislázuli pero sin motas doradas. Se asocia con la lógica, el orden de las ideas y la comunicación serena. Tradicionalmente se usa al estudiar o antes de una conversación importante.",
+      "care": "Admite un enjuague rápido con agua si se seca bien enseguida. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco."
+    },
+    {
+      "key": "aquamarine",
+      "name": "Aguamarina",
+      "colors": ["blue"],
+      "chakras": ["throat", "heart"],
+      "signs": ["pisces", "aries", "gemini"],
+      "intentions": ["calm", "communication", "clarity", "balance"],
+      "description": "Variedad de berilo de un azul claro como el mar. Se asocia con el agua, la serenidad y la comunicación fluida. Tradicionalmente se llevaba en los viajes por mar como amuleto y hoy se usa para expresarse con calma.",
+      "care": "Se puede lavar con agua tibia y secar con un paño suave. Evite el sol directo prolongado, porque su color puede perder intensidad. Tradicionalmente se recarga con una noche bajo la luz de la luna."
+    },
+    {
+      "key": "amazonite",
+      "name": "Amazonita",
+      "colors": ["green", "blue"],
+      "chakras": ["heart", "throat"],
+      "signs": ["virgo", "aquarius"],
+      "intentions": ["communication", "calm", "balance", "confidence"],
+      "description": "Feldespato de color verde azulado, a veces con vetas blancas. Se asocia con la armonía entre lo que se siente y lo que se dice. Tradicionalmente se usa para comunicarse con honestidad y para recuperar la serenidad.",
+      "care": "Admite un enjuague rápido con agua si se seca bien enseguida. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco."
+    },
+    {
+      "key": "turquoise",
+      "name": "Turquesa",
+      "colors": ["blue", "green"],
+      "chakras": ["throat"],
+      "signs": ["sagittarius", "scorpio", "pisces"],
+      "intentions": ["protection", "communication", "balance", "joy"],
+      "description": "Piedra azul verdosa muy usada en la joyería de los pueblos originarios de América. Se asocia con la protección, la sabiduría y la buena fortuna. Tradicionalmente se lleva como amuleto en los viajes y como regalo de amistad.",
+      "care": "Evite el agua: es porosa y puede cambiar de color. Evite también el sol, los perfumes y las cremas. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco."
+    },
+    {
+      "key": "fluorite",
+      "name": "Fluorita",
+      "colors": ["purple", "green", "multicolor"],
+      "chakras": ["thirdEye", "heart"],
+      "signs": ["pisces", "capricorn"],
+      "intentions": ["focus", "clarity", "balance", "energyCleansing"],
+      "description": "Cristal de bandas moradas, verdes y transparentes. Se asocia con el orden mental, la concentración y la toma de decisiones. Tradicionalmente se coloca en el escritorio o se usa al estudiar.",
+      "care": "Evite el agua: es blanda y se raya o se agrieta con facilidad. Evite el sol directo prolongado, porque su color puede perder intensidad. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco."
+    },
+    {
+      "key": "smoky-quartz",
+      "name": "Cuarzo ahumado",
+      "colors": ["brown", "grey"],
+      "chakras": ["root"],
+      "signs": ["sagittarius", "capricorn", "scorpio"],
+      "intentions": ["grounding", "protection", "calm", "energyCleansing"],
+      "description": "Cuarzo de tonos café a gris, translúcido. Se asocia con el arraigo y con transformar la energía densa. Tradicionalmente se usa para soltar las preocupaciones y volver al presente.",
+      "care": "Se puede lavar con agua tibia y secar con un paño suave. Evite el sol directo prolongado, porque su color puede perder intensidad. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco."
+    },
+    {
+      "key": "onyx",
+      "name": "Ónix",
+      "colors": ["black"],
+      "chakras": ["root"],
+      "signs": ["leo", "capricorn"],
+      "intentions": ["focus", "protection", "grounding", "confidence"],
+      "description": "Ágata de color negro intenso, a veces con bandas blancas. Se asocia con la disciplina, la fuerza interior y la protección. Tradicionalmente se usa para mantener la constancia en los momentos de exigencia.",
+      "care": "Se puede lavar con agua tibia y secar con un paño suave. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco."
+    },
+    {
+      "key": "garnet",
+      "name": "Granate",
+      "colors": ["red"],
+      "chakras": ["root", "heart"],
+      "signs": ["aries", "leo", "capricorn", "aquarius"],
+      "intentions": ["motivation", "love", "confidence", "grounding"],
+      "description": "Piedra de color rojo profundo, piedra del mes de enero. Se asocia con la pasión, el compromiso y la energía vital. Tradicionalmente se regala como señal de lealtad y se usa para reavivar el entusiasmo.",
+      "care": "Se puede lavar con agua tibia y secar con un paño suave. Tradicionalmente se recarga con una noche bajo la luz de la luna."
+    },
+    {
+      "key": "pyrite",
+      "name": "Pirita",
+      "colors": ["gold"],
+      "chakras": ["solarPlexus"],
+      "signs": ["aries", "leo"],
+      "intentions": ["abundance", "confidence", "protection", "motivation"],
+      "description": "Mineral dorado y metálico, conocido como el «oro de los tontos». Se asocia con la prosperidad, la fuerza de voluntad y el éxito en los negocios. Tradicionalmente se coloca en el lugar de trabajo o junto a la caja.",
+      "care": "Evite el agua: puede oxidarse y perder el brillo. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco. También se puede limpiar energéticamente sobre una placa de selenita o de cuarzo."
+    },
+    {
+      "key": "sunstone",
+      "name": "Piedra de sol",
+      "colors": ["orange", "gold"],
+      "chakras": ["sacral", "solarPlexus"],
+      "signs": ["leo", "libra"],
+      "intentions": ["joy", "confidence", "motivation", "creativity"],
+      "description": "Feldespato anaranjado con destellos dorados. Se asocia con el sol, la alegría y la generosidad. Tradicionalmente se usa para recuperar el optimismo y animarse a brillar.",
+      "care": "Se puede lavar con agua tibia y secar con un paño suave. A diferencia de otras piedras, se suele recargar bajo el sol de la mañana."
+    },
+    {
+      "key": "blue-lace-agate",
+      "name": "Ágata azul de encaje",
+      "colors": ["blue", "white"],
+      "chakras": ["throat"],
+      "signs": ["gemini", "pisces"],
+      "intentions": ["calm", "communication", "rest"],
+      "description": "Ágata de franjas azul claro y blanco que parecen encaje. Se asocia con la serenidad y con hablar con suavidad. Tradicionalmente se usa para bajar el ritmo y expresar los sentimientos con calma.",
+      "care": "Se puede lavar con agua tibia y secar con un paño suave. Evite el sol directo prolongado, porque su color puede perder intensidad. Tradicionalmente se recarga con una noche bajo la luz de la luna."
+    },
+    {
+      "key": "moss-agate",
+      "name": "Ágata musgo",
+      "colors": ["green", "clear"],
+      "chakras": ["heart", "root"],
+      "signs": ["taurus", "virgo"],
+      "intentions": ["abundance", "grounding", "newBeginnings", "balance"],
+      "description": "Ágata transparente con inclusiones verdes que parecen musgo. Se asocia con la naturaleza, el crecimiento y la paciencia. Tradicionalmente se asocia con la jardinería y el cultivo, y se recomienda al iniciar proyectos que necesitan tiempo para crecer.",
+      "care": "Se puede lavar con agua tibia y secar con un paño suave. Puede recargarse junto a una planta o en contacto con la tierra."
+    },
+    {
+      "key": "howlite",
+      "name": "Howlita",
+      "colors": ["white", "grey"],
+      "chakras": ["crown"],
+      "signs": ["gemini", "virgo"],
+      "intentions": ["calm", "rest", "clarity"],
+      "description": "Piedra blanca con vetas grises, a menudo teñida para imitar la turquesa. Se asocia con la paciencia y con aquietar los pensamientos. Tradicionalmente se coloca bajo la almohada para favorecer el descanso.",
+      "care": "Evite el agua: es porosa y absorbe líquidos. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco. Tradicionalmente se recarga con una noche bajo la luz de la luna."
+    },
+    {
+      "key": "lepidolite",
+      "name": "Lepidolita",
+      "colors": ["purple", "pink"],
+      "chakras": ["heart", "thirdEye", "crown"],
+      "signs": ["libra", "pisces"],
+      "intentions": ["calm", "rest", "balance", "transformation"],
+      "description": "Mica de color lila con pequeñas escamas brillantes. Se asocia con la serenidad y con acompañar los cambios con suavidad. Tradicionalmente se usa en épocas de transición y para preparar el descanso.",
+      "care": "Evite el agua: es blanda y se descama. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco. También se puede limpiar energéticamente sobre una placa de selenita o de cuarzo."
+    },
+    {
+      "key": "rhodochrosite",
+      "name": "Rodocrosita",
+      "colors": ["pink"],
+      "chakras": ["heart", "solarPlexus"],
+      "signs": ["leo", "scorpio"],
+      "intentions": ["selfLove", "love", "joy"],
+      "description": "Mineral de bandas rosadas y blancas, muy característico de Argentina. Se asocia con el amor propio, la compasión y la alegría de vivir. Tradicionalmente se usa para mirarse con ternura y compasión.",
+      "care": "Evite el agua: es blanda y delicada. Evite el sol directo prolongado, porque su color puede perder intensidad. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco."
+    },
+    {
+      "key": "rhodonite",
+      "name": "Rodonita",
+      "colors": ["pink", "black"],
+      "chakras": ["heart"],
+      "signs": ["taurus", "leo"],
+      "intentions": ["selfLove", "love", "balance", "calm"],
+      "description": "Piedra rosada con vetas negras. Se asocia con el perdón, la reconciliación y el equilibrio emocional. Tradicionalmente se usa para cultivar la compasión en los vínculos.",
+      "care": "Admite un enjuague rápido con agua si se seca bien enseguida. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco."
+    },
+    {
+      "key": "kunzite",
+      "name": "Kunzita",
+      "colors": ["pink", "purple"],
+      "chakras": ["heart"],
+      "signs": ["taurus", "leo", "scorpio"],
+      "intentions": ["love", "selfLove", "calm"],
+      "description": "Cristal de color rosa lila, delicado y transparente. Se asocia con el amor incondicional y la dulzura. Tradicionalmente se usa para abrirse al afecto con calma.",
+      "care": "Admite un enjuague rápido con agua si se seca bien enseguida. Evite el sol por completo: su color se desvanece con rapidez. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco."
+    },
+    {
+      "key": "chrysocolla",
+      "name": "Crisocola",
+      "colors": ["blue", "green"],
+      "chakras": ["throat", "heart"],
+      "signs": ["taurus", "gemini", "virgo"],
+      "intentions": ["communication", "calm", "balance", "creativity"],
+      "description": "Mineral de cobre de color azul turquesa a verde. Se asocia con la expresión de los sentimientos y con la enseñanza. Tradicionalmente se usa para comunicarse con amabilidad.",
+      "care": "Evite el agua: es blanda y porosa. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco."
+    },
+    {
+      "key": "larimar",
+      "name": "Larimar",
+      "colors": ["blue", "white"],
+      "chakras": ["throat", "heart"],
+      "signs": ["leo", "pisces"],
+      "intentions": ["calm", "communication", "balance"],
+      "description": "Piedra azul celeste con vetas blancas que se encuentra únicamente en República Dominicana. Se asocia con el mar, la serenidad y la ligereza. Tradicionalmente se usa para recordar la calma del océano y expresarse con suavidad.",
+      "care": "Admite un enjuague rápido con agua si se seca bien enseguida. Evite el sol directo prolongado, porque su color puede perder intensidad. Tradicionalmente se recarga con una noche bajo la luz de la luna."
+    },
+    {
+      "key": "celestite",
+      "name": "Celestita",
+      "colors": ["blue"],
+      "chakras": ["throat", "thirdEye", "crown"],
+      "signs": ["gemini", "libra"],
+      "intentions": ["calm", "rest", "spirituality", "communication"],
+      "description": "Cristal azul celeste muy suave, a menudo en geodas. Se asocia con el cielo, la paz y la conexión espiritual. Tradicionalmente se coloca en el dormitorio o en el espacio de meditación.",
+      "care": "Evite el agua: es frágil y se disuelve poco a poco. Evite el sol directo prolongado, porque su color puede perder intensidad. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco."
+    },
+    {
+      "key": "blue-kyanite",
+      "name": "Cianita azul",
+      "colors": ["blue"],
+      "chakras": ["throat", "thirdEye"],
+      "signs": ["aries", "taurus", "libra"],
+      "intentions": ["communication", "balance", "clarity", "energyCleansing"],
+      "description": "Mineral azul en forma de láminas alargadas y estriadas. Se asocia con la alineación, la verdad y la comunicación clara. Se dice que no acumula energía densa y tradicionalmente se usa para limpiar otras piedras.",
+      "care": "Evite el agua: es frágil y se parte en láminas. Se considera una piedra que no necesita limpieza energética."
+    },
+    {
+      "key": "prehnite",
+      "name": "Prehnita",
+      "colors": ["green"],
+      "chakras": ["heart", "solarPlexus"],
+      "signs": ["virgo", "libra"],
+      "intentions": ["calm", "intuition", "balance"],
+      "description": "Piedra verde claro, translúcida, a veces con agujas de epidota. Se asocia con la paz interior y la confianza en la propia intuición. Tradicionalmente se usa para prepararse antes de una lectura o una meditación.",
+      "care": "Se puede lavar con agua tibia y secar con un paño suave. Tradicionalmente se recarga con una noche bajo la luz de la luna."
+    },
+    {
+      "key": "peridot",
+      "name": "Peridoto",
+      "colors": ["green"],
+      "chakras": ["heart", "solarPlexus"],
+      "signs": ["leo", "virgo", "sagittarius"],
+      "intentions": ["abundance", "joy", "newBeginnings", "confidence"],
+      "description": "Gema verde oliva, piedra del mes de agosto. Se asocia con la luz, la renovación y la prosperidad. Tradicionalmente se usa para dar la bienvenida a una nueva etapa con optimismo.",
+      "care": "Se puede lavar con agua tibia y secar con un paño suave. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco."
+    },
+    {
+      "key": "amber",
+      "name": "Ámbar",
+      "colors": ["orange", "yellow", "gold"],
+      "chakras": ["solarPlexus", "sacral"],
+      "signs": ["leo", "aquarius"],
+      "intentions": ["joy", "confidence", "protection", "energyCleansing"],
+      "description": "Resina fósil de árboles antiguos, cálida y liviana; no es una piedra mineral. Se asocia con el sol, la vitalidad y la protección. Tradicionalmente se lleva en collares y amuletos para atraer la alegría.",
+      "care": "Admite un enjuague rápido con agua si se seca bien enseguida. Evite el calor, el sol fuerte, la sal y los perfumes, porque se opaca. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco."
+    },
+    {
+      "key": "shungite",
+      "name": "Shungita",
+      "colors": ["black"],
+      "chakras": ["root"],
+      "signs": ["scorpio", "capricorn"],
+      "intentions": ["protection", "grounding", "energyCleansing"],
+      "description": "Roca negra rica en carbono, originaria de Rusia. Se asocia con la protección y la limpieza de la energía de los espacios. Tradicionalmente se coloca en el hogar o en el lugar de trabajo.",
+      "care": "Admite un enjuague rápido con agua si se seca bien enseguida. También se puede limpiar energéticamente sobre una placa de selenita o de cuarzo."
+    },
+    {
+      "key": "orange-calcite",
+      "name": "Calcita naranja",
+      "colors": ["orange"],
+      "chakras": ["sacral", "solarPlexus"],
+      "signs": ["cancer", "leo"],
+      "intentions": ["creativity", "joy", "motivation"],
+      "description": "Mineral naranja translúcido de aspecto ceroso. Se asocia con la alegría, el juego y la creatividad. Tradicionalmente se usa para recuperar las ganas de crear y de disfrutar.",
+      "care": "Evite el agua: es blanda y se disuelve con facilidad. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco. Tradicionalmente se recarga con una noche bajo la luz de la luna."
+    },
+    {
+      "key": "ametrine",
+      "name": "Ametrino",
+      "colors": ["purple", "yellow"],
+      "chakras": ["crown", "solarPlexus"],
+      "signs": ["libra"],
+      "intentions": ["balance", "clarity", "creativity", "transformation"],
+      "description": "Cuarzo que une la amatista y el citrino en una misma piedra, en tonos morados y dorados. Se asocia con el equilibrio entre la intuición y la acción. Tradicionalmente se usa para tomar decisiones que integren mente y corazón.",
+      "care": "Se puede lavar con agua tibia y secar con un paño suave. Evite el sol directo prolongado, porque su color puede perder intensidad. Tradicionalmente se recarga con una noche bajo la luz de la luna."
+    },
+    {
+      "key": "angelite",
+      "name": "Angelita",
+      "colors": ["blue"],
+      "chakras": ["throat", "crown"],
+      "signs": ["aquarius"],
+      "intentions": ["calm", "communication", "spirituality", "rest"],
+      "description": "Mineral azul pálido, opaco y suave, de la familia de la anhidrita. Se asocia con la paz, la compasión y la conexión con lo espiritual. Tradicionalmente se coloca en el dormitorio o se usa al orar o meditar.",
+      "care": "Evite el agua: con la humedad se convierte en yeso y se deteriora. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco."
+    },
+    {
+      "key": "chrysoprase",
+      "name": "Crisoprasa",
+      "colors": ["green"],
+      "chakras": ["heart"],
+      "signs": ["taurus", "gemini", "libra"],
+      "intentions": ["joy", "love", "newBeginnings", "selfLove"],
+      "description": "Calcedonia de un verde manzana luminoso. Se asocia con la esperanza, la alegría y el perdón. Tradicionalmente se usa para mirar hacia adelante con optimismo después de una etapa difícil.",
+      "care": "Se puede lavar con agua tibia y secar con un paño suave. Evite el sol directo prolongado, porque su color puede perder intensidad. Tradicionalmente se recarga con una noche bajo la luz de la luna."
+    },
+    {
+      "key": "unakite",
+      "name": "Unakita",
+      "colors": ["green", "pink"],
+      "chakras": ["heart"],
+      "signs": ["taurus", "scorpio"],
+      "intentions": ["balance", "love", "transformation"],
+      "description": "Roca moteada de verde y rosa salmón. Se asocia con el equilibrio emocional y con integrar el pasado. Tradicionalmente se usa en procesos de cambio personal y en la vida de pareja.",
+      "care": "Se puede lavar con agua tibia y secar con un paño suave. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco."
+    },
+    {
+      "key": "iolite",
+      "name": "Iolita",
+      "colors": ["blue", "purple"],
+      "chakras": ["thirdEye"],
+      "signs": ["taurus", "libra", "sagittarius"],
+      "intentions": ["intuition", "clarity", "spirituality"],
+      "description": "Gema azul violeta que cambia de color según el ángulo, conocida como la brújula de los vikingos. Se asocia con la visión interior y con encontrar el rumbo. Tradicionalmente se usa en la meditación y en momentos de búsqueda.",
+      "care": "Se puede lavar con agua tibia y secar con un paño suave. Tradicionalmente se recarga con una noche bajo la luz de la luna."
+    },
+    {
+      "key": "emerald",
+      "name": "Esmeralda",
+      "colors": ["green"],
+      "chakras": ["heart"],
+      "signs": ["taurus", "gemini", "cancer"],
+      "intentions": ["love", "abundance", "balance"],
+      "description": "Gema verde intenso, piedra del mes de mayo; en bruto es más accesible que tallada. Se asocia con el amor leal, la abundancia y la armonía. Tradicionalmente se regala como símbolo de compromiso.",
+      "care": "Admite un enjuague rápido con agua si se seca bien enseguida. Evite el calor y los cambios bruscos de temperatura. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco."
+    },
+    {
+      "key": "ocean-jasper",
+      "name": "Jaspe oceánico",
+      "colors": ["green", "multicolor"],
+      "chakras": ["heart", "solarPlexus"],
+      "signs": ["cancer", "capricorn"],
+      "intentions": ["calm", "joy", "newBeginnings"],
+      "description": "Jaspe de colores variados con dibujos circulares, encontrado en la costa de Madagascar. Se asocia con el ritmo del mar, la paciencia y la alegría. Tradicionalmente se usa para tomar las cosas con calma y renovar el ánimo.",
+      "care": "Se puede lavar con agua tibia y secar con un paño suave. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco."
+    },
+    {
+      "key": "jet",
+      "name": "Azabache",
+      "colors": ["black"],
+      "chakras": ["root"],
+      "signs": ["capricorn"],
+      "intentions": ["protection", "grounding", "energyCleansing"],
+      "description": "Madera fosilizada de color negro brillante y muy liviana. En América Latina se asocia con la protección contra el mal de ojo, y tradicionalmente se regala a bebés en una pulsera o un dije. Se usa como amuleto para resguardar la energía.",
+      "care": "Evite el agua: es un material orgánico y puede agrietarse. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco."
+    },
+    {
+      "key": "aragonite",
+      "name": "Aragonito",
+      "colors": ["brown", "orange"],
+      "chakras": ["root", "sacral"],
+      "signs": ["capricorn", "virgo"],
+      "intentions": ["grounding", "balance", "calm"],
+      "description": "Mineral café anaranjado, a menudo en racimos con forma de estrella. Se asocia con la conexión con la tierra y la paciencia. Tradicionalmente se usa en épocas de mucha exigencia para recuperar el centro.",
+      "care": "Evite el agua: es blando y se disuelve con facilidad. Para la limpieza energética puede usar humo de salvia o palo santo, o el sonido de un cuenco."
+    }
+  ]
+}
