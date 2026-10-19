@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet } from 'react-router';
 
+import { useDiscardSessionOnLeave } from '../features/sessions/leave';
+
 const NAV_ITEMS = [
   { to: '/', key: 'nav.home', end: true },
   { to: '/clients', key: 'nav.clients', end: false },
@@ -12,6 +14,7 @@ const NAV_ITEMS = [
  */
 export default function AppLayout() {
   const { t } = useTranslation();
+  useDiscardSessionOnLeave();
 
   return (
     <div className="min-h-dvh bg-stone-50 text-stone-900">

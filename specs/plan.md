@@ -87,7 +87,7 @@ All synced tables share these columns:
 
 Local-only (IndexedDB, never sent to the server):
 - `pending` (`0|1`, not boolean, because IndexedDB can't index booleans): 1 while a row has unsynced changes. The sync push reads `where('pending').equals(1)`, tombstones included.
-- `meta` key/value table: `device_id` (UUIDv7 created on first run), `seed_version:spreads` and `seed_version:crystals` (the bundled `version` last loaded, see "Seed vs. user edits"), later the sync cursor.
+- `meta` key/value table: `device_id` (UUIDv7 created on first run), `seed_version:spreads` and `seed_version:crystals` (the bundled `version` last loaded, see "Seed vs. user edits"), `fresh_session:<id>` (a session just created by "Nueva sesión": its fields as created, its `updated_at`, and whether creating it unarchived the client; read and removed by the discard-on-leave check and the startup sweep in `features/sessions/actions.ts`), later the sync cursor.
 
 Local conventions: field names stay snake_case so rows go to the sync API as-is; timestamps are ISO 8601 UTC strings (sort lexically, which last-write-wins relies on); `server_version` is null until first sync. Deletes are soft (`deleted_at` set, row re-stamped `pending`), and repository reads hide tombstones by default.
 

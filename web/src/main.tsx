@@ -8,12 +8,22 @@ import './index.css';
 import './seed/images/card-images.ts';
 import App from './App.tsx';
 import { db } from './db';
+import { sweepFreshSessions } from './features/sessions/actions.ts';
+import { sessionIdFromPath } from './features/sessions/leave.ts';
 import { loadSeed } from './seed/loader.ts';
 
 // Local and quick; render doesn't wait for it, and the next start retries a failed load.
 loadSeed(db).catch((error: unknown) => {
   console.error('Seed load failed', error);
 });
+
+// A session created and left untouched before the app was closed was a mistaken tap. The page
+// the app opens on is skipped: leaving it handles that session.
+sweepFreshSessions(db, { except: sessionIdFromPath(window.location.pathname) }).catch(
+  (error: unknown) => {
+    console.error('Fresh session sweep failed', error);
+  },
+);
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Root element #root not found');
