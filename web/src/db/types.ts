@@ -144,7 +144,11 @@ export interface Crystal extends SyncedRow {
 
 export interface IntentionTag extends SyncedRow {
   key: string;
-  label: string;
+  /**
+   * Null for an unrenamed seed tag: the UI shows the `es.json` label for `key`
+   * (`crystals.intention.*`). Her own tags and seed tags she renamed store a real label.
+   */
+  label: string | null;
 }
 
 export interface CardNote extends SyncedRow {
