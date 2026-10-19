@@ -65,5 +65,29 @@
       "layout": "Disposición",
       "corrections": "Correcciones"
     }
+  },
+  "zodiac": {
+    "modality": {
+      "cardinal": "Cardinal",
+      "fixed": "Fijo",
+      "mutable": "Mutable"
+    },
+    "field": {
+      "challenging": "Signos desafiantes"
+    }
+  },
+  "astro": {
+    "planet": {
+      "sun": "Sol",
+      "moon": "Luna",
+      "mercury": "Mercurio",
+      "venus": "Venus",
+      "mars": "Marte",
+      "jupiter": "Júpiter",
+      "saturn": "Saturno",
+      "uranus": "Urano",
+      "neptune": "Neptuno",
+      "pluto": "Plutón"
+    }
   }
 }
