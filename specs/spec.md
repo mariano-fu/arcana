@@ -37,6 +37,9 @@ A tarot reader starting a small business needs one place to keep track of her cl
 
 **Acceptance criteria**
 - A session autosaves; closing the app mid-reading loses nothing.
+- "Nueva sesión" saves the session right away. If she leaves the session page with it still exactly as created (no field edited, no readings, no payments), it is discarded silently (tombstoned).
+- Starting a session for an archived client unarchives the client (they came back), with a short notice: "La ficha se desarchivó". If that session is then discarded as untouched, the client is archived again.
+- Deleting a session asks for confirmation and lists what goes with it (readings, payments with totals per currency); its payments, readings and card draws are tombstoned with it.
 - From a client's timeline I can open any past session and see exactly which cards were drawn, in which positions, upright or reversed.
 
 ## Feature 2b — Payments (Pagos)

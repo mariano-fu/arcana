@@ -3,6 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router';
 
 import { db, repos, type Client } from '../../db';
+import { createSession } from '../sessions/actions';
+import { pickSessionFields, type SessionRouteState } from '../sessions/form';
+import SessionTimeline from '../sessions/SessionTimeline';
 import DeleteClientDialog from './DeleteClientDialog';
 import { deleteClient } from './deletion';
 import { formatDate } from './format';
@@ -25,6 +28,12 @@ function ClientDetail({ client }: { client: Client }) {
 
   async function setArchived(archived: boolean) {
     await repos.client.update(client.id, { archived });
+  }
+
+  async function startSession() {
+    const { session, unarchived } = await createSession(db, client.id);
+    const state: SessionRouteState = { created: pickSessionFields(session), unarchived };
+    await navigate(`/sessions/${session.id}`, { state });
   }
 
   const contact = [
@@ -116,7 +125,20 @@ function ClientDetail({ client }: { client: Client }) {
         </Section>
       )}
 
-      {/* Shells filled by later tasks: astrology (T2.6), crystals (T2.9), sessions (T1.8). */}
+      <Section title={t('clients.detail.sessions')}>
+        <div className="flex flex-col gap-3">
+          <button
+            type="button"
+            onClick={() => void startSession()}
+            className="flex min-h-11 items-center justify-center self-start rounded-lg bg-stone-900 px-4 text-base font-medium text-stone-50"
+          >
+            {t('clients.detail.newSession')}
+          </button>
+          <SessionTimeline clientId={client.id} />
+        </div>
+      </Section>
+
+      {/* Shells filled by later tasks: astrology (T2.6), crystals (T2.9). */}
       <Section title={t('clients.detail.astrology')}>
         <p className="text-stone-600">
           {client.birth_date === null
@@ -126,9 +148,6 @@ function ClientDetail({ client }: { client: Client }) {
       </Section>
       <Section title={t('clients.detail.crystals')}>
         <p className="text-stone-600">{t('clients.detail.crystalsSoon')}</p>
-      </Section>
-      <Section title={t('clients.detail.sessions')}>
-        <p className="text-stone-600">{t('clients.detail.noSessions')}</p>
       </Section>
 
       {confirmingDelete && (
