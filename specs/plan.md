@@ -170,12 +170,12 @@ Tests must cover: concurrent edits on two devices, delete vs. edit, offline for 
 Pure functions, no UI:
 - `sunSign(birthDate, utc?)` → always from the Sun's ecliptic longitude (astronomy-engine), never from the date table (which is only for displaying ranges). With `utc` (time and place known, via `toUtc`): the sign at that instant. Date-only: compute the longitude at the day's two extreme instants (its start in UTC+14 and its end in UTC−12); same sign → `cusp: false`; different → `cusp: true`, primary sign = the sign at 12:00 UTC that day, `alternative` = the other.
 - `toUtc(date, time | null, ianaTz)` → Luxon; when time is null, use 12:00 local and mark result `timeKnown: false`. A local time inside a DST gap (never existed) is shifted forward by the gap; a local time that occurred twice resolves to the earlier instant. The result's `adjusted` (`'none' | 'gap' | 'ambiguous'`) says which rule applied.
-- `planetPositions(utc)` → sun, moon, mercury … pluto ecliptic longitudes via astronomy-engine → sign + degree.
-- `moonSignUncertain(date, tz)` → true if the moon changes sign during that local day.
+- `planetPositions(utc)` → sun, moon, mercury … pluto geocentric apparent longitudes on the true ecliptic of date via astronomy-engine → `{ longitude, sign, degree }` per planet (`degree` within the sign, 0–30).
+- `moonSignUncertain(date, tz)` → true if the moon changes sign during that local day (from its first local instant per `toUtc` to the next day's).
 - `ascendantAndHouses(utc, lat, lng)` → only when time known; Placidus (confirmed as her system), whole-sign as fallback near polar latitudes where Placidus is undefined.
 - Zodiac: Western tropical (confirmed). No sidereal support needed.
 
-Reference test set: 10+ charts with known positions (pick public charts and verify against a trusted online ephemeris). Tolerance 1°.
+Reference test set: 10+ charts with known positions (pick public charts and verify against a trusted online ephemeris). Tolerance 1°. Planet positions are checked against NASA JPL Horizons (DE441, geocentric, `QUANTITIES='31'`): `astro/fixtures/horizons-reference.json` records the source and query, and `npm run fetch:horizons-reference` regenerates it (needs network, never run in CI).
 
 Cities: subset of GeoNames `cities15000` (CC BY 4.0 — credit GeoNames in the About screen), filtered to Latin America + Spain + world capitals, fields `name, country, admin1, lat, lng, tz`. Target < 1 MB gzipped.
 

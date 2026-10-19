@@ -19,7 +19,8 @@
     "build:cards-review": "node scripts/build-cards-review.ts",
     "build:spreads-review": "node scripts/build-spreads-review.ts",
     "build:crystals-review": "node scripts/build-crystals-review.ts",
-    "build:card-images": "node scripts/build-card-images.ts"
+    "build:card-images": "node scripts/build-card-images.ts",
+    "fetch:horizons-reference": "node scripts/fetch-horizons-reference.ts"
   },
   "dependencies": {
     "astronomy-engine": "^2.1.19",
