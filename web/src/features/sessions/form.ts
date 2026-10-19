@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import type { Currency, IsoDateTime, Session } from '../../db';
-import { CURRENCY_SYMBOL, formatMoney, parseMoney } from '../payments';
+import { formatMoneyInput, parseMoney } from '../payments';
 
 /** The session fields she edits on the session page. */
 export type SessionFields = Pick<
@@ -72,8 +72,7 @@ export function fromLocalInput(value: string): IsoDateTime | null {
 
 /** A stored price as she'd type it, without the symbol (the currency picker shows it). */
 export function priceToInput(priceMinor: number | null, currency: Currency): string {
-  if (priceMinor === null) return '';
-  return formatMoney(priceMinor, currency).slice(CURRENCY_SYMBOL[currency].length);
+  return priceMinor === null ? '' : formatMoneyInput(priceMinor, currency);
 }
 
 /** Price field → minor units. Empty means no price; `undefined` means she typed something invalid. */

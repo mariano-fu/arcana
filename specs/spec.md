@@ -56,6 +56,7 @@ A tarot reader starting a small business needs one place to keep track of her cl
 - Amounts are stored as integers in the smallest unit (céntimos / cents), never floats.
 - Currencies are never summed together; totals are shown per currency.
 - Overpayment is allowed but flagged ("Saldo a favor").
+- On a client's profile, per currency: total paid, "Pendiente" (sum of what each session still owes) and "Saldo a favor" (sum of overpayments) are shown separately, never netted against each other, so each open session stays visible. Payments in a currency other than the session's count toward "total pagado" but not toward that session's balance.
 - A pending balance on a session appears on the home screen alongside follow-ups.
 - Deleting a session with payments requires confirmation and deletes (tombstones) its payments too.
 
