@@ -59,6 +59,8 @@ A tarot reader starting a small business needs one place to keep track of her cl
 - On a client's profile, per currency: total paid, "Pendiente" (sum of what each session still owes) and "Saldo a favor" (sum of overpayments) are shown separately, never netted against each other, so each open session stays visible. Payments in a currency other than the session's count toward "total pagado" but not toward that session's balance.
 - A pending balance on a session appears on the home screen alongside follow-ups.
 - Deleting a session with payments requires confirmation and deletes (tombstones) its payments too.
+- On the "Pagos" screen, one month picker drives the income and the payment list; method and client filters only narrow the list. "Saldos pendientes" spans all months and archived clients, oldest session first, and leaves out paid, free and overpaid sessions.
+- The CSV export (`pagos-YYYY-MM.csv`) holds every payment of the month, ignoring the list's filters, oldest first. It is shaped for Excel/Numbers in Spanish: UTF-8 with BOM, `;`-separated, amounts as `15000,00` (no symbol or grouping) so they stay numbers. Columns: Fecha, Cliente, Monto, Moneda, Método, Referencia, Nota. Cells that would start a formula get a leading `'`.
 
 ## Feature 3 — Tarot spreads (Tiradas)
 

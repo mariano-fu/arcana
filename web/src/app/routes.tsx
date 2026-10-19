@@ -3,6 +3,7 @@ import type { RouteObject } from 'react-router';
 import ClientDetailPage from '../features/clients/ClientDetailPage';
 import ClientFormPage from '../features/clients/ClientFormPage';
 import ClientListPage from '../features/clients/ClientListPage';
+import PaymentsPage from '../features/payments/PaymentsPage';
 import SessionPage from '../features/sessions/SessionPage';
 import AppLayout from './AppLayout';
 import HomePage from './HomePage';
@@ -18,6 +19,7 @@ export const routes: RouteObject[] = [
       { path: 'clients/:id', element: <ClientDetailPage /> },
       { path: 'clients/:id/edit', element: <ClientFormPage /> },
       { path: 'sessions/:id', element: <SessionPage /> },
+      { path: 'payments', element: <PaymentsPage /> },
     ],
   },
 ];

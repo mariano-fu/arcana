@@ -216,11 +216,57 @@
       "pending": "Pendiente",
       "credit": "Saldo a favor",
       "none": "No hay pagos ni saldos pendientes."
+    },
+    "page": {
+      "title": "Pagos",
+      "month": {
+        "label": "Mes",
+        "previous": "Mes anterior",
+        "next": "Mes siguiente"
+      },
+      "income": {
+        "title": "Ingresos del mes",
+        "none": "No hay pagos registrados en {{month}}."
+      },
+      "pending": {
+        "title": "Saldos pendientes",
+        "list": "Sesiones con saldo pendiente",
+        "none": "No hay saldos pendientes.",
+        "owes": "Falta {{amount}}"
+      },
+      "list": {
+        "title": "Pagos de {{month}}",
+        "label": "Pagos del mes",
+        "none": "No hay pagos registrados en {{month}}.",
+        "noMatch": "Ningún pago coincide con los filtros.",
+        "clearFilters": "Quitar filtros"
+      },
+      "filter": {
+        "method": "Método",
+        "client": "Cliente",
+        "all": "Todos"
+      },
+      "export": {
+        "button": "Exportar CSV",
+        "hint": "Descarga todos los pagos de {{month}}, sin filtros.",
+        "filename": "pagos-{{month}}.csv"
+      },
+      "csv": {
+        "date": "Fecha",
+        "client": "Cliente",
+        "amount": "Monto",
+        "currency": "Moneda",
+        "method": "Método",
+        "reference": "Referencia",
+        "note": "Nota",
+        "unknownClient": "(cliente eliminado)"
+      }
     }
   },
   "nav": {
     "label": "Navegación principal",
     "home": "Inicio",
+    "payments": "Pagos",
     "clients": "Clientes"
   },
   "common": {
