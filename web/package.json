@@ -22,6 +22,7 @@
     "build:card-images": "node scripts/build-card-images.ts"
   },
   "dependencies": {
+    "astronomy-engine": "^2.1.19",
     "dexie": "^4.4.6",
     "dexie-react-hooks": "^4.4.0",
     "i18next": "^26.5.2",

@@ -1,8 +1,7 @@
 // Zodiac sign profile seed: schema, types and the parsed `zodiac.es.json`.
 //
-// Western tropical zodiac. `start`/`end` are the standard date table (inclusive); cusp days
-// vary by year, so `sunSign` (astro/) computes the sun's longitude when time and place are
-// known and only falls back to this table otherwise.
+// Western tropical zodiac. `start`/`end` are the standard date table (inclusive), for display
+// only: ingress days vary by year, so `sunSign` (astro/) always computes the Sun's longitude.
 //
 // `ruler` is the modern ruler (Pluto, Uranus and Neptune for Escorpio, Acuario and Piscis);
 // `traditional_ruler` is the classical one, limited to the seven visible planets.
