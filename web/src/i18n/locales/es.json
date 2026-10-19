@@ -164,5 +164,83 @@
       "no_charge": "Sin cobro",
       "overpaid": "Saldo a favor"
     }
+  },
+  "nav": {
+    "label": "Navegación principal",
+    "home": "Inicio",
+    "clients": "Clientes"
+  },
+  "common": {
+    "back": "Volver",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "edit": "Editar",
+    "notFound": "No se encontró lo que busca."
+  },
+  "clients": {
+    "title": "Clientes",
+    "add": "Agregar cliente",
+    "search": {
+      "label": "Buscar por nombre o usuario de Instagram",
+      "placeholder": "Buscar…"
+    },
+    "showArchived": "Mostrar fichas archivadas",
+    "empty": "Todavía no hay clientes. Agregue el primero con el botón de arriba.",
+    "noResults": "Ningún cliente coincide con «{{query}}».",
+    "lastVisit": "Última visita: {{date}}",
+    "noVisits": "Sin visitas",
+    "archivedBadge": "Ficha archivada",
+    "form": {
+      "newTitle": "Agregar cliente",
+      "editTitle": "Editar ficha",
+      "name": "Nombre",
+      "instagram": "Instagram",
+      "whatsapp": "WhatsApp",
+      "email": "Correo electrónico",
+      "birthDate": "Fecha de nacimiento",
+      "birthDateHint": "Opcional, pero se necesita para la astrología.",
+      "birthTime": "Hora de nacimiento",
+      "birthTimeUnknown": "No sabe la hora",
+      "birthPlace": "Lugar de nacimiento",
+      "notes": "Notas",
+      "tags": "Etiquetas",
+      "tagsHint": "Separadas por comas, por ejemplo: ansiedad, trabajo, cliente frecuente.",
+      "error": {
+        "nameRequired": "Escriba el nombre.",
+        "email": "Revise el correo electrónico."
+      }
+    },
+    "detail": {
+      "contact": "Contacto",
+      "noContact": "Sin datos de contacto.",
+      "birth": "Nacimiento",
+      "birthTimeUnknown": "Hora desconocida",
+      "tags": "Etiquetas",
+      "notes": "Notas",
+      "astrology": "Astrología",
+      "astrologyMissingBirthDate": "Agregue fecha de nacimiento",
+      "astrologySoon": "El perfil astrológico estará disponible pronto.",
+      "crystals": "Cristales recomendados",
+      "crystalsSoon": "Las recomendaciones de cristales estarán disponibles pronto.",
+      "sessions": "Sesiones",
+      "noSessions": "Aún no hay sesiones.",
+      "archive": "Archivar",
+      "unarchive": "Desarchivar",
+      "delete": "Eliminar"
+    },
+    "delete": {
+      "title": "¿Eliminar a {{name}}?",
+      "summary_one": "Se eliminará {{items}}.",
+      "summary_other": "Se eliminarán {{items}}.",
+      "onlyProfile": "Se eliminará solo la ficha: no tiene sesiones ni pagos.",
+      "sessions_one": "{{count}} sesión",
+      "sessions_other": "{{count}} sesiones",
+      "payments_one": "{{count}} pago ({{totals}})",
+      "payments_other": "{{count}} pagos ({{totals}})",
+      "irreversible": "Esto no se puede deshacer.",
+      "suggestArchive": "Si solo quiere quitar la ficha de la lista, puede archivarla: se conserva todo el historial y puede desarchivarla cuando quiera.",
+      "archiveInstead": "Archivar la ficha",
+      "confirm": "Eliminar definitivamente"
+    }
   }
 }

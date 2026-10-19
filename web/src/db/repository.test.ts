@@ -15,6 +15,7 @@ const newClient = (overrides: Partial<NewRow<Client>> = {}): NewRow<Client> => (
   notes: '',
   tags: [],
   archived: false,
+  created_at: '2026-10-01T12:00:00.000Z',
   ...overrides,
 });
 

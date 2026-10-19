@@ -2,8 +2,10 @@ import type { VitePWAOptions } from 'vite-plugin-pwa';
 
 import es from './src/i18n/locales/es.json' with { type: 'json' };
 
-export const THEME_COLOR = '#1c1917';
 export const BACKGROUND_COLOR = '#fafaf9';
+// The status bar takes the theme color, so it matches the app background (T1.7).
+// index.html's theme-color meta and the body background in src/index.css use the same value.
+export const THEME_COLOR = BACKGROUND_COLOR;
 
 // The manifest is static, so its Spanish copy is read from the es locale at
 // build time instead of being duplicated here.

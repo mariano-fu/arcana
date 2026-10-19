@@ -39,6 +39,8 @@ export interface Client extends SyncedRow {
   notes: string;
   tags: string[];
   archived: boolean;
+  /** When she added the client; the list sorts by it until the client has a session. */
+  created_at: IsoDateTime;
 }
 
 export interface Session extends SyncedRow {
