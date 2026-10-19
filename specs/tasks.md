@@ -21,7 +21,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [x] T1.6 Seed loader with versioning and the "don't overwrite user-modified rows" rule. Tests.
 - [ ] T1.7 Clients: list (search, sort by last visit), create/edit form (with "No sabe la hora"), detail page shell, archive/delete. Any bottom navigation must respect the bottom safe-area inset (home indicator), and the status bar color must match the app background.
 - [ ] T1.8 Sessions: create from client, autosave notes, type, price + currency, follow-up. Client timeline.
-- [ ] T1.8b Payments core: `paymentStatus()` and money helpers (integer minor units, per-currency totals, ₡/US$ formatting in es-CR). Unit tests incl. partial, overpaid, mixed currencies, free reading.
+- [x] T1.8b Payments core: `paymentStatus()` and money helpers (integer minor units, per-currency totals, ₡/US$ formatting in es-CR). Unit tests incl. partial, overpaid, mixed currencies, free reading.
 - [ ] T1.8c Payments UI: record/edit/delete payments on a session (method, date, reference), status badge on sessions, client totals + balance.
 - [ ] T1.8d "Pagos" screen: monthly income per currency, pending balances list, filterable payment list, CSV export for a month.
 - [ ] T1.9 Spreads: choose template → position grid with card thumbnails → card picker (search + browse by suit with thumbnails, ≤3 taps) → reversed toggle (image rotates) → meaning panel (full image + card meaning + position meaning + her card note). Save into session. Creating the reading must write `reading.spread_snapshot` (spread name + each position's number, name, meaning, layout `{col, row, rotated}`); past readings render from the snapshot, never from the current template.
@@ -47,7 +47,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [ ] T2.9 Recommendations on client detail and inside a session (attach to session).
 
 ## Phase 3 — Backend & sync
-- [ ] T3.1 `api/`: Django 5 + DRF + Postgres, settings via env, pytest, mypy, ruff. Dockerfile. CI job.
+- [x] T3.1 `api/`: Django 5 + DRF + Postgres, settings via env, pytest, mypy, ruff. Dockerfile. CI job.
 - [ ] T3.2 Models mirroring the data model + global `server_version` sequence. Admin registered. References to seed-backed tables (`reading.spread_template_id`, crystal and intention tag references) are plain UUID fields, not foreign keys, since unedited seed rows never sync (plan.md, Backend).
 - [ ] T3.3 Auth: simplejwt login/refresh, throttling. Tests.
 - [ ] T3.4 `POST /api/sync/` implementing plan.md rules. Tests for every scenario listed in plan.md.
