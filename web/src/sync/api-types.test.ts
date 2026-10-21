@@ -50,15 +50,11 @@ type Pushed<Row, Record> = [Wire<Row>] extends [Record]
     : false
   : false;
 
-// `spread_snapshot.positions[].layout`: plan.md has it, `db/types.ts` doesn't yet (T1.9
-// writes it). Until then the snapshot is compared without it; drop this when T1.9 lands.
-type SnapshotWithoutLayout = Omit<Reading, 'spread_snapshot'>;
-
 export type Checks = [
   Assert<Pulled<Client, Schemas['ClientRecord']>>,
   Assert<Pulled<Session, Schemas['SessionRecord']>>,
   Assert<Pulled<Payment, Schemas['PaymentRecord']>>,
-  Assert<Pulled<SnapshotWithoutLayout, Omit<Schemas['ReadingRecord'], 'spread_snapshot'>>>,
+  Assert<Pulled<Reading, Schemas['ReadingRecord']>>,
   Assert<Pulled<CardDraw, Schemas['CardDrawRecord']>>,
   Assert<Pulled<SpreadTemplate, Schemas['SpreadTemplateRecord']>>,
   Assert<Pulled<Crystal, Schemas['CrystalRecord']>>,
@@ -70,7 +66,7 @@ export type Checks = [
   Assert<Pushed<Client, Schemas['ClientRecordRequest']>>,
   Assert<Pushed<Session, Schemas['SessionRecordRequest']>>,
   Assert<Pushed<Payment, Schemas['PaymentRecordRequest']>>,
-  Assert<Pushed<SnapshotWithoutLayout, Omit<Schemas['ReadingRecordRequest'], 'spread_snapshot'>>>,
+  Assert<Pushed<Reading, Schemas['ReadingRecordRequest']>>,
   Assert<Pushed<CardDraw, Schemas['CardDrawRecordRequest']>>,
   Assert<Pushed<SpreadTemplate, Schemas['SpreadTemplateRecordRequest']>>,
   Assert<Pushed<Crystal, Schemas['CrystalRecordRequest']>>,
@@ -81,8 +77,8 @@ export type Checks = [
   // JSON columns.
   Assert<Exact<SpreadLayout, Schemas['SpreadLayout']>>,
   Assert<Exact<SpreadPosition, Schemas['SpreadPosition']>>,
-  Assert<Exact<SpreadSnapshotPosition, Omit<Schemas['SpreadPosition'], 'layout'>>>,
-  Assert<Exact<Reading['spread_snapshot']['name'], Schemas['SpreadSnapshot']['name']>>,
+  Assert<Exact<SpreadSnapshotPosition, Schemas['SpreadPosition']>>,
+  Assert<Exact<Reading['spread_snapshot'], Schemas['SpreadSnapshot']>>,
 
   // Table names: every table is pulled, every table but `horoscope` can be pushed.
   Assert<Exact<SyncedTableName, Schemas['SyncedTableEnum']>>,
