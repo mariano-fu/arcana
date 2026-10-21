@@ -1,6 +1,8 @@
 import { masculineWords } from '../test/gender-neutral';
 import raw from './spreads.json';
 import {
+  SPREAD_GRID,
+  spreadLayoutIssues,
   spreadsFileSchema,
   spreadsSeed,
   type SeedSpread,
@@ -135,6 +137,37 @@ describe('spreadsFileSchema', () => {
   it('rejects a position without a layout', () => {
     const file = clone();
     Reflect.deleteProperty(position(file, 'one-card', 0), 'layout');
+    expect(spreadsFileSchema.safeParse(file).success).toBe(false);
+  });
+});
+
+describe('spreadLayoutIssues', () => {
+  const at = (col: number, row: number, rotated = false) => ({ layout: { col, row, rotated } });
+
+  it('fits every seed layout inside the 7×5 grid the builder uses', () => {
+    for (const spread of spreadsSeed.spreads) {
+      for (const { layout } of spread.positions) {
+        expect(layout.col).toBeLessThan(SPREAD_GRID.cols);
+        expect(layout.row).toBeLessThan(SPREAD_GRID.rows);
+      }
+      expect(spreadLayoutIssues(spread.positions)).toEqual([]);
+    }
+  });
+
+  it('flags cells outside the grid, taken cells and a crosswise card on its own', () => {
+    expect(spreadLayoutIssues([at(7, 0), at(0, 5)])).toEqual([
+      { position: 0, issue: 'outOfGrid' },
+      { position: 1, issue: 'outOfGrid' },
+    ]);
+    expect(spreadLayoutIssues([at(1, 1), at(1, 1)])).toEqual([{ position: 1, issue: 'cellTaken' }]);
+    expect(spreadLayoutIssues([at(1, 1, true)])).toEqual([{ position: 0, issue: 'crossingAlone' }]);
+    expect(spreadLayoutIssues([at(1, 1, true), at(1, 1)])).toEqual([]);
+    expect(spreadLayoutIssues([{ layout: null }, { layout: null }])).toEqual([]);
+  });
+
+  it('rejects a seed crosswise card with nothing under it', () => {
+    const file = clone();
+    position(file, 'three-card', 0).layout = { col: 5, row: 4, rotated: true };
     expect(spreadsFileSchema.safeParse(file).success).toBe(false);
   });
 });

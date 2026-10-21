@@ -67,7 +67,9 @@
     },
     "chooser": {
       "title": "Elija una tirada",
-      "empty": "No hay tiradas disponibles."
+      "empty": "No hay tiradas disponibles.",
+      "create": "Crear tirada propia",
+      "manage": "Mis tiradas"
     },
     "reading": {
       "position": "{{index}} · {{name}}",
@@ -105,6 +107,71 @@
       "drawNote": "Nota de esta posición",
       "change": "Cambiar carta",
       "remove": "Quitar carta"
+    },
+    "builder": {
+      "list": {
+        "title": "Mis tiradas",
+        "seed": "Tiradas incluidas",
+        "custom": "Sus tiradas",
+        "empty": "Aún no ha creado tiradas propias.",
+        "create": "Crear tirada",
+        "duplicate": "Duplicar",
+        "duplicateLabel": "Duplicar {{name}}"
+      },
+      "form": {
+        "newTitle": "Nueva tirada propia",
+        "editTitle": "Editar tirada",
+        "name": "Nombre",
+        "description": "Descripción",
+        "descriptionHint": "Opcional: cuándo usarla y cómo leerla.",
+        "positions": "Posiciones",
+        "positionName": "Nombre de la posición {{index}}",
+        "positionMeaning": "Significado de la posición {{index}}",
+        "positionMeaningHint": "Opcional.",
+        "add": "Agregar posición",
+        "moveUp": "Subir posición {{index}}",
+        "moveDown": "Bajar posición {{index}}",
+        "remove": "Quitar posición {{index}}",
+        "maxPositions": "Una tirada puede tener hasta {{max}} posiciones.",
+        "delete": {
+          "button": "Eliminar tirada",
+          "title": "¿Eliminar esta tirada?",
+          "body": "Ya no aparecerá al crear una tirada nueva. Las lecturas que ya hizo con ella no cambian.",
+          "confirm": "Eliminar tirada"
+        }
+      },
+      "layout": {
+        "title": "Disposición",
+        "hint": "Elija una posición y toque la casilla donde va. Las posiciones sin lugar se muestran solo en la lista.",
+        "select": "Posición a colocar",
+        "crossed": "Cruzada",
+        "none": "Sin lugar",
+        "cell": "Fila {{row}}, columna {{col}}",
+        "cellWith": "Fila {{row}}, columna {{col}}: {{positions}}",
+        "placed": "Fila {{row}}, columna {{col}}",
+        "placedCrossed": "Fila {{row}}, columna {{col}}, cruzada",
+        "unplaced": "Sin lugar",
+        "crossedIndex": "{{index}} cruzada"
+      },
+      "error": {
+        "nameRequired": "Escriba un nombre para la tirada.",
+        "nameTaken": "Ya tiene una tirada con ese nombre. Elija otro.",
+        "noPositions": "Agregue al menos una posición.",
+        "tooMany": "Una tirada puede tener hasta {{max}} posiciones.",
+        "positionName": "Escriba un nombre para la posición {{index}}.",
+        "outOfGrid": "La posición {{index}} está fuera de la cuadrícula.",
+        "cellTaken": "La posición {{index}} está en una casilla ocupada.",
+        "crossingAlone": "La posición {{index}} está cruzada, pero no tiene otra carta debajo.",
+        "summary": "Revise los datos marcados antes de guardar."
+      },
+      "copyName": "{{name}} (copia)",
+      "copyNameN": "{{name}} (copia {{n}})",
+      "leave": {
+        "title": "¿Descartar los cambios?",
+        "body": "Lo que cambió en esta tirada no se ha guardado.",
+        "confirm": "Descartar",
+        "cancel": "Seguir editando"
+      }
     }
   },
   "zodiac": {

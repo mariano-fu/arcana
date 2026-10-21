@@ -5,6 +5,8 @@ interface Props {
   title: string;
   children: ReactNode;
   confirmLabel: string;
+  /** Defaults to "Cancelar". */
+  cancelLabel?: string;
   /** Red confirm button, for deletes. */
   destructive?: boolean;
   onConfirm: () => void;
@@ -16,6 +18,7 @@ export default function ConfirmDialog({
   title,
   children,
   confirmLabel,
+  cancelLabel,
   destructive = false,
   onConfirm,
   onCancel,
@@ -48,7 +51,7 @@ export default function ConfirmDialog({
             {confirmLabel}
           </button>
           <button type="button" onClick={onCancel} className="min-h-11 text-base text-stone-600">
-            {t('common.cancel')}
+            {cancelLabel ?? t('common.cancel')}
           </button>
         </div>
       </div>

@@ -73,6 +73,21 @@ export default function TemplatePickerPage() {
           ))}
         </ul>
       )}
+
+      <div className="flex flex-wrap gap-2">
+        <Link
+          to={`/sessions/${session.id}/spreads/new`}
+          className="flex min-h-11 items-center justify-center rounded-lg border border-stone-300 bg-white px-4 text-base"
+        >
+          {t('spreads.chooser.create')}
+        </Link>
+        <Link
+          to={`/sessions/${session.id}/spreads`}
+          className="flex min-h-11 items-center justify-center rounded-lg border border-stone-300 bg-white px-4 text-base"
+        >
+          {t('spreads.chooser.manage')}
+        </Link>
+      </div>
     </div>
   );
 }
