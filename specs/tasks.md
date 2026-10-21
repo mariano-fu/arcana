@@ -27,12 +27,12 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [x] T1.9 Spreads: choose template → position grid with card thumbnails → card picker (search + browse by suit with thumbnails, ≤3 taps) → reversed toggle (image rotates) → meaning panel (full image + card meaning + position meaning + her card note). Save into session. Creating the reading must write `reading.spread_snapshot` (spread name + each position's number, name, meaning, layout `{col, row, rotated}`); past readings render from the snapshot, never from the current template.
 - [x] T1.10 Custom spread builder.
 - [x] T1.11 Card reference screen (image + meanings) with her personal notes per card.
-- [ ] T1.12 Home: upcoming follow-ups, pending balances, recent sessions.
+- [x] T1.12 Home: upcoming follow-ups, pending balances, recent sessions.
 - [ ] T1.13 Export to JSON / import from JSON (Zod-validated, versioned format). Round-trip test.
 - [ ] T1.14 Settings: storage persistence request + status, export/import, versions.
   - Acerca de: list third-party licenses (generated at build time), including MIT notices for bundled packages.
   - Manual birth-place entry: make the timezone dropdown searchable, with Spanish labels and common zones (America/Costa_Rica, US, Central America, Spain) first.
-- [ ] T1.15 Playwright e2e on WebKit iPhone viewport: create client → session → Cruz Celta → reload offline → data still there. Runs in CI on Ubuntu (GitHub Actions), not locally: Playwright doesn't support Arch-based distros.
+- [x] T1.15 Playwright e2e on WebKit iPhone viewport: create client → session → Cruz Celta → reload offline → data still there. Runs in CI on Ubuntu (GitHub Actions), not locally: Playwright doesn't support Arch-based distros.
 - [ ] T4.7 Service-worker update toast ("Nueva versión disponible — recargar"). Moved up from Phase 4. Switches `registerType` in `web/pwa.config.ts` to `prompt`.
   - Note: On app version change, clear the sync 'stopped' state so a fixed bug doesn't leave sync paused.
 - [ ] T1.16 Storage survival check on her iPhone: confirm `navigator.storage.persist()` was granted, and after a week of real use verify all data is intact; record results in `docs/spikes/`.
