@@ -33,6 +33,44 @@ jobs:
       - run: npm run gen:api-types && git diff --exit-code -- src/sync/api.gen.ts
       - run: npm run build
 
+  # Playwright on WebKit with an iPhone profile against the production build (T1.15). Not a
+  # required check: making it one means updating main's branch protection (Mariano's call).
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - id: playwright
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - id: browsers
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-webkit-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - if: steps.browsers.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps webkit
+      - if: steps.browsers.outputs.cache-hit == 'true'
+        run: npx playwright install-deps webkit
+      - run: npm run build
+      - run: npm run test:e2e
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            web/playwright-report/
+            web/test-results/
+          retention-days: 7
+
   # Not a required check yet: add it to main's branch protection once this job is on main.
   api:
     runs-on: ubuntu-latest

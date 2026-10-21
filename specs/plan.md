@@ -37,7 +37,7 @@
 | i18n | i18next, `es` only for now | Principle 3 |
 | Dates/TZ | Luxon | IANA timezones incl. historical DST for natal charts |
 | Astrology math | `astronomy-engine` (MIT) for planet ecliptic longitudes; ascendant/MC/Placidus houses implemented in a small `astro/` module | Offline, permissive license. **Avoid Swiss Ephemeris bindings (AGPL)** in case this becomes a product |
-| Tests | Vitest + Testing Library; Playwright e2e incl. WebKit + iPhone viewport | Catch Safari issues early |
+| Tests | Vitest + Testing Library; Playwright e2e incl. WebKit + iPhone viewport (iPhone 15 profile, production build via `vite preview` with the real service worker, offline reloads; every test aborts and asserts zero `/api` requests). Runs only in CI (`e2e` job, not a required check) | Catch Safari issues early |
 
 TypeScript is pinned to `~6.0` until typescript-eslint supports 7.x (its peer range is `<6.1`).
 
