@@ -55,7 +55,7 @@ export default function AstrologyPanel({ client }: { client: Client }) {
           sign: signName(sun.sign),
           alternative: signName(sun.alternative),
         });
-  // Provisional (T2.6 A2): an uncertain Moon shows both possible signs, with a warning.
+  // Decision (T2.6 A2): an uncertain Moon shows both possible signs, with a warning.
   const moonLabel = view.moonOptions
     ? t('astro.panel.orSign', {
         sign: signName(view.moonOptions.start),
@@ -89,7 +89,7 @@ export default function AstrologyPanel({ client }: { client: Client }) {
         ))}
       </dl>
 
-      {/* Provisional (T2.6 A4): the cusp follows clientSigns' date-only rule. */}
+      {/* Decision (T2.6 A4): the cusp follows clientSigns' date-only rule. */}
       {sun.alternative !== null && (
         <Note>
           {t('astro.panel.sunCusp', {
@@ -115,7 +115,7 @@ export default function AstrologyPanel({ client }: { client: Client }) {
 
       <SunProfile sign={sun.sign} />
 
-      {/* Provisional (T2.6 A1): the full chart is folded so Cristales stays close. */}
+      {/* Decision (T2.6 A1): the full chart is folded so Cristales stays close. */}
       {view.planets && (
         <details className="rounded-lg border border-stone-200 bg-white">
           <summary className="flex min-h-11 cursor-pointer items-center px-4 text-base font-medium">

@@ -59,7 +59,7 @@ export default function NatalChart({
         </tbody>
       </table>
 
-      {/* Provisional (T2.6 A5): cusps 1–12 only; no planets placed in houses yet. */}
+      {/* Decision (T2.6 A5): cusps 1–12 only; no planets placed in houses yet. */}
       {houses && (
         <table className="w-full text-base">
           <caption className="text-left font-semibold">{t('astro.panel.houses')}</caption>

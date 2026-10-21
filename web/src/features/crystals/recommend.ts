@@ -6,8 +6,8 @@
 // once per crystal, even if her edits list it twice. Crystals scoring 0, hidden ones and
 // tombstones are left out. Her edited and her own crystals are scored like any other row.
 //
-// Decisions marked "Provisional (T2.8 decision N)" await Mariano's confirmation; each is a named
-// constant or a small branch so it is easy to change.
+// The rules marked "Decision (T2.8 decision N)" were confirmed by Mariano on 2026-10-21; each
+// is a named constant or a small branch so it is easy to change.
 
 import type { TFunction } from 'i18next';
 
@@ -22,7 +22,7 @@ export const SIGN_POINTS: Record<Placement, number> = { sun: 2, moon: 1, rising:
 export const INTENTION_POINTS = 3;
 
 /**
- * Provisional (T2.8 decision 1): on a cusp date, a crystal for either possible sun sign earns the
+ * Decision (T2.8 decision 1): on a cusp date, a crystal for either possible sun sign earns the
  * full sun points (once per crystal), with the reason marked "posible".
  */
 export const CUSP_ALTERNATIVE_POINTS = SIGN_POINTS.sun;
@@ -45,7 +45,7 @@ export interface RecommendInput {
   intentions: readonly string[];
   /** Intention tag rows; a chosen key without a live row does not count. */
   tags: readonly IntentionTag[];
-  /** No default: callers decide how many to show (provisional, T2.8 decision 3). */
+  /** No default: callers decide how many to show (T2.8 decision 3). */
   limit?: number;
 }
 
@@ -59,7 +59,7 @@ export function recommendCrystals({
   tags,
   limit,
 }: RecommendInput): Recommendation[] {
-  // Provisional (T2.8 decision 4): a deleted tag no longer counts, even if a crystal lists it.
+  // Decision (T2.8 decision 4): a deleted tag no longer counts, even if a crystal lists it.
   const liveTags = new Set(tags.filter((tag) => tag.deleted_at === null).map((tag) => tag.key));
   const chosen = [...new Set(intentions)].filter((key) => liveTags.has(key));
 
@@ -82,7 +82,7 @@ export function recommendCrystals({
     if (score > 0) ranked.push({ crystal, score, reasons, intentionMatches: matched.length });
   }
 
-  // Provisional (T2.8 decision 5): ties go to more matched intentions, then Spanish
+  // Decision (T2.8 decision 5): ties go to more matched intentions, then Spanish
   // alphabetical order; the id keeps the order the same on every device.
   ranked.sort(
     (a, b) =>

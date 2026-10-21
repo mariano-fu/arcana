@@ -50,7 +50,7 @@ export function clientSigns(birth: BirthData): ClientSigns {
   }
 
   if (time === null) {
-    // Provisional (T2.8 decision 2): an uncertain Moon is left out rather than counting both
+    // Decision (T2.8 decision 2): an uncertain Moon is left out rather than counting both
     // possible signs.
     if (moonSignUncertain(date, tz)) {
       return { ...NO_SIGNS, sun: sunFrom(date), moonUncertain: true };

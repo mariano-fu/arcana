@@ -25,7 +25,7 @@ export default function SunProfile({ sign }: { sign: SignKey }) {
     [t('astro.panel.modality'), t(`zodiac.modality.${profile.modality}`)],
     [
       t('astro.panel.ruler'),
-      // Provisional (T2.6 A6): modern ruler, with the traditional one when they differ.
+      // Decision (T2.6 A6): modern ruler, with the traditional one when they differ.
       profile.ruler === profile.traditional_ruler
         ? ruler
         : t('astro.panel.rulerTraditional', {
@@ -35,7 +35,7 @@ export default function SunProfile({ sign }: { sign: SignKey }) {
     ],
     [t('astro.panel.traits'), profile.traits.join(', ')],
     [t('astro.panel.compatible'), names(profile.compatible)],
-    // Provisional (T2.6 A7): the seed's challenging signs are shown too.
+    // Decision (T2.6 A7): the seed's challenging signs are shown too.
     [t('zodiac.field.challenging'), names(profile.challenging)],
   ];
 

@@ -146,7 +146,7 @@ function ClientDetail({ client }: { client: Client }) {
         </div>
       </Section>
 
-      {/* Provisional (T2.6 A8): after Sesiones, where the shell was. */}
+      {/* Decision (T2.6 A8): after Sesiones, where the shell was. */}
       <Section title={t('clients.detail.astrology')}>
         <AstrologyPanel client={client} />
       </Section>
