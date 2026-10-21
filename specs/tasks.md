@@ -29,7 +29,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [x] T1.11 Card reference screen (image + meanings) with her personal notes per card.
 - [x] T1.12 Home: upcoming follow-ups, pending balances, recent sessions.
 - [ ] T1.13 Export to JSON / import from JSON (Zod-validated, versioned format). Round-trip test.
-- [ ] T1.14 Settings: storage persistence request + status, export/import, versions.
+- [x] T1.14 Settings: storage persistence request + status, export/import, versions.
   - Acerca de: list third-party licenses (generated at build time), including MIT notices for bundled packages.
   - Manual birth-place entry: make the timezone dropdown searchable, with Spanish labels and common zones (America/Costa_Rica, US, Central America, Spain) first.
 - [x] T1.15 Playwright e2e on WebKit iPhone viewport: create client → session → Cruz Celta → reload offline → data still there. Runs in CI on Ubuntu (GitHub Actions), not locally: Playwright doesn't support Arch-based distros.
