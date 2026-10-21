@@ -5,7 +5,7 @@ import { ArcanaDB, createRepositories, getDeviceId, type Repositories } from '..
 import { createAuth } from './auth';
 import { createSyncEngine, type SyncEngine } from './engine';
 import { createLocalLocks, type Locks } from './locks';
-import { CURSOR_KEY, EPOCH_KEY, readCursor, readStatus, STATUS_KEY } from './status';
+import { EPOCH_KEY, readCursor, readStatus, STATUS_KEY } from './status';
 
 let db: ArcanaDB;
 let server: FakeSyncServer;
@@ -408,6 +408,17 @@ describe('server epoch', () => {
     await db.session.put({ ...session, pending: 0 });
     const crystalId = seedId('crystal', 'amethyst');
     await repos.crystal.update(crystalId, { hidden: true }); // An edited seed row, pending = 1.
+    // Edited seed rows whose pending flag says 0: still hers, so they must upload.
+    const editedId = seedId('crystal', 'rose-quartz');
+    const hiddenId = seedId('crystal', 'clear-quartz');
+    const edited = await db.crystal.get(editedId);
+    const hidden = await db.crystal.get(hiddenId);
+    if (!edited || !hidden) throw new Error('seed crystals missing');
+    await db.crystal.bulkPut([
+      { ...edited, description: 'Su propia descripción', user_modified: true, pending: 0 },
+      { ...hidden, hidden: true, pending: 0 },
+    ]);
+    const untouchedId = seedId('crystal', 'citrine');
     const before = new Map(
       [...(await db.client.toArray()), ...(await db.session.toArray())].map((row) => [row.id, row]),
     );
@@ -425,6 +436,10 @@ describe('server epoch', () => {
     expect(server.get('client', client.id)?.name).toBe('Cliente de prueba');
     expect(server.get('client', deleted.id)?.deleted_at).not.toBeNull();
     expect(server.get('crystal', crystalId)?.hidden).toBe(true);
+    expect(server.get('crystal', editedId)?.description).toBe('Su propia descripción');
+    expect(server.get('crystal', hiddenId)?.hidden).toBe(true);
+    expect(server.get('crystal', untouchedId)).toBeUndefined();
+    expect((await db.crystal.get(editedId))?.pending).toBe(0);
     const tables = new Set([...server.rows.values()].map((row) => row.table));
     expect(tables.has('spread_template')).toBe(false);
     expect(tables.has('intention_tag')).toBe(false);
@@ -477,18 +492,44 @@ describe('server epoch', () => {
     expect(await db.horoscope.count()).toBe(1);
   });
 
-  it('does not apply the page of a response from another database', async () => {
+  it('in one sync(): discards the mismatched page, resets the cursor to 0, re-pushes everything, then pulls', async () => {
+    const client = await repos.client.create(newClient());
     await engine.sync('open');
-    await db.meta.put({ key: CURSOR_KEY, value: '40' });
+    expect((await db.client.get(client.id))?.pending).toBe(0);
     server.resetDatabase();
-    const stale = remoteClient(crypto.randomUUID(), ago(1));
-    server.put('client', stale);
+    const remote = remoteClient(crypto.randomUUID(), ago(1));
+    server.put('client', remote);
+    // The first response of the run comes from the new database, with a page relative to the
+    // old cursor: it must not be applied.
+    const bogus = remoteClient(crypto.randomUUID(), ago(1), 'No debe guardarse');
+    server.script.push({
+      kind: 'ok',
+      body: {
+        applied: [],
+        conflicts: [],
+        changes: [{ table: 'client', record: { ...bogus, server_version: 99 } }],
+        cursor: 99,
+        server_time: new Date().toISOString(),
+        epoch: server.epoch,
+      },
+    });
+    const sent = server.requests.length;
 
-    await engine.sync('open');
+    const status = await engine.sync('open');
 
-    // Pulled again from cursor 0 after the reset, not skipped by the old cursor.
-    expect(await db.client.get(stale.id)).toBeDefined();
-    expect(server.requests.at(-1)?.cursor).toBe(1);
+    expect(status.state).toBe('idle');
+    const run = server.requests.slice(sent);
+    // 1: the mismatched exchange (old cursor). 2: re-push from cursor 0. Then pulls.
+    expect(run[0]?.cursor).toBeGreaterThan(0);
+    expect(run[1]?.cursor).toBe(0);
+    expect(run[1]?.changes?.map((change) => change.record.id)).toEqual([client.id]);
+    expect(run.slice(2).every((request) => (request.changes ?? []).length === 0)).toBe(true);
+    expect(run.length).toBeGreaterThanOrEqual(3);
+    expect(await db.client.get(bogus.id)).toBeUndefined();
+    expect(await db.client.get(remote.id)).toBeDefined();
+    expect(server.get('client', client.id)?.updated_at).toBe(client.updated_at);
+    expect(await readCursor(db)).toBe(server.version);
+    expect((await db.meta.get(EPOCH_KEY))?.value).toBe(server.epoch);
   });
 });
 
