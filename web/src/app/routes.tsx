@@ -1,5 +1,7 @@
 import type { RouteObject } from 'react-router';
 
+import CardDetailPage from '../features/cards/CardDetailPage';
+import CardListPage from '../features/cards/CardListPage';
 import ClientDetailPage from '../features/clients/ClientDetailPage';
 import ClientFormPage from '../features/clients/ClientFormPage';
 import ClientListPage from '../features/clients/ClientListPage';
@@ -31,6 +33,8 @@ export const routes: RouteObject[] = [
       { path: 'sessions/:id/spreads/new', element: <SpreadFormPage /> },
       { path: 'sessions/:id/spreads/:spreadId/edit', element: <SpreadFormPage /> },
       { path: 'payments', element: <PaymentsPage /> },
+      { path: 'cards', element: <CardListPage /> },
+      { path: 'cards/:key', element: <CardDetailPage /> },
       { path: 'about', element: <AboutPage /> },
     ],
   },

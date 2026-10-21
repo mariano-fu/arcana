@@ -7,6 +7,7 @@ import { db, repos, type Session } from '../../db';
 import es from '../../i18n/locales/es.json';
 import { cardsSeed } from '../../seed/cards';
 import { loadSeed, seedId } from '../../seed/loader';
+import { saveCardNote } from '../cards/actions';
 import { clearDb, newClient, newSession } from '../clients/test-utils';
 import { createReading, drawId, placeCard, removeCard } from './actions';
 
@@ -139,7 +140,7 @@ describe('readings', () => {
 
   it('autosaves the position note and shows her card note read-only', async () => {
     const user = userEvent.setup();
-    await repos.card_note.create({ card_id: 'major-01', note: 'Me sale cuando hay proyectos' });
+    await saveCardNote(db, 'major-01', 'Me sale cuando hay proyectos');
     const reading = await createReading(db, session.id, CELTIC_CROSS);
     await placeCard(db, reading.id, 1, { card_id: 'major-01', reversed: false });
     renderAt(`/sessions/${session.id}/readings/${reading.id}`);

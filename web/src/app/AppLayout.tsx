@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { to: '/', key: 'nav.home', end: true },
   { to: '/payments', key: 'nav.payments', end: false },
   { to: '/clients', key: 'nav.clients', end: false },
+  { to: '/cards', key: 'nav.cards', end: false },
 ] as const;
 
 /**

@@ -3,11 +3,11 @@ import { useTranslation } from 'react-i18next';
 
 import { db, type CardDraw, type SpreadSnapshotPosition } from '../../db';
 import { cardName } from '../../seed/cards';
+import { useCardNote } from '../cards/hooks';
 import { useAutosave } from '../sessions/autosave';
 import { removeCard, setDrawNote, setReversed } from './actions';
 import CardImage from './CardImage';
 import { cardByKey } from './cardSearch';
-import { useCardNote } from './hooks';
 import Sheet from './Sheet';
 
 interface Props {
@@ -103,7 +103,7 @@ export default function CardMeaningPanel({
               {/* Custom spreads may leave a position's meaning empty. */}
               {position.meaning !== '' && <p className="text-base">{position.meaning}</p>}
             </div>
-            {cardNote !== undefined && cardNote !== '' && (
+            {cardNote !== undefined && cardNote.trim() !== '' && (
               <div className="flex flex-col gap-1 rounded-lg bg-amber-50 p-3">
                 <h4 className="text-sm font-medium text-stone-700">
                   {t('spreads.panel.cardNote')}

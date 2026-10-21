@@ -60,11 +60,3 @@ export function sortTemplates(templates: SpreadTemplate[]): SpreadTemplate[] {
 export function useSpreadTemplates(): SpreadTemplate[] | undefined {
   return useLiveQuery(async () => sortTemplates(await db.spread_template.filter(live).toArray()));
 }
-
-/** Her personal note on a card (empty string when she has none); undefined while loading. */
-export function useCardNote(cardId: string): string | undefined {
-  return useLiveQuery(async () => {
-    const notes = await db.card_note.where('card_id').equals(cardId).filter(live).toArray();
-    return notes.map((row) => row.note.trim()).find((note) => note !== '') ?? '';
-  }, [cardId]);
-}

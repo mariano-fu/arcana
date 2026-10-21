@@ -1,4 +1,6 @@
-import { createAutosave, type AutosaveState } from './autosave';
+import { renderHook } from '@testing-library/react';
+
+import { createAutosave, useAutosave, type AutosaveState } from './autosave';
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -95,5 +97,54 @@ describe('createAutosave', () => {
     await autosave.flush();
 
     expect(states).toEqual(['saving', 'saved', 'saving', 'error']);
+  });
+});
+
+describe('useAutosave', () => {
+  function setVisibility(state: DocumentVisibilityState) {
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: state });
+  }
+
+  afterEach(() => {
+    setVisibility('visible');
+  });
+
+  function mount() {
+    const save = vi.fn<(patch: { notes: string }) => Promise<void>>(() => Promise.resolve());
+    const hook = renderHook(() => useAutosave(save));
+    hook.result.current.schedule({ notes: 'Hola' });
+    return { save, ...hook };
+  }
+
+  // Each save runs after the ones before it, on a microtask; the 600 ms pause never passes here.
+  const settle = () => vi.advanceTimersByTimeAsync(0);
+
+  it('saves right away when the app is hidden', async () => {
+    const { save } = mount();
+    setVisibility('hidden');
+    document.dispatchEvent(new Event('visibilitychange'));
+    await settle();
+    expect(save).toHaveBeenCalledWith({ notes: 'Hola' });
+  });
+
+  it('does not save early when the app becomes visible', async () => {
+    const { save } = mount();
+    document.dispatchEvent(new Event('visibilitychange'));
+    await settle();
+    expect(save).not.toHaveBeenCalled();
+  });
+
+  it('saves right away on pagehide', async () => {
+    const { save } = mount();
+    window.dispatchEvent(new Event('pagehide'));
+    await settle();
+    expect(save).toHaveBeenCalledWith({ notes: 'Hola' });
+  });
+
+  it('saves right away on unmount', async () => {
+    const { save, unmount } = mount();
+    unmount();
+    await settle();
+    expect(save).toHaveBeenCalledWith({ notes: 'Hola' });
   });
 });
