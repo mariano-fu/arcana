@@ -101,9 +101,7 @@ describe('Respaldo: import', () => {
 
     const preview = await section.findByRole('group', { name: /^Respaldo del / });
     expect(within(preview).getByText('Nuevos: 1')).toBeVisible();
-    expect(
-      within(preview).getByText('Se conserva la versión de este teléfono, más reciente: 1'),
-    ).toBeVisible();
+    expect(within(preview).getByText('Se conserva la versión de este teléfono: 1')).toBeVisible();
     expect(within(preview).queryByText(B.future)).not.toBeInTheDocument();
     expect(await db.client.get(incoming.id)).toBeUndefined();
 

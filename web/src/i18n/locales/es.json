@@ -648,7 +648,7 @@
       "export": "Exportar respaldo",
       "preparing": "Preparando…",
       "filename": "arcana-respaldo-{{date}}.json",
-      "exportError": "No se pudo crear el respaldo: algunos datos de este teléfono no pasaron la revisión. Sus datos siguen guardados aquí.",
+      "exportError": "No se pudo crear el respaldo: algunos datos de este teléfono están incompletos. Sincronice y vuelva a intentarlo; sus datos siguen guardados aquí.",
       "import": "Importar respaldo",
       "reading": "Revisando el archivo…",
       "previewTitle": "Respaldo del {{date}}",
@@ -662,7 +662,7 @@
         "added": "Nuevos: {{count}}",
         "updated": "Actualizados: {{count}}",
         "deleted": "Borrados: {{count}}",
-        "kept": "Se conserva la versión de este teléfono, más reciente: {{count}}",
+        "kept": "Se conserva la versión de este teléfono: {{count}}",
         "unchanged": "Sin cambios: {{count}}"
       },
       "error": {
