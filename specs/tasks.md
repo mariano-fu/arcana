@@ -25,7 +25,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [x] T1.8c Payments UI: record/edit/delete payments on a session (method, date, reference), status badge on sessions, client totals + balance.
 - [x] T1.8d "Pagos" screen: monthly income per currency, pending balances list, filterable payment list, CSV export for a month.
 - [x] T1.9 Spreads: choose template → position grid with card thumbnails → card picker (search + browse by suit with thumbnails, ≤3 taps) → reversed toggle (image rotates) → meaning panel (full image + card meaning + position meaning + her card note). Save into session. Creating the reading must write `reading.spread_snapshot` (spread name + each position's number, name, meaning, layout `{col, row, rotated}`); past readings render from the snapshot, never from the current template.
-- [ ] T1.10 Custom spread builder.
+- [x] T1.10 Custom spread builder.
 - [ ] T1.11 Card reference screen (image + meanings) with her personal notes per card.
 - [ ] T1.12 Home: upcoming follow-ups, pending balances, recent sessions.
 - [ ] T1.13 Export to JSON / import from JSON (Zod-validated, versioned format). Round-trip test.
@@ -39,7 +39,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 
 ## Phase 2 — Astrology & crystals (offline)
 - [x] T2.1 `astro/` sun sign + cusp handling. Tests.
-- [ ] T2.2 Cities dataset build script (GeoNames subset → `cities.json`). Offline city autocomplete in client form; manual lat/lng/tz fallback.
+- [x] T2.2 Cities dataset build script (GeoNames subset → `cities.json`). Offline city autocomplete in client form; manual lat/lng/tz fallback.
 - [x] T2.3 `astro/` `toUtc` with historical timezones. Tests incl. Costa Rica DST years (CR used DST briefly — verify which years) and a Southern-hemisphere case.
 - [x] T2.4 `astro/` planet positions via astronomy-engine + moon-sign uncertainty. Reference-chart tests (±1°).
 - [x] T2.5 `astro/` ascendant + Placidus houses (+ whole-sign fallback). Reference tests.
