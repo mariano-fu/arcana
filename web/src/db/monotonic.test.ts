@@ -89,6 +89,50 @@ describe('monotonic updated_at middleware', () => {
     expect((await db.session.get(session.id))?.updated_at).toBe('2026-10-20T12:00:00.001Z');
   });
 
+  it('bumps writes made through Table.update()', async () => {
+    const client = await createRepositories(db, fixedClock(T0)).client.create(newClient());
+
+    await db.client.update(client.id, { name: 'Otro nombre', updated_at: T0, pending: 1 });
+
+    expect(await db.client.get(client.id)).toMatchObject({
+      name: 'Otro nombre',
+      updated_at: '2026-10-20T12:00:00.001Z',
+    });
+  });
+
+  it('bumps writes made through Collection.modify(), with an object or a function', async () => {
+    const repos = createRepositories(db, fixedClock(T0));
+    const a = await repos.client.create(newClient({ name: 'A' }));
+    const b = await repos.client.create(newClient({ name: 'B' }));
+
+    // A real change: modify() with an object skips rows it wouldn't change.
+    await db.client
+      .where('id')
+      .anyOf([a.id, b.id])
+      .modify({ archived: true, updated_at: T0, pending: 1 });
+    expect((await db.client.get(a.id))?.updated_at).toBe('2026-10-20T12:00:00.001Z');
+    expect((await db.client.get(b.id))?.updated_at).toBe('2026-10-20T12:00:00.001Z');
+
+    // A plain key range: Dexie also sends `criteria` and `changeSpec` with the values.
+    await db.client.where('id').equals(b.id).modify({ name: 'B2', updated_at: T0, pending: 1 });
+    expect((await db.client.get(b.id))?.updated_at).toBe('2026-10-20T12:00:00.002Z');
+
+    await db.client
+      .where('id')
+      .equals(a.id)
+      .modify((row) => {
+        row.notes = 'Nota';
+        row.updated_at = T0;
+        row.deleted_at = T0;
+        row.pending = 1;
+      });
+    expect(await db.client.get(a.id)).toMatchObject({
+      notes: 'Nota',
+      updated_at: '2026-10-20T12:00:00.002Z',
+      deleted_at: '2026-10-20T12:00:00.002Z',
+    });
+  });
+
   it('stores pending = 0 writes as given (seed rows, pulled rows)', async () => {
     await loadSeed(db, undefined, fixedClock(T0));
     const id = seedId('crystal', 'amethyst');

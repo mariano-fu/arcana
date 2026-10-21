@@ -162,7 +162,9 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
     async function pushAndPull(): Promise<Step> {
       const { changes, snapshot } = await readPending(db);
       for (const chunk of chunkChanges(changes, pushLimits)) {
-        const step = await exchange(chunk, snapshot);
+        // Only this chunk's rows: a row still waiting in a later chunk hasn't been pushed, so a
+        // server copy pulled now must not count as the server's answer to it.
+        const step = await exchange(chunk, chunkSnapshot(chunk, snapshot));
         if (step.kind !== 'applied') return step;
       }
       for (let page = 0; page < maxPullPages; page++) {
@@ -226,6 +228,11 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
       return () => listeners.delete(listener);
     },
   };
+}
+
+function chunkSnapshot(chunk: readonly PushChange[], snapshot: PushSnapshot): PushSnapshot {
+  const ids = new Set(chunk.map((change) => change.record.id));
+  return new Map([...snapshot].filter(([id]) => ids.has(id)));
 }
 
 function failed(

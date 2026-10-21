@@ -111,6 +111,41 @@ describe('a sync run', () => {
     expect(pushes[1]?.cursor).toBe(2);
   });
 
+  it('a pulled row still waiting in a later chunk stays pending and is pushed in that chunk', async () => {
+    const first = await repos.client.create(newClient({ name: 'Primera' }));
+    const waiting = await repos.client.create(newClient({ name: 'Su versión' }));
+    // An older copy of `waiting` from another device: chunk 1's response pulls it.
+    server.put('client', remoteClient(waiting.id, ago(60), 'Versión vieja del servidor'));
+    const twoChunks = createSyncEngine({
+      db,
+      api: server,
+      locks,
+      pushLimits: { maxRows: 1, maxBytes: 1_000_000 },
+    });
+    const atChunk2: (typeof waiting | undefined)[] = [];
+    const sync = server.sync.bind(server);
+    vi.spyOn(server, 'sync').mockImplementation(async (access, body) => {
+      if (body.changes?.some((change) => change.record.id === waiting.id)) {
+        atChunk2.push(await db.client.get(waiting.id));
+      }
+      return sync(access, body);
+    });
+
+    expect((await twoChunks.sync('open')).state).toBe('idle');
+
+    const pushes = server.requests.filter((request) => (request.changes ?? []).length > 0);
+    expect(pushes.map((request) => request.changes?.map((change) => change.record.id))).toEqual([
+      [first.id],
+      [waiting.id],
+    ]);
+    // After chunk 1 it is untouched and pending; chunk 2 sends her version as it was.
+    expect(atChunk2).toEqual([waiting]);
+    expect(pushes[1]?.changes?.[0]?.record.updated_at).toBe(waiting.updated_at);
+    // The server accepted her newer version, and the local row is its applied copy.
+    expect(server.get('client', waiting.id)?.name).toBe('Su versión');
+    expect(await db.client.get(waiting.id)).toEqual({ ...waiting, pending: 0 });
+  });
+
   it('stops after maxPullPages pages, idle, and resumes from the cursor on the next run', async () => {
     server.pageSize = 1;
     for (let i = 0; i < 5; i++) server.put('client', remoteClient(crypto.randomUUID(), ago(10)));
