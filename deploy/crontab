@@ -1,0 +1,6 @@
+# Scheduled jobs, run by supercronic in the `cron` service (mounted read-only at /app/crontab).
+# Times are Costa Rica time (UTC-6, no DST).
+CRON_TZ=America/Costa_Rica
+
+# Remove expired refresh tokens from the simplejwt blacklist tables.
+30 3 * * * python manage.py flushexpiredtokens

@@ -73,12 +73,14 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 
 ## Phase 4 — Deploy & horoscopes
 - [ ] T4.1 `deploy/docker-compose.yml`: caddy (serves built PWA + proxies /api), api, db, cron. `.env.example`. Caddy must serve .webmanifest as application/manifest+json.
-  - Note: Set REST_FRAMEWORK NUM_PROXIES = 1 behind Caddy so auth throttling keys on the client IP, not Caddy's; add a test.
+  - Note: Set REST_FRAMEWORK NUM_PROXIES to the number of proxies in the chain (2: tailscale serve → Caddy) so auth throttling keys on the client IP; add a test.
   - Note: The chain is tailscale serve → Caddy → gunicorn. Configure Caddy trusted_proxies and the matching NUM_PROXIES for the full chain, and test that throttling keys on the device's address, not a proxy's.
   - Note: Cron: run `manage.py flushexpiredtokens` daily; deploy runs `migrate` (simplejwt blacklist tables).
 - [ ] T4.2 Tailscale setup doc in `docs/deploy.md`: enable MagicDNS + HTTPS certificates, `tailscale serve` → Caddy, share the node with her account, ACL limiting her to the app port. Install on her iPhone from the ts.net URL.
+  - Note: On the real node, confirm Caddy's access log shows client_ip = the device's 100.x address and that a second device isn't throttled by the first; if tailscale serve doesn't set X-Forwarded-For, fix the chain before she uses it.
 - [ ] T4.3 Nightly `pg_dump` backups + tested restore procedure.
   - Note: The restore script itself runs rotate_sync_epoch after restoring (not a manual step); test that a restore changes the epoch.
+  - Note: The one-shot migrate service runs a pg_dump to the backup volume before `migrate` when there are unapplied migrations.
 - [ ] T4.4 Spike (1 evening): call freehoroscopeapi.com for all 12 signs, check response shape and text length; translate a sample with DeepL Free (test `formality`), review quality. ADR with decision.
 - [ ] T4.5 `horoscopes` app: `HoroscopeSource` (freehoroscopeapi, manual) and `Translator` (DeepL Free, none) interfaces. Daily job: fetch → translate → upsert `text_en`/`text_es`; skip re-translation; DeepL quota check that falls back to English-only above 90%. Tests with mocked HTTP, including DeepL down and quota exceeded.
   - Note: Horoscope job writes through the same locked sync-write helper.

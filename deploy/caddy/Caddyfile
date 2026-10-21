@@ -1,0 +1,73 @@
+# Arcana's single origin: the PWA and /api on the same host (specs/plan.md, "Deploy").
+#
+# The chain is device → tailscale serve (TLS, on the host) → Caddy (here, plain HTTP on 8080,
+# published on the host's loopback only) → gunicorn. tailscale serve sets X-Forwarded-For to
+# the device's tailnet address and X-Forwarded-Proto to https. Its connection reaches Caddy
+# through Docker's port publishing, from a private address (the bridge gateway), so Caddy
+# trusts private ranges: it keeps those headers and appends that address to
+# X-Forwarded-For. Django then counts 2 proxies (NUM_PROXIES=2). Tailnet addresses
+# (100.64.0.0/10) are not private ranges, so a device can never pose as a proxy.
+{
+	admin off
+	auto_https off
+	servers {
+		trusted_proxies static private_ranges
+		client_ip_headers X-Forwarded-For
+		trusted_proxies_strict
+	}
+}
+
+:8080 {
+	# Access log on stdout; `client_ip` is the device's address.
+	log
+	encode zstd gzip
+
+	handle /healthz {
+		respond 200
+	}
+
+	handle /api/* {
+		header Cache-Control "no-store"
+		# A sync push may be up to 10 MB (DATA_UPLOAD_MAX_MEMORY_SIZE); a little slack for headers.
+		request_body {
+			max_size 11MB
+		}
+		reverse_proxy api:8000 {
+			# Read the whole body before passing it on, so a slow phone upload doesn't hold a
+			# gunicorn sync worker for its duration.
+			request_buffers 11MB
+		}
+	}
+
+	# The Django admin is not served here (v1): use `docker compose exec` or an SSH tunnel to
+	# the api's loopback port (deploy/README.md).
+	handle /admin* {
+		respond 404
+	}
+
+	handle {
+		root * /srv
+
+		# Hashed file names never change content: cache them for good, and never answer a
+		# missing one with index.html.
+		@hashed path /assets/* /workbox-*.js
+		handle @hashed {
+			header Cache-Control "public, max-age=31536000, immutable"
+			file_server
+		}
+
+		@manifest path *.webmanifest
+		header @manifest Content-Type "application/manifest+json"
+
+		# Everything else (index.html, sw.js, registerSW.js, the manifest, icons) is revalidated
+		# on every load, so a new deploy is picked up; the service worker serves it offline.
+		# Its own handle: Caddy runs try_files before handle, so the fallback must not see
+		# hashed paths.
+		handle {
+			header Cache-Control "no-cache"
+			# SPA routes (/clients/…) get the app shell.
+			try_files {path} /index.html
+			file_server
+		}
+	}
+}
