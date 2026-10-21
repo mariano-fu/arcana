@@ -137,6 +137,37 @@ def test_server_time_has_millisecond_precision(api: APIClient) -> None:
     assert len(server_time) == len("2026-10-19T12:00:00.000Z")
 
 
+def test_birth_time_round_trips_as_hours_and_minutes(api: APIClient) -> None:
+    client = new_client(updated_at=at(1))
+
+    ok(push(api, DEVICE_A, [change(client, birth_time="14:03")]))
+    body = ok(push(api, DEVICE_B, []))
+
+    assert pulled(body, "client")[str(client.id)]["birth_time"] == "14:03"
+    assert stored(Client, client.id).birth_time == dt.time(14, 3)
+
+
+def test_birth_time_with_zero_seconds_is_accepted(api: APIClient) -> None:
+    client = new_client(updated_at=at(1))
+
+    ok(push(api, DEVICE_A, [change(client, birth_time="14:03:00")]))
+
+    assert stored(Client, client.id).birth_time == dt.time(14, 3)
+
+
+@pytest.mark.parametrize("value", ["14:03:30", "14:03:00.5"])
+def test_birth_time_with_seconds_is_rejected(api: APIClient, value: str) -> None:
+    client = new_client(updated_at=at(1))
+
+    response = push(api, DEVICE_A, [change(client, birth_time=value)])
+
+    assert response.status_code == 400
+    [error] = response.json()["records"]
+    assert error["code"] == "invalid"
+    assert "birth_time" in error["detail"]
+    assert_nothing_applied(client)
+
+
 def test_upload_limit_fits_a_full_push() -> None:
     assert settings.DATA_UPLOAD_MAX_MEMORY_SIZE == 10 * 1024 * 1024
 

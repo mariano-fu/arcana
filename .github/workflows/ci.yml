@@ -29,6 +29,8 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
+      # src/sync/api.gen.ts is generated from the committed api/openapi.yaml.
+      - run: npm run gen:api-types && git diff --exit-code -- src/sync/api.gen.ts
       - run: npm run build
 
   # Not a required check yet: add it to main's branch protection once this job is on main.
@@ -67,5 +69,6 @@ jobs:
       - run: uv run ruff format --check .
       - run: uv run mypy .
       - run: uv run python manage.py makemigrations --check --dry-run
+      - run: uv run python manage.py spectacular --validate --fail-on-warn --file openapi.yaml && git diff --exit-code -- openapi.yaml
       - run: uv run pytest
       - run: docker build -t arcana-api:ci .

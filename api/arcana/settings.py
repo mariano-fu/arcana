@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "django.contrib.postgres",
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
+    "drf_spectacular",
     "core",
     "sync",
     "horoscopes",
@@ -121,11 +122,36 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser"],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     # Scoped per view (core/auth.py). Clients are told apart by REMOTE_ADDR (NUM_PROXIES unset),
     # which behind Caddy is the proxy: one shared bucket per scope, fine for a single-user app
     # and not dodgeable via X-Forwarded-For. Counts live in each worker's local-memory cache,
     # so the effective limit is the rate times the number of gunicorn workers.
     "DEFAULT_THROTTLE_RATES": {"auth": env.str("AUTH_THROTTLE_RATE", default="10/min")},
+}
+
+# OpenAPI schema (`api/openapi.yaml`, served at /api/schema/); the web client's TS types are
+# generated from it (`npm run gen:api-types`).
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Arcana API",
+    "DESCRIPTION": "Sync and backup server for the Arcana tarot practice app.",
+    "VERSION": "0.1.0",
+    # Request and response records differ (`server_version` is response-only).
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SERVE_INCLUDE_SCHEMA": False,
+    # Spectacular serves the schema to anyone by default; auth everywhere (constitution §2).
+    "SERVE_PERMISSIONS": ["rest_framework.permissions.IsAuthenticated"],
+    "ENUM_NAME_OVERRIDES": {
+        "CurrencyEnum": "sync.models.Currency",
+        "SessionTypeEnum": "sync.models.SessionType",
+        "PaymentMethodEnum": "sync.models.PaymentMethod",
+        "SyncedTableEnum": "sync.models.SYNCED_TABLE_NAMES",
+        "RecordErrorCodeEnum": "sync.service.ERROR_CODES",
+    },
+    "POSTPROCESSING_HOOKS": [
+        "drf_spectacular.hooks.postprocess_schema_enums",
+        "sync.schema.postprocess",
+    ],
 }
 
 SIMPLE_JWT = {

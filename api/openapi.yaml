@@ -1,0 +1,1826 @@
+openapi: 3.0.3
+info:
+  title: Arcana API
+  version: 0.1.0
+  description: Sync and backup server for the Arcana tarot practice app.
+paths:
+  /api/auth/token/:
+    post:
+      operationId: auth_token_create
+      description: Username + password → access and refresh tokens. Throttled (plan.md,
+        Security).
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+          description: ''
+        '429':
+          description: Throttled (`AUTH_THROTTLE_RATE`); `Retry-After` gives the seconds
+            to wait.
+  /api/auth/token/refresh/:
+    post:
+      operationId: auth_token_refresh_create
+      description: Refresh token → new access token and a rotated refresh token; the
+        old one is blacklisted.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+          description: ''
+        '429':
+          description: Throttled (`AUTH_THROTTLE_RATE`); `Retry-After` gives the seconds
+            to wait.
+  /api/health/:
+    get:
+      operationId: health_retrieve
+      description: Liveness + database check. The only endpoint that needs no auth
+        (constitution §2).
+      tags:
+      - health
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+          description: ''
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthDown'
+          description: ''
+  /api/sync/:
+    post:
+      operationId: sync_create
+      description: |-
+        Push pending rows, pull the next page (specs/plan.md, "Sync protocol").
+
+        A 400 means nothing was applied: request errors come as DRF field errors, record
+        errors as `records: [{index, table, id, code, detail}]`.
+      tags:
+      - sync
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncBadRequest'
+          description: 'Nothing applied: per-record `records`, or DRF field errors.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+          description: ''
+components:
+  schemas:
+    CardDrawRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        updated_at:
+          type: string
+          format: date-time
+          description: Client clock; last-write-wins compares it.
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Tombstone.
+        server_version:
+          type: integer
+          readOnly: true
+        device_id:
+          type: string
+          format: uuid
+        reading_id:
+          type: string
+          format: uuid
+        position_index:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          description: 1-based.
+        card_id:
+          type: string
+          description: Seed card key, e.g. major-00.
+        reversed:
+          type: boolean
+        note:
+          type: string
+      required:
+      - id
+      - updated_at
+      - deleted_at
+      - server_version
+      - device_id
+      - reading_id
+      - position_index
+      - card_id
+      - reversed
+      - note
+    CardDrawRecordRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        updated_at:
+          type: string
+          format: date-time
+          description: Client clock; last-write-wins compares it.
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Tombstone.
+        device_id:
+          type: string
+          format: uuid
+        reading_id:
+          type: string
+          format: uuid
+        position_index:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          description: 1-based.
+        card_id:
+          type: string
+          minLength: 1
+          description: Seed card key, e.g. major-00.
+        reversed:
+          type: boolean
+        note:
+          type: string
+      required:
+      - card_id
+      - id
+      - position_index
+      - reading_id
+      - updated_at
+    CardNoteRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        updated_at:
+          type: string
+          format: date-time
+          description: Client clock; last-write-wins compares it.
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Tombstone.
+        server_version:
+          type: integer
+          readOnly: true
+        device_id:
+          type: string
+          format: uuid
+        card_id:
+          type: string
+          description: Seed card key, e.g. major-00.
+        note:
+          type: string
+      required:
+      - id
+      - updated_at
+      - deleted_at
+      - server_version
+      - device_id
+      - card_id
+      - note
+    CardNoteRecordRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        updated_at:
+          type: string
+          format: date-time
+          description: Client clock; last-write-wins compares it.
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Tombstone.
+        device_id:
+          type: string
+          format: uuid
+        card_id:
+          type: string
+          minLength: 1
+          description: Seed card key, e.g. major-00.
+        note:
+          type: string
+      required:
+      - card_id
+      - id
+      - updated_at
+    ClientRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        updated_at:
+          type: string
+          format: date-time
+          description: Client clock; last-write-wins compares it.
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Tombstone.
+        server_version:
+          type: integer
+          readOnly: true
+        device_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        instagram:
+          type: string
+          nullable: true
+        whatsapp:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        birth_date:
+          type: string
+          format: date
+          nullable: true
+        birth_time:
+          type: string
+          pattern: ^([01][0-9]|2[0-3]):[0-5][0-9]$
+          nullable: true
+        birth_place_label:
+          type: string
+          nullable: true
+        birth_lat:
+          type: number
+          format: double
+          nullable: true
+        birth_lng:
+          type: number
+          format: double
+          nullable: true
+        birth_tz:
+          type: string
+          nullable: true
+          description: IANA timezone.
+        notes:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        archived:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - updated_at
+      - deleted_at
+      - server_version
+      - device_id
+      - name
+      - instagram
+      - whatsapp
+      - email
+      - birth_date
+      - birth_time
+      - birth_place_label
+      - birth_lat
+      - birth_lng
+      - birth_tz
+      - notes
+      - tags
+      - archived
+      - created_at
+    ClientRecordRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        updated_at:
+          type: string
+          format: date-time
+          description: Client clock; last-write-wins compares it.
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Tombstone.
+        device_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+        instagram:
+          type: string
+          nullable: true
+        whatsapp:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        birth_date:
+          type: string
+          format: date
+          nullable: true
+        birth_time:
+          type: string
+          pattern: ^([01][0-9]|2[0-3]):[0-5][0-9]$
+          nullable: true
+        birth_place_label:
+          type: string
+          nullable: true
+        birth_lat:
+          type: number
+          format: double
+          nullable: true
+        birth_lng:
+          type: number
+          format: double
+          nullable: true
+        birth_tz:
+          type: string
+          nullable: true
+          description: IANA timezone.
+        notes:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        archived:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - created_at
+      - id
+      - name
+      - updated_at
+    ConflictRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        updated_at:
+          type: string
+          format: date-time
+          description: Client clock; last-write-wins compares it.
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Tombstone.
+        server_version:
+          type: integer
+          readOnly: true
+        device_id:
+          type: string
+          format: uuid
+        table:
+          $ref: '#/components/schemas/SyncedTableEnum'
+        record_id:
+          type: string
+          format: uuid
+        field:
+          type: string
+        losing_value:
+          type: string
+          nullable: true
+        losing_device_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        resolved:
+          type: boolean
+      required:
+      - id
+      - updated_at
+      - deleted_at
+      - server_version
+      - device_id
+      - table
+      - record_id
+      - field
+      - losing_value
+      - losing_device_id
+      - created_at
+      - resolved
+    ConflictRecordRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        updated_at:
+          type: string
+          format: date-time
+          description: Client clock; last-write-wins compares it.
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Tombstone.
+        device_id:
+          type: string
+          format: uuid
+        table:
+          $ref: '#/components/schemas/SyncedTableEnum'
+        record_id:
+          type: string
+          format: uuid
+        field:
+          type: string
+          minLength: 1
+        losing_value:
+          type: string
+          nullable: true
+        losing_device_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        resolved:
+          type: boolean
+      required:
+      - created_at
+      - field
+      - id
+      - losing_device_id
+      - record_id
+      - table
+      - updated_at
+    ConflictRef:
+      type: object
+      properties:
+        table:
+          $ref: '#/components/schemas/SyncedTableEnum'
+        id:
+          type: string
+          format: uuid
+          description: The record's id, not the conflict row's.
+        field:
+          type: string
+      required:
+      - table
+      - id
+      - field
+    CrystalRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        updated_at:
+          type: string
+          format: date-time
+          description: Client clock; last-write-wins compares it.
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Tombstone.
+        server_version:
+          type: integer
+          readOnly: true
+        device_id:
+          type: string
+          format: uuid
+        seed_key:
+          type: string
+          nullable: true
+        name:
+          type: string
+        colors:
+          type: array
+          items:
+            type: string
+        chakras:
+          type: array
+          items:
+            type: string
+        signs:
+          type: array
+          items:
+            type: string
+        intentions:
+          type: array
+          items:
+            type: string
+          description: Intention tag keys.
+        description:
+          type: string
+        care:
+          type: string
+        hidden:
+          type: boolean
+        user_modified:
+          type: boolean
+      required:
+      - id
+      - updated_at
+      - deleted_at
+      - server_version
+      - device_id
+      - seed_key
+      - name
+      - colors
+      - chakras
+      - signs
+      - intentions
+      - description
+      - care
+      - hidden
+      - user_modified
+    CrystalRecordRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        updated_at:
+          type: string
+          format: date-time
+          description: Client clock; last-write-wins compares it.
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Tombstone.
+        device_id:
+          type: string
+          format: uuid
+        seed_key:
+          type: string
+          nullable: true
+        name:
+          type: string
+          minLength: 1
+        colors:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        chakras:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        signs:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        intentions:
+          type: array
+          items:
+            type: string
+            minLength: 1
+          description: Intention tag keys.
+        description:
+          type: string
+        care:
+          type: string
+        hidden:
+          type: boolean
+        user_modified:
+          type: boolean
+      required:
+      - id
+      - name
+      - updated_at
+    CurrencyEnum:
+      enum:
+      - CRC
+      - USD
+      type: string
+      description: |-
+        * `CRC` - Crc
+        * `USD` - Usd
+    DatabaseEnum:
+      enum:
+      - unavailable
+      type: string
+      description: '* `unavailable` - unavailable'
+    ErrorDetail:
+      type: object
+      description: DRF's error body for 401, 403 and 429.
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    Health:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/HealthStatusEnum'
+      required:
+      - status
+    HealthDown:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/HealthDownStatusEnum'
+        database:
+          $ref: '#/components/schemas/DatabaseEnum'
+      required:
+      - status
+      - database
+    HealthDownStatusEnum:
+      enum:
+      - error
+      type: string
+      description: '* `error` - error'
+    HealthStatusEnum:
+      enum:
+      - ok
+      type: string
+      description: '* `ok` - ok'
+    HoroscopeRecord:
+      type: object
+      properties:
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Tombstone.
+        server_version:
+          type: integer
+          readOnly: true
+        id:
+          type: string
+          format: uuid
+        updated_at:
+          type: string
+          format: date-time
+        device_id:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        sign:
+          type: string
+          description: Zodiac seed key, e.g. scorpio.
+        period:
+          allOf:
+          - $ref: '#/components/schemas/PeriodEnum'
+          default: day
+        text_en:
+          type: string
+        text_es:
+          type: string
+          nullable: true
+          description: Null when not translated.
+        source:
+          type: string
+        translator:
+          type: string
+          nullable: true
+      required:
+      - deleted_at
+      - server_version
+      - id
+      - updated_at
+      - device_id
+      - date
+      - sign
+      - period
+      - text_en
+      - text_es
+      - source
+      - translator
+    IntentionTagRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        updated_at:
+          type: string
+          format: date-time
+          description: Client clock; last-write-wins compares it.
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Tombstone.
+        server_version:
+          type: integer
+          readOnly: true
+        device_id:
+          type: string
+          format: uuid
+        key:
+          type: string
+        label:
+          type: string
+          nullable: true
+          description: Null for an unrenamed seed tag (UI uses es.json).
+      required:
+      - id
+      - updated_at
+      - deleted_at
+      - server_version
+      - device_id
+      - key
+      - label
+    IntentionTagRecordRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        updated_at:
+          type: string
+          format: date-time
+          description: Client clock; last-write-wins compares it.
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Tombstone.
+        device_id:
+          type: string
+          format: uuid
+        key:
+          type: string
+          minLength: 1
+        label:
+          type: string
+          nullable: true
+          description: Null for an unrenamed seed tag (UI uses es.json).
+      required:
+      - id
+      - key
+      - updated_at
+    NullEnum:
+      enum:
+      - null
+    PaymentMethodEnum:
+      enum:
+      - sinpe
+      - cash
+      - transfer
+      - paypal
+      - other
+      type: string
+      description: |-
+        * `sinpe` - Sinpe
+        * `cash` - Cash
+        * `transfer` - Transfer
+        * `paypal` - Paypal
+        * `other` - Other
+    PaymentRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        updated_at:
+          type: string
+          format: date-time
+          description: Client clock; last-write-wins compares it.
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Tombstone.
+        server_version:
+          type: integer
+          readOnly: true
+        device_id:
+          type: string
+          format: uuid
+        session_id:
+          type: string
+          format: uuid
+        client_id:
+          type: string
+          format: uuid
+        amount_minor:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          description: Integer minor units (céntimos/cents).
+        currency:
+          $ref: '#/components/schemas/CurrencyEnum'
+        method:
+          $ref: '#/components/schemas/PaymentMethodEnum'
+        paid_at:
+          type: string
+          format: date
+        reference:
+          type: string
+          nullable: true
+        note:
+          type: string
+      required:
+      - id
+      - updated_at
+      - deleted_at
+      - server_version
+      - device_id
+      - session_id
+      - client_id
+      - amount_minor
+      - currency
+      - method
+      - paid_at
+      - reference
+      - note
+    PaymentRecordRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        updated_at:
+          type: string
+          format: date-time
+          description: Client clock; last-write-wins compares it.
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Tombstone.
+        device_id:
+          type: string
+          format: uuid
+        session_id:
+          type: string
+          format: uuid
+        client_id:
+          type: string
+          format: uuid
+        amount_minor:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          description: Integer minor units (céntimos/cents).
+        currency:
+          $ref: '#/components/schemas/CurrencyEnum'
+        method:
+          $ref: '#/components/schemas/PaymentMethodEnum'
+        paid_at:
+          type: string
+          format: date
+        reference:
+          type: string
+          nullable: true
+        note:
+          type: string
+      required:
+      - amount_minor
+      - client_id
+      - currency
+      - id
+      - method
+      - paid_at
+      - session_id
+      - updated_at
+    PeriodEnum:
+      enum:
+      - day
+      type: string
+      description: '* `day` - Day'
+    PulledCardDrawChange:
+      type: object
+      properties:
+        table:
+          type: string
+          enum:
+          - card_draw
+        record:
+          $ref: '#/components/schemas/CardDrawRecord'
+      required:
+      - table
+      - record
+    PulledCardNoteChange:
+      type: object
+      properties:
+        table:
+          type: string
+          enum:
+          - card_note
+        record:
+          $ref: '#/components/schemas/CardNoteRecord'
+      required:
+      - table
+      - record
+    PulledChange:
+      oneOf:
+      - $ref: '#/components/schemas/PulledClientChange'
+      - $ref: '#/components/schemas/PulledSessionChange'
+      - $ref: '#/components/schemas/PulledPaymentChange'
+      - $ref: '#/components/schemas/PulledReadingChange'
+      - $ref: '#/components/schemas/PulledCardDrawChange'
+      - $ref: '#/components/schemas/PulledSpreadTemplateChange'
+      - $ref: '#/components/schemas/PulledCrystalChange'
+      - $ref: '#/components/schemas/PulledIntentionTagChange'
+      - $ref: '#/components/schemas/PulledCardNoteChange'
+      - $ref: '#/components/schemas/PulledConflictChange'
+      - $ref: '#/components/schemas/PulledHoroscopeChange'
+      discriminator:
+        propertyName: table
+        mapping:
+          client: '#/components/schemas/PulledClientChange'
+          session: '#/components/schemas/PulledSessionChange'
+          payment: '#/components/schemas/PulledPaymentChange'
+          reading: '#/components/schemas/PulledReadingChange'
+          card_draw: '#/components/schemas/PulledCardDrawChange'
+          spread_template: '#/components/schemas/PulledSpreadTemplateChange'
+          crystal: '#/components/schemas/PulledCrystalChange'
+          intention_tag: '#/components/schemas/PulledIntentionTagChange'
+          card_note: '#/components/schemas/PulledCardNoteChange'
+          conflict: '#/components/schemas/PulledConflictChange'
+          horoscope: '#/components/schemas/PulledHoroscopeChange'
+    PulledClientChange:
+      type: object
+      properties:
+        table:
+          type: string
+          enum:
+          - client
+        record:
+          $ref: '#/components/schemas/ClientRecord'
+      required:
+      - table
+      - record
+    PulledConflictChange:
+      type: object
+      properties:
+        table:
+          type: string
+          enum:
+          - conflict
+        record:
+          $ref: '#/components/schemas/ConflictRecord'
+      required:
+      - table
+      - record
+    PulledCrystalChange:
+      type: object
+      properties:
+        table:
+          type: string
+          enum:
+          - crystal
+        record:
+          $ref: '#/components/schemas/CrystalRecord'
+      required:
+      - table
+      - record
+    PulledHoroscopeChange:
+      type: object
+      properties:
+        table:
+          type: string
+          enum:
+          - horoscope
+        record:
+          $ref: '#/components/schemas/HoroscopeRecord'
+      required:
+      - table
+      - record
+    PulledIntentionTagChange:
+      type: object
+      properties:
+        table:
+          type: string
+          enum:
+          - intention_tag
+        record:
+          $ref: '#/components/schemas/IntentionTagRecord'
+      required:
+      - table
+      - record
+    PulledPaymentChange:
+      type: object
+      properties:
+        table:
+          type: string
+          enum:
+          - payment
+        record:
+          $ref: '#/components/schemas/PaymentRecord'
+      required:
+      - table
+      - record
+    PulledReadingChange:
+      type: object
+      properties:
+        table:
+          type: string
+          enum:
+          - reading
+        record:
+          $ref: '#/components/schemas/ReadingRecord'
+      required:
+      - table
+      - record
+    PulledSessionChange:
+      type: object
+      properties:
+        table:
+          type: string
+          enum:
+          - session
+        record:
+          $ref: '#/components/schemas/SessionRecord'
+      required:
+      - table
+      - record
+    PulledSpreadTemplateChange:
+      type: object
+      properties:
+        table:
+          type: string
+          enum:
+          - spread_template
+        record:
+          $ref: '#/components/schemas/SpreadTemplateRecord'
+      required:
+      - table
+      - record
+    PushCardDrawChangeRequest:
+      type: object
+      properties:
+        table:
+          type: string
+          enum:
+          - card_draw
+        record:
+          $ref: '#/components/schemas/CardDrawRecordRequest'
+      required:
+      - record
+      - table
+    PushCardNoteChangeRequest:
+      type: object
+      properties:
+        table:
+          type: string
+          enum:
+          - card_note
+        record:
+          $ref: '#/components/schemas/CardNoteRecordRequest'
+      required:
+      - record
+      - table
+    PushChangeRequest:
+      oneOf:
+      - $ref: '#/components/schemas/PushClientChangeRequest'
+      - $ref: '#/components/schemas/PushSessionChangeRequest'
+      - $ref: '#/components/schemas/PushPaymentChangeRequest'
+      - $ref: '#/components/schemas/PushReadingChangeRequest'
+      - $ref: '#/components/schemas/PushCardDrawChangeRequest'
+      - $ref: '#/components/schemas/PushSpreadTemplateChangeRequest'
+      - $ref: '#/components/schemas/PushCrystalChangeRequest'
+      - $ref: '#/components/schemas/PushIntentionTagChangeRequest'
+      - $ref: '#/components/schemas/PushCardNoteChangeRequest'
+      - $ref: '#/components/schemas/PushConflictChangeRequest'
+      discriminator:
+        propertyName: table
+        mapping:
+          client: '#/components/schemas/PushClientChangeRequest'
+          session: '#/components/schemas/PushSessionChangeRequest'
+          payment: '#/components/schemas/PushPaymentChangeRequest'
+          reading: '#/components/schemas/PushReadingChangeRequest'
+          card_draw: '#/components/schemas/PushCardDrawChangeRequest'
+          spread_template: '#/components/schemas/PushSpreadTemplateChangeRequest'
+          crystal: '#/components/schemas/PushCrystalChangeRequest'
+          intention_tag: '#/components/schemas/PushIntentionTagChangeRequest'
+          card_note: '#/components/schemas/PushCardNoteChangeRequest'
+          conflict: '#/components/schemas/PushConflictChangeRequest'
+    PushClientChangeRequest:
+      type: object
+      properties:
+        table:
+          type: string
+          enum:
+          - client
+        record:
+          $ref: '#/components/schemas/ClientRecordRequest'
+      required:
+      - record
+      - table
+    PushConflictChangeRequest:
+      type: object
+      properties:
+        table:
+          type: string
+          enum:
+          - conflict
+        record:
+          $ref: '#/components/schemas/ConflictRecordRequest'
+      required:
+      - record
+      - table
+    PushCrystalChangeRequest:
+      type: object
+      properties:
+        table:
+          type: string
+          enum:
+          - crystal
+        record:
+          $ref: '#/components/schemas/CrystalRecordRequest'
+      required:
+      - record
+      - table
+    PushIntentionTagChangeRequest:
+      type: object
+      properties:
+        table:
+          type: string
+          enum:
+          - intention_tag
+        record:
+          $ref: '#/components/schemas/IntentionTagRecordRequest'
+      required:
+      - record
+      - table
+    PushPaymentChangeRequest:
+      type: object
+      properties:
+        table:
+          type: string
+          enum:
+          - payment
+        record:
+          $ref: '#/components/schemas/PaymentRecordRequest'
+      required:
+      - record
+      - table
+    PushReadingChangeRequest:
+      type: object
+      properties:
+        table:
+          type: string
+          enum:
+          - reading
+        record:
+          $ref: '#/components/schemas/ReadingRecordRequest'
+      required:
+      - record
+      - table
+    PushSessionChangeRequest:
+      type: object
+      properties:
+        table:
+          type: string
+          enum:
+          - session
+        record:
+          $ref: '#/components/schemas/SessionRecordRequest'
+      required:
+      - record
+      - table
+    PushSpreadTemplateChangeRequest:
+      type: object
+      properties:
+        table:
+          type: string
+          enum:
+          - spread_template
+        record:
+          $ref: '#/components/schemas/SpreadTemplateRecordRequest'
+      required:
+      - record
+      - table
+    ReadingRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        updated_at:
+          type: string
+          format: date-time
+          description: Client clock; last-write-wins compares it.
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Tombstone.
+        server_version:
+          type: integer
+          readOnly: true
+        device_id:
+          type: string
+          format: uuid
+        session_id:
+          type: string
+          format: uuid
+        spread_template_id:
+          type: string
+          format: uuid
+        spread_snapshot:
+          $ref: '#/components/schemas/SpreadSnapshot'
+        label:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - updated_at
+      - deleted_at
+      - server_version
+      - device_id
+      - session_id
+      - spread_template_id
+      - spread_snapshot
+      - label
+      - created_at
+    ReadingRecordRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        updated_at:
+          type: string
+          format: date-time
+          description: Client clock; last-write-wins compares it.
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Tombstone.
+        device_id:
+          type: string
+          format: uuid
+        session_id:
+          type: string
+          format: uuid
+        spread_template_id:
+          type: string
+          format: uuid
+        spread_snapshot:
+          $ref: '#/components/schemas/SpreadSnapshotRequest'
+        label:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - created_at
+      - id
+      - session_id
+      - spread_snapshot
+      - spread_template_id
+      - updated_at
+    RecordError:
+      type: object
+      properties:
+        index:
+          type: integer
+          nullable: true
+          description: Position in `changes`.
+        table:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/SyncedTableEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        id:
+          type: string
+          format: uuid
+          nullable: true
+        code:
+          $ref: '#/components/schemas/RecordErrorCodeEnum'
+        detail:
+          description: A message, or DRF field errors for `invalid`.
+      required:
+      - index
+      - table
+      - id
+      - code
+      - detail
+    RecordErrorCodeEnum:
+      enum:
+      - invalid
+      - server_owned
+      - clock_ahead
+      - constraint
+      - missing_parent
+      type: string
+      description: |-
+        * `invalid` - invalid
+        * `server_owned` - server_owned
+        * `clock_ahead` - clock_ahead
+        * `constraint` - constraint
+        * `missing_parent` - missing_parent
+    SessionRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        updated_at:
+          type: string
+          format: date-time
+          description: Client clock; last-write-wins compares it.
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Tombstone.
+        server_version:
+          type: integer
+          readOnly: true
+        device_id:
+          type: string
+          format: uuid
+        client_id:
+          type: string
+          format: uuid
+        started_at:
+          type: string
+          format: date-time
+        type:
+          $ref: '#/components/schemas/SessionTypeEnum'
+        price_minor:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          description: Integer minor units (céntimos/cents).
+        currency:
+          $ref: '#/components/schemas/CurrencyEnum'
+        notes:
+          type: string
+        follow_up_note:
+          type: string
+        follow_up_date:
+          type: string
+          format: date
+          nullable: true
+      required:
+      - id
+      - updated_at
+      - deleted_at
+      - server_version
+      - device_id
+      - client_id
+      - started_at
+      - type
+      - price_minor
+      - currency
+      - notes
+      - follow_up_note
+      - follow_up_date
+    SessionRecordRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        updated_at:
+          type: string
+          format: date-time
+          description: Client clock; last-write-wins compares it.
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Tombstone.
+        device_id:
+          type: string
+          format: uuid
+        client_id:
+          type: string
+          format: uuid
+        started_at:
+          type: string
+          format: date-time
+        type:
+          $ref: '#/components/schemas/SessionTypeEnum'
+        price_minor:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          description: Integer minor units (céntimos/cents).
+        currency:
+          $ref: '#/components/schemas/CurrencyEnum'
+        notes:
+          type: string
+        follow_up_note:
+          type: string
+        follow_up_date:
+          type: string
+          format: date
+          nullable: true
+      required:
+      - client_id
+      - id
+      - started_at
+      - type
+      - updated_at
+    SessionTypeEnum:
+      enum:
+      - in_person
+      - online
+      - message
+      type: string
+      description: |-
+        * `in_person` - In Person
+        * `online` - Online
+        * `message` - Message
+    SpreadLayout:
+      type: object
+      properties:
+        col:
+          type: integer
+          minimum: 0
+        row:
+          type: integer
+          minimum: 0
+        rotated:
+          type: boolean
+      required:
+      - col
+      - row
+      - rotated
+    SpreadLayoutRequest:
+      type: object
+      properties:
+        col:
+          type: integer
+          minimum: 0
+        row:
+          type: integer
+          minimum: 0
+        rotated:
+          type: boolean
+      required:
+      - col
+      - rotated
+      - row
+    SpreadPosition:
+      type: object
+      properties:
+        index:
+          type: integer
+          minimum: 1
+          description: 1-based.
+        name:
+          type: string
+        meaning:
+          type: string
+        layout:
+          allOf:
+          - $ref: '#/components/schemas/SpreadLayout'
+          nullable: true
+      required:
+      - index
+      - name
+      - meaning
+      - layout
+    SpreadPositionRequest:
+      type: object
+      properties:
+        index:
+          type: integer
+          minimum: 1
+          description: 1-based.
+        name:
+          type: string
+          minLength: 1
+        meaning:
+          type: string
+        layout:
+          allOf:
+          - $ref: '#/components/schemas/SpreadLayoutRequest'
+          nullable: true
+      required:
+      - index
+      - layout
+      - meaning
+      - name
+    SpreadSnapshot:
+      type: object
+      properties:
+        name:
+          type: string
+        positions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SpreadPosition'
+      required:
+      - name
+      - positions
+    SpreadSnapshotRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        positions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SpreadPositionRequest'
+      required:
+      - name
+      - positions
+    SpreadTemplateRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        updated_at:
+          type: string
+          format: date-time
+          description: Client clock; last-write-wins compares it.
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Tombstone.
+        server_version:
+          type: integer
+          readOnly: true
+        device_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        positions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SpreadPosition'
+        is_seed:
+          type: boolean
+        seed_key:
+          type: string
+          nullable: true
+      required:
+      - id
+      - updated_at
+      - deleted_at
+      - server_version
+      - device_id
+      - name
+      - description
+      - positions
+      - is_seed
+      - seed_key
+    SpreadTemplateRecordRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        updated_at:
+          type: string
+          format: date-time
+          description: Client clock; last-write-wins compares it.
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Tombstone.
+        device_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        positions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SpreadPositionRequest'
+        is_seed:
+          type: boolean
+        seed_key:
+          type: string
+          nullable: true
+      required:
+      - id
+      - name
+      - positions
+      - updated_at
+    SyncBadRequest:
+      oneOf:
+      - $ref: '#/components/schemas/SyncRejected'
+      - $ref: '#/components/schemas/FieldErrors'
+    SyncRejected:
+      type: object
+      properties:
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecordError'
+      required:
+      - records
+    SyncRequest:
+      type: object
+      properties:
+        device_id:
+          type: string
+          format: uuid
+        cursor:
+          type: integer
+          minimum: 0
+          description: Default 0.
+        changes:
+          type: array
+          items:
+            $ref: '#/components/schemas/PushChangeRequest'
+      required:
+      - device_id
+    SyncResponse:
+      type: object
+      properties:
+        applied:
+          type: array
+          items:
+            type: string
+            format: uuid
+        conflicts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConflictRef'
+        changes:
+          type: array
+          items:
+            $ref: '#/components/schemas/PulledChange'
+        cursor:
+          type: integer
+        server_time:
+          type: string
+          format: date-time
+      required:
+      - applied
+      - conflicts
+      - changes
+      - cursor
+      - server_time
+    SyncedTableEnum:
+      enum:
+      - client
+      - session
+      - payment
+      - reading
+      - card_draw
+      - spread_template
+      - crystal
+      - intention_tag
+      - card_note
+      - conflict
+      - horoscope
+      type: string
+      description: |-
+        * `client` - client
+        * `session` - session
+        * `payment` - payment
+        * `reading` - reading
+        * `card_draw` - card_draw
+        * `spread_template` - spread_template
+        * `crystal` - crystal
+        * `intention_tag` - intention_tag
+        * `card_note` - card_note
+        * `conflict` - conflict
+        * `horoscope` - horoscope
+    TokenObtainPair:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - refresh
+    TokenObtainPairRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - password
+      - username
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          minLength: 1
+      required:
+      - refresh
+    FieldErrors:
+      type: object
+      description: 'DRF field errors for a malformed request: `{field: errors}`.'
+      additionalProperties: {}
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
