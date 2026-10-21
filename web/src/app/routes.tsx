@@ -5,6 +5,8 @@ import ClientFormPage from '../features/clients/ClientFormPage';
 import ClientListPage from '../features/clients/ClientListPage';
 import PaymentsPage from '../features/payments/PaymentsPage';
 import SessionPage from '../features/sessions/SessionPage';
+import ReadingPage from '../features/spreads/ReadingPage';
+import TemplatePickerPage from '../features/spreads/TemplatePickerPage';
 import AppLayout from './AppLayout';
 import HomePage from './HomePage';
 
@@ -19,6 +21,8 @@ export const routes: RouteObject[] = [
       { path: 'clients/:id', element: <ClientDetailPage /> },
       { path: 'clients/:id/edit', element: <ClientFormPage /> },
       { path: 'sessions/:id', element: <SessionPage /> },
+      { path: 'sessions/:id/readings/new', element: <TemplatePickerPage /> },
+      { path: 'sessions/:id/readings/:readingId', element: <ReadingPage /> },
       { path: 'payments', element: <PaymentsPage /> },
     ],
   },

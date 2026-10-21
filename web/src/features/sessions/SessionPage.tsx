@@ -6,6 +6,7 @@ import { db, repos, type Client, type Currency, type Session } from '../../db';
 import { useClient } from '../clients/hooks';
 import { CURRENCIES, CURRENCY_SYMBOL, formatMoney } from '../payments';
 import SessionPayments from '../payments/SessionPayments';
+import SessionReadings from '../spreads/SessionReadings';
 import { deleteSession } from './actions';
 import { useAutosave, type AutosaveState } from './autosave';
 import DeleteSessionDialog from './DeleteSessionDialog';
@@ -243,11 +244,7 @@ function SessionEditor({
         )}
       </Field>
 
-      <section className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold">{t('sessions.readings.title')}</h2>
-        {/* Filled by T1.9. */}
-        <p className="text-base text-stone-600">{t('sessions.readings.soon')}</p>
-      </section>
+      <SessionReadings sessionId={session.id} />
 
       <section className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold">{t('sessions.field.followUp')}</h2>
