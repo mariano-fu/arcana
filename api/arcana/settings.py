@@ -123,11 +123,15 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser"],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-    # Scoped per view (core/auth.py). Clients are told apart by REMOTE_ADDR (NUM_PROXIES unset),
-    # which behind Caddy is the proxy: one shared bucket per scope, fine for a single-user app
-    # and not dodgeable via X-Forwarded-For. Counts live in each worker's local-memory cache,
-    # so the effective limit is the rate times the number of gunicorn workers.
+    # Scoped per view (core/auth.py). Counts live in each worker's local-memory cache, so the
+    # effective limit is the rate times the number of gunicorn workers.
     "DEFAULT_THROTTLE_RATES": {"auth": env.str("AUTH_THROTTLE_RATE", default="10/min")},
+    # How throttling tells clients apart: the number of proxies in front of gunicorn, each of
+    # which appends one X-Forwarded-For entry. DRF takes the client from that many entries from
+    # the right, so a client-sent X-Forwarded-For can't pick its own bucket. Deployed: 2
+    # (tailscale serve → Caddy, deploy/.env). Default 0: REMOTE_ADDR only. Never leave it unset
+    # (None): DRF would then key on the whole X-Forwarded-For header, which any client can vary.
+    "NUM_PROXIES": env.int("NUM_PROXIES", default=0),
 }
 
 # OpenAPI schema (`api/openapi.yaml`, served at /api/schema/); the web client's TS types are

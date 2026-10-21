@@ -1,0 +1,128 @@
+# Arcana on the homelab (specs/plan.md, "Deploy"). From this directory:
+#   docker volume create arcana_pgdata   # once: the database lives outside the project
+#   cp .env.example .env                 # and fill it in; never commit .env
+#   docker compose up -d --build
+# Every `up` runs pending migrations first (the one-shot `migrate` service).
+
+name: arcana
+
+x-hardening: &hardening
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" }
+
+x-api: &api
+  <<: *hardening
+  build:
+    context: ../api
+    target: runtime
+  image: arcana-api:local
+  # ENV_FILE lets smoke.sh use a throwaway file; normally deploy/.env.
+  env_file: ${ENV_FILE:-.env}
+  environment:
+    DATABASE_URL: postgres://arcana:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/.env}@db:5432/arcana
+    SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in deploy/.env}
+    NUM_PROXIES: ${NUM_PROXIES:-2}
+  tmpfs: [/tmp]
+
+services:
+  db:
+    image: postgres:16.15-alpine@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea
+    # The one service that starts as root: the official entrypoint prepares the data directory,
+    # then runs Postgres as the `postgres` user.
+    security_opt: ["no-new-privileges:true"]
+    environment:
+      POSTGRES_DB: arcana
+      POSTGRES_USER: arcana
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/.env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks: [backend]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "arcana", "-d", "arcana"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  # Applies pending migrations (simplejwt's token_blacklist tables included), then exits.
+  migrate:
+    <<: *api
+    command: ["python", "manage.py", "migrate", "--noinput"]
+    networks: [backend]
+    depends_on:
+      db: { condition: service_healthy }
+    restart: "no"
+
+  api:
+    <<: *api
+    # No published port: the app reaches the API only through Caddy (body limit, buffering,
+    # and an X-Forwarded-For the client can't fully choose).
+    networks: [backend, egress]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    restart: unless-stopped
+
+  # Opt-in, for an admin session over an SSH tunnel (deploy/README.md): a second api process
+  # on the host's loopback. Started only with `--profile admin`; stop it when done. Requests
+  # here bypass Caddy, so it must not stay up.
+  admin:
+    <<: *api
+    profiles: [admin]
+    networks: [backend, egress]
+    ports: ["127.0.0.1:${ADMIN_PORT:-8001}:8000"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    restart: "no"
+
+  cron:
+    <<: *api
+    build:
+      context: ../api
+      target: cron
+    image: arcana-cron:local
+    volumes:
+      - ./crontab:/app/crontab:ro
+    networks: [backend, egress]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    restart: unless-stopped
+
+  caddy:
+    <<: *hardening
+    build:
+      context: ../web
+      dockerfile: ../deploy/caddy/Dockerfile
+      additional_contexts:
+        caddyconf: ./caddy
+      args:
+        # Shown in Ajustes → Versiones; "dev" if unset.
+        BUILD_COMMIT: ${BUILD_COMMIT:-}
+    image: arcana-caddy:local
+    # Loopback only: `tailscale serve` on the host is the way in.
+    ports: ["127.0.0.1:${CADDY_PORT:-8080}:8080"]
+    # Caddy's state; nothing to keep (TLS ends at tailscale serve).
+    tmpfs: ["/data:uid=10002,gid=10002", "/config:uid=10002,gid=10002"]
+    networks: [edge, backend]
+    # No depends_on: Caddy resolves api:8000 per request, so the app shell is served even if
+    # the API never starts (say, a failed migration); /api answers 502 until it does.
+    restart: unless-stopped
+
+networks:
+  # Postgres and the API's internal traffic: no route out.
+  backend:
+    internal: true
+  egress: {}
+  edge: {}
+
+volumes:
+  # External and fixed-name, so `docker compose down -v` can't remove it.
+  pgdata:
+    external: true
+    name: ${PGDATA_VOLUME:-arcana_pgdata}

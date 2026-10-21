@@ -4,6 +4,7 @@ from typing import Any
 import pytest
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.test import override_settings
 from rest_framework.test import APIClient
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework_simplejwt.tokens import AccessToken
@@ -111,3 +112,57 @@ def test_health_stays_public_with_a_stale_token() -> None:
     client.credentials(HTTP_AUTHORIZATION="Bearer not-a-token")
 
     assert client.get("/api/health/").status_code == 200
+
+
+# Example addresses only: devices on the tailnet range (RFC 6598), proxies from RFC 5737.
+PROXY = "192.0.2.10"
+DEVICE_A = "100.64.0.1"
+DEVICE_B = "100.64.0.2"
+
+
+def behind_two_proxies() -> Any:
+    """The deployed chain: tailscale serve and Caddy each append one X-Forwarded-For entry."""
+    return override_settings(REST_FRAMEWORK={**settings.REST_FRAMEWORK, "NUM_PROXIES": 2})
+
+
+def login_from(xff: str) -> int:
+    response = APIClient().post(
+        LOGIN, {}, format="json", HTTP_X_FORWARDED_FOR=xff, REMOTE_ADDR="192.0.2.20"
+    )
+    return response.status_code
+
+
+def auth_limit() -> int:
+    limit, _ = ScopedRateThrottle().parse_rate(ScopedRateThrottle.THROTTLE_RATES["auth"])
+    assert limit is not None
+    return limit
+
+
+def test_behind_the_proxy_chain_throttling_keys_on_the_device() -> None:
+    with behind_two_proxies():
+        statuses = [login_from(f"{DEVICE_A}, {PROXY}") for _ in range(auth_limit() + 1)]
+
+        assert statuses[-1] == 429
+        # Another device behind the same proxies has its own bucket.
+        assert login_from(f"{DEVICE_B}, {PROXY}") == 400
+
+
+def test_a_client_sent_x_forwarded_for_does_not_pick_the_bucket() -> None:
+    with behind_two_proxies():
+        for _ in range(auth_limit()):
+            login_from(f"{DEVICE_A}, {PROXY}")
+
+        # The device prepends its own value: the proxies' entries still decide.
+        assert login_from(f"203.0.113.9, {DEVICE_A}, {PROXY}") == 429
+        assert login_from(f"203.0.113.9, {DEVICE_B}, {PROXY}") == 400
+
+
+def test_by_default_x_forwarded_for_is_ignored() -> None:
+    # 0, not unset: with None, DRF keys on the whole header and a client could vary it.
+    assert settings.REST_FRAMEWORK["NUM_PROXIES"] == 0
+    for _ in range(auth_limit()):
+        login_from(f"{DEVICE_A}, {PROXY}")
+
+    # Keyed by REMOTE_ADDR, so a different X-Forwarded-For shares the bucket.
+    assert login_from(f"{DEVICE_B}, {PROXY}") == 429
+    assert login_from("203.0.113.77") == 429

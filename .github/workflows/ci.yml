@@ -110,3 +110,11 @@ jobs:
       - run: uv run python manage.py spectacular --validate --fail-on-warn --file openapi.yaml && git diff --exit-code -- openapi.yaml
       - run: uv run pytest
       - run: docker build -t arcana-api:ci .
+
+  # Builds and starts the whole deployed stack (deploy/docker-compose.yml) and checks it from
+  # the host the way tailscale serve reaches it. Not a required check (T4.1).
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: deploy/smoke.sh
