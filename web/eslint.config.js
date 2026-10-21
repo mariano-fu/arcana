@@ -1,5 +1,6 @@
 import js from '@eslint/js';
 import prettier from 'eslint-config-prettier';
+import playwright from 'eslint-plugin-playwright';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import globals from 'globals';
@@ -28,6 +29,19 @@ export default tseslint.config(
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       // `const { omitted, ...rest } = row` is how a field is dropped from a typed object.
       '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }],
+    },
+  },
+  {
+    // No fixed waits; assertions that retry on their own (T1.15).
+    files: ['e2e/**/*.ts'],
+    ...playwright.configs['flat/recommended'],
+    rules: {
+      ...playwright.configs['flat/recommended'].rules,
+      'playwright/no-wait-for-timeout': 'error',
+      'playwright/no-networkidle': 'error',
+      'playwright/prefer-web-first-assertions': 'error',
+      // Playwright fixtures receive a `use` callback; it is not React's `use`.
+      'react-hooks/rules-of-hooks': 'off',
     },
   },
   prettier,

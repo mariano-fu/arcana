@@ -1,7 +1,7 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 
 import { pwaOptions } from './pwa.config.ts';
 
@@ -14,5 +14,7 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
     css: false,
+    // Playwright specs (e2e/) run in CI with `npm run test:e2e`, not under Vitest.
+    exclude: [...configDefaults.exclude, 'e2e/**'],
   },
 });
