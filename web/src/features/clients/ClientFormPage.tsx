@@ -1,8 +1,9 @@
-import { useId, useState, type ReactNode } from 'react';
+import { useId, useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router';
 
 import { nowIso, repos, type Client } from '../../db';
+import CityAutocomplete from './CityAutocomplete';
 import {
   clientToForm,
   emptyClientForm,
@@ -51,10 +52,6 @@ function ClientForm({ client }: { client: Client | null }) {
         ? await repos.client.update(client.id, result.fields)
         : await repos.client.create({
             ...result.fields,
-            // Birth place stays free text until the city list (T2.2) fills these.
-            birth_lat: null,
-            birth_lng: null,
-            birth_tz: null,
             archived: false,
             created_at: nowIso(),
           });
@@ -64,7 +61,26 @@ function ClientForm({ client }: { client: Client | null }) {
     }
   }
 
-  const text = (id: string, key: 'instagram' | 'whatsapp' | 'birth_place_label', type = 'text') => (
+  const timeZones = useMemo(() => {
+    const zones = Intl.supportedValuesOf('timeZone');
+    return values.birth_tz === '' || zones.includes(values.birth_tz)
+      ? zones
+      : [values.birth_tz, ...zones];
+  }, [values.birth_tz]);
+
+  const hasCoordinates =
+    values.birth_lat !== '' && values.birth_lng !== '' && values.birth_tz !== '';
+  const placeStatus = hasCoordinates
+    ? t('clients.form.birthPlaceCoordinates', {
+        lat: values.birth_lat,
+        lng: values.birth_lng,
+        tz: values.birth_tz,
+      })
+    : values.birth_place_label.trim() !== '' && !values.birth_place_manual
+      ? t('clients.form.birthPlaceNoCoordinates')
+      : t('clients.form.birthPlaceHint');
+
+  const text = (id: string, key: 'instagram' | 'whatsapp', type = 'text') => (
     <input
       id={id}
       type={type}
@@ -162,7 +178,105 @@ function ClientForm({ client }: { client: Client | null }) {
         />
         {t('clients.form.birthTimeUnknown')}
       </label>
-      <Field label={t('clients.form.birthPlace')}>{(id) => text(id, 'birth_place_label')}</Field>
+      <Field label={t('clients.form.birthPlace')} hint={placeStatus}>
+        {(id) => (
+          <CityAutocomplete
+            id={id}
+            value={values.birth_place_label}
+            suggestions={!values.birth_place_manual}
+            onChange={(label) => {
+              setValues((current) => ({
+                ...current,
+                birth_place_label: label,
+                // A typed place no longer matches the picked city's coordinates.
+                ...(current.birth_place_manual
+                  ? {}
+                  : { birth_lat: '', birth_lng: '', birth_tz: '' }),
+              }));
+            }}
+            onSelect={(city) => {
+              setValues((current) => ({
+                ...current,
+                birth_place_label: city.label,
+                birth_lat: String(city.lat),
+                birth_lng: String(city.lng),
+                birth_tz: city.tz,
+              }));
+            }}
+          />
+        )}
+      </Field>
+      <label className="flex min-h-11 items-center gap-3 text-base">
+        <input
+          type="checkbox"
+          checked={values.birth_place_manual}
+          onChange={(event) => {
+            set('birth_place_manual', event.target.checked);
+          }}
+          className="size-5"
+        />
+        {t('clients.form.birthPlaceManual')}
+      </label>
+      {values.birth_place_manual && (
+        <>
+          <Field
+            label={t('clients.form.birthLat')}
+            hint={t('clients.form.birthLatHint')}
+            error={errors.birth_lat && t(`clients.form.error.${errors.birth_lat}`)}
+          >
+            {(id) => (
+              <input
+                id={id}
+                inputMode="decimal"
+                value={values.birth_lat}
+                onChange={(event) => {
+                  set('birth_lat', event.target.value);
+                }}
+                className={inputClass}
+              />
+            )}
+          </Field>
+          <Field
+            label={t('clients.form.birthLng')}
+            hint={t('clients.form.birthLngHint')}
+            error={errors.birth_lng && t(`clients.form.error.${errors.birth_lng}`)}
+          >
+            {(id) => (
+              <input
+                id={id}
+                inputMode="decimal"
+                value={values.birth_lng}
+                onChange={(event) => {
+                  set('birth_lng', event.target.value);
+                }}
+                className={inputClass}
+              />
+            )}
+          </Field>
+          <Field
+            label={t('clients.form.birthTz')}
+            error={errors.birth_tz && t(`clients.form.error.${errors.birth_tz}`)}
+          >
+            {(id) => (
+              <select
+                id={id}
+                value={values.birth_tz}
+                onChange={(event) => {
+                  set('birth_tz', event.target.value);
+                }}
+                className={inputClass}
+              >
+                <option value="">{t('clients.form.birthTzPlaceholder')}</option>
+                {timeZones.map((zone) => (
+                  <option key={zone} value={zone}>
+                    {zone}
+                  </option>
+                ))}
+              </select>
+            )}
+          </Field>
+        </>
+      )}
       <Field label={t('clients.form.tags')} hint={t('clients.form.tagsHint')}>
         {(id) => (
           <input

@@ -100,7 +100,9 @@ function ClientDetail({ client }: { client: Client }) {
             {[
               formatDate(client.birth_date),
               client.birth_time ?? t('clients.detail.birthTimeUnknown'),
-              client.birth_place_label,
+              client.birth_place_label !== null && client.birth_lat === null
+                ? `${client.birth_place_label} (${t('clients.detail.noCoordinates')})`
+                : client.birth_place_label,
             ]
               .filter((part) => part !== null)
               .join(' · ')}

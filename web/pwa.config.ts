@@ -6,6 +6,11 @@ export const BACKGROUND_COLOR = '#fafaf9';
 // The status bar takes the theme color, so it matches the app background (T1.7).
 // index.html's theme-color meta and the body background in src/index.css use the same value.
 export const THEME_COLOR = BACKGROUND_COLOR;
+/**
+ * Workbox's default per-file precache limit, made explicit: larger files are skipped with only a
+ * warning, so scripts/check-precache.ts fails the build if the city list chunk reaches it.
+ */
+export const MAX_PRECACHE_FILE_BYTES = 2 * 1024 * 1024;
 
 // The manifest is static, so its Spanish copy is read from the es locale at
 // build time instead of being duplicated here.
@@ -45,5 +50,6 @@ export const pwaOptions: Partial<VitePWAOptions> = {
     navigateFallback: 'index.html',
     navigateFallbackDenylist: [/^\/api\//],
     cleanupOutdatedCaches: true,
+    maximumFileSizeToCacheInBytes: MAX_PRECACHE_FILE_BYTES,
   },
 };
