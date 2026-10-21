@@ -9,7 +9,8 @@
 // Names:
 // - City: the Spanish preferred alternate name (isolanguage `es` and isPreferredName = 1), else
 //   the first Spanish name, else the GeoNames name. The GeoNames name and every other Spanish
-//   name stay searchable (`alt`): "Londres" shows, "London" still finds it.
+//   name stay searchable (`alt`): "Londres" shows, "London" still finds it. Costa Rica always
+//   uses the GeoNames name ("Limón", not "Ciudad de Limón"); the canton tells repeats apart.
 // - Province / canton (admin1 / admin2): the Spanish preferred name, else the first Spanish name,
 //   else the GeoNames name; then a fixed list of administrative prefixes and suffixes is
 //   stripped ("Provincia de Alajuela" → "Alajuela", "Estado de Yucatán" → "Yucatán"), except
@@ -270,7 +271,7 @@ export function buildCities(input: BuildInput): {
     const names = input.spanish.get(city.geonameid);
     return {
       city,
-      name: names?.preferred ?? names?.first ?? city.name,
+      name: city.country === 'CR' ? city.name : (names?.preferred ?? names?.first ?? city.name),
       admin1: adminDisplayName(input.admin1.get(`${city.country}.${city.admin1}`), input.spanish),
       admin2: adminDisplayName(
         input.admin2.get(`${city.country}.${city.admin1}.${city.admin2}`),

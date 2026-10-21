@@ -69,6 +69,11 @@ describe('cities.json', () => {
     ['Escazú, San José', 'CR'],
     ['Zarcero, Alajuela', 'CR'],
     ['Liberia, Guanacaste', 'CR'],
+    // Costa Rica keeps GeoNames names, not Spanish alternates ("Ciudad de Limón", "Pizote").
+    ['Limón', 'CR'],
+    ['San Isidro, Pérez Zeledón, San José', 'CR'],
+    ['La Asunción, Belén, Heredia', 'CR'],
+    ['San José, Upala, Alajuela', 'CR'],
     ['Ciudad de México, México', 'MX'],
     ['Sevilla, Andalucía, España', 'ES'],
     ['Madrid, España', 'ES'],

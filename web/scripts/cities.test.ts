@@ -282,6 +282,18 @@ describe('buildCities', () => {
     ]);
   });
 
+  it('keeps the GeoNames name for Costa Rica, with Spanish names only searchable', () => {
+    const { cities } = buildCities(
+      input({
+        spanish: new Map([['600', spanishNames('Ciudad de Limón')]]),
+        cities1000: [
+          city({ geonameid: '600', name: 'Limón', admin1: '08', admin2: '102', population: 5 }),
+        ],
+      }),
+    );
+    expect(cities).toEqual([expect.objectContaining({ name: 'Limón', alt: ['Ciudad de Limón'] })]);
+  });
+
   it('adds admin1 outside Latin America, Spain and the US only when the city name repeats', () => {
     const { cities } = buildCities(
       input({
