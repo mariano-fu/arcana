@@ -57,7 +57,8 @@ describe('deleteClient', () => {
     const other = await seedClientWithHistory('Otra', 1, [{}]);
     await db.table('client').toCollection().modify({ pending: 0 });
 
-    await deleteClient(db, client.id, () => '2026-10-19T00:00:00.000Z');
+    // Later than the real clock that created the rows: updated_at only moves forward.
+    await deleteClient(db, client.id, () => '2099-10-19T00:00:00.000Z');
 
     for (const [table, id] of [
       ['client', client.id],
@@ -67,7 +68,7 @@ describe('deleteClient', () => {
       ['card_draw', draw.id],
     ] as const) {
       const row: unknown = await db.table(table).get(id);
-      expect(row).toMatchObject({ deleted_at: '2026-10-19T00:00:00.000Z', pending: 1 });
+      expect(row).toMatchObject({ deleted_at: '2099-10-19T00:00:00.000Z', pending: 1 });
     }
     expect(await repos.client.get(other.id)).toBeDefined();
     expect(await repos.session.list()).toHaveLength(1);

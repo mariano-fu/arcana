@@ -8,7 +8,14 @@ from typing import Any, Literal, get_args
 
 from django.db import IntegrityError, connection, transaction
 
-from sync.models import SERVER_DEVICE_ID, Conflict, SyncedModel, synced_write, to_ms
+from sync.models import (
+    SERVER_DEVICE_ID,
+    Conflict,
+    SyncedModel,
+    current_epoch,
+    synced_write,
+    to_ms,
+)
 from sync.registry import synced_models
 from sync.serializers import format_timestamp, record_serializer
 
@@ -30,6 +37,10 @@ CONFLICT_ID_NAMESPACE = uuid.UUID("6f1c2a52-3d0e-4d8b-9a57-7c0f3e1b2d94")
 Key = tuple[str, uuid.UUID]
 ErrorCode = Literal["invalid", "server_owned", "clock_ahead", "constraint", "missing_parent"]
 ERROR_CODES: tuple[ErrorCode, ...] = get_args(ErrorCode)
+# What happened to each pushed record: written, the same write again (nothing written), or
+# refused because the server's row wins (it comes back in `changes`).
+PushStatus = Literal["applied", "noop", "rejected"]
+PUSH_STATUSES: tuple[PushStatus, ...] = get_args(PushStatus)
 
 
 class PushRejected(Exception):
@@ -40,12 +51,21 @@ class PushRejected(Exception):
         self.errors = errors
 
 
+@dataclass(frozen=True)
+class PushResult:
+    table: str
+    id: uuid.UUID
+    status: PushStatus
+
+
 @dataclass
 class SyncResult:
-    applied: list[uuid.UUID] = field(default_factory=list)
+    # One per pushed record, in request order.
+    results: list[PushResult] = field(default_factory=list)
     conflicts: list[Conflict] = field(default_factory=list)
     changes: list[SyncedModel] = field(default_factory=list)
     cursor: int = 0
+    epoch: uuid.UUID | None = None
 
 
 def table_of(row: SyncedModel) -> str:
@@ -78,6 +98,7 @@ def sync(
         for row in page:
             returned.setdefault((table_of(row), row.pk), row)
         result.changes = sorted(returned.values(), key=lambda row: row.server_version)
+        result.epoch = current_epoch()
     return result
 
 
@@ -137,7 +158,7 @@ def _apply(
     if stored is None:  # Rule 1.
         model(**data).save()
         written.add((table, data["id"]))
-        result.applied.append(data["id"])
+        result.results.append(PushResult(table, data["id"], "applied"))
         return
 
     incoming = {
@@ -164,12 +185,12 @@ def _apply(
             setattr(stored, name, value)
         stored.save()
         written.add((table, stored.pk))
-        result.applied.append(stored.pk)
+        result.results.append(PushResult(table, stored.pk, "applied"))
     elif data["updated_at"] == stored.updated_at and (
         stored.device_id == device_id or _same_content(stored, data)
     ):
         # The same write again (a retried push, or a pulled row echoed back): no-op.
-        result.applied.append(stored.pk)
+        result.results.append(PushResult(table, stored.pk, "noop"))
     else:  # Rule 3: reject; the device gets the server's row back.
         if unseen:
             _keep_losing_text(
@@ -184,6 +205,7 @@ def _apply(
                 returned,
             )
         returned[(table, stored.pk)] = stored
+        result.results.append(PushResult(table, stored.pk, "rejected"))
 
 
 def _same_content(stored: SyncedModel, data: Mapping[str, Any]) -> bool:

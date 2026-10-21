@@ -686,6 +686,19 @@ export interface components {
             table: "reading";
             record: components["schemas"]["ReadingRecordRequest"];
         };
+        PushResult: {
+            table: components["schemas"]["PushableTableEnum"];
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description `applied`: written. `noop`: the same write again (equal `updated_at`, same device or identical content), nothing written. `rejected`: the server's row wins; it is in `changes`.
+             *
+             *     * `applied` - applied
+             *     * `noop` - noop
+             *     * `rejected` - rejected
+             */
+            status: components["schemas"]["PushStatusEnum"];
+        };
         PushSessionChangeRequest: {
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -702,6 +715,27 @@ export interface components {
             table: "spread_template";
             record: components["schemas"]["SpreadTemplateRecordRequest"];
         };
+        /**
+         * @description * `applied` - applied
+         *     * `noop` - noop
+         *     * `rejected` - rejected
+         * @enum {string}
+         */
+        PushStatusEnum: "applied" | "noop" | "rejected";
+        /**
+         * @description * `client` - client
+         *     * `session` - session
+         *     * `payment` - payment
+         *     * `reading` - reading
+         *     * `card_draw` - card_draw
+         *     * `spread_template` - spread_template
+         *     * `crystal` - crystal
+         *     * `intention_tag` - intention_tag
+         *     * `card_note` - card_note
+         *     * `conflict` - conflict
+         * @enum {string}
+         */
+        PushableTableEnum: "client" | "session" | "payment" | "reading" | "card_draw" | "spread_template" | "crystal" | "intention_tag" | "card_note" | "conflict";
         ReadingRecord: {
             /** Format: uuid */
             id: string;
@@ -927,12 +961,18 @@ export interface components {
             changes?: components["schemas"]["PushChangeRequest"][];
         };
         SyncResponse: {
-            applied: string[];
+            /** @description One per pushed record, in request order. */
+            results: components["schemas"]["PushResult"][];
             conflicts: components["schemas"]["ConflictRef"][];
             changes: components["schemas"]["PulledChange"][];
             cursor: number;
             /** Format: date-time */
             server_time: string;
+            /**
+             * Format: uuid
+             * @description Random id of the server's database. If it differs from the one a device stored, the device's cursor refers to another database: it resets the cursor to 0 and pushes every row again.
+             */
+            epoch: string;
         };
         /**
          * @description * `client` - client

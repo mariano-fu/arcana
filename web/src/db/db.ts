@@ -1,6 +1,8 @@
 import { Dexie, type Table } from 'dexie';
 
+import { monotonicUpdatedAt, type LocalWriteListener } from './monotonic';
 import type {
+  AuthRow,
   CardDraw,
   CardNote,
   Client,
@@ -34,6 +36,11 @@ export const SCHEMA_V1: Record<SyncedTableName | 'meta', string> = {
   meta: 'key',
 };
 
+/** v2: `auth`, the JWTs, apart from `meta` (see `AuthRow`). Every v1 table is unchanged. */
+export const SCHEMA_V2: Record<'auth', string> = {
+  auth: 'key',
+};
+
 export const DEFAULT_DB_NAME = 'arcana';
 
 // Plain `Table` rather than `EntityTable`: ids are always generated before insert, never by IndexedDB.
@@ -50,9 +57,24 @@ export class ArcanaDB extends Dexie {
   conflict!: Table<Conflict, string>;
   horoscope!: Table<Horoscope, string>;
   meta!: Table<MetaRow, string>;
+  auth!: Table<AuthRow, string>;
+
+  private readonly localWriteListeners = new Set<LocalWriteListener>();
 
   constructor(name: string = DEFAULT_DB_NAME) {
     super(name);
     this.version(1).stores(SCHEMA_V1);
+    this.version(2).stores(SCHEMA_V2);
+    this.use(
+      monotonicUpdatedAt(() => {
+        for (const listener of this.localWriteListeners) listener();
+      }),
+    );
+  }
+
+  /** Calls `listener` after each local edit (a write with `pending = 1`). Returns an unsubscribe. */
+  onLocalWrite(listener: LocalWriteListener): () => void {
+    this.localWriteListeners.add(listener);
+    return () => this.localWriteListeners.delete(listener);
   }
 }

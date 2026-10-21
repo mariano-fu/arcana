@@ -46,7 +46,9 @@ def sync(request: Request) -> Response:
         return Response({"records": exc.errors}, status=400)
     return Response(
         {
-            "applied": [str(record_id) for record_id in result.applied],
+            "results": [
+                {"table": r.table, "id": str(r.id), "status": r.status} for r in result.results
+            ],
             "conflicts": [
                 {"table": c.table, "id": str(c.record_id), "field": c.field}
                 for c in result.conflicts
@@ -57,5 +59,6 @@ def sync(request: Request) -> Response:
             ],
             "cursor": result.cursor,
             "server_time": format_timestamp(now),
+            "epoch": str(result.epoch),
         }
     )

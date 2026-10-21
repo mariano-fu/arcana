@@ -136,3 +136,25 @@ export async function loadSeed(
     }
   });
 }
+
+/**
+ * Seed rows exactly as the loader writes them: never edited, hidden or deleted here. Each device
+ * derives these from its own bundle, so a full re-push (sync epoch change) leaves them out when
+ * they never reached the server; pushing them would let an older bundle's copy overwrite a
+ * newer one on other devices. A row she changed fails these checks and is pushed.
+ */
+export const isUntouchedSeedRow: {
+  [T in SeedTableName]: (row: SeedTables[T]) => boolean;
+} = {
+  spread_template: (row) => row.is_seed && row.deleted_at === null,
+  crystal: (row) =>
+    row.seed_key !== null && !row.user_modified && !row.hidden && row.deleted_at === null,
+  intention_tag: (row) =>
+    row.label === null && row.deleted_at === null && row.id === seedId('intention_tag', row.key),
+};
+
+interface SeedTables {
+  spread_template: SpreadTemplate;
+  crystal: Crystal;
+  intention_tag: IntentionTag;
+}

@@ -147,6 +147,8 @@ SPECTACULAR_SETTINGS = {
         "PaymentMethodEnum": "sync.models.PaymentMethod",
         "SyncedTableEnum": "sync.models.SYNCED_TABLE_NAMES",
         "RecordErrorCodeEnum": "sync.service.ERROR_CODES",
+        "PushStatusEnum": "sync.service.PUSH_STATUSES",
+        "PushableTableEnum": "sync.schema.PUSHABLE_TABLES",
     },
     "POSTPROCESSING_HOOKS": [
         "drf_spectacular.hooks.postprocess_schema_enums",

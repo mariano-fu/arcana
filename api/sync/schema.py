@@ -12,7 +12,7 @@ from rest_framework import serializers
 from sync.models import SYNCED_TABLE_NAMES
 from sync.registry import synced_models
 from sync.serializers import TimestampField, record_serializer
-from sync.service import ERROR_CODES, SERVER_OWNED_TABLES
+from sync.service import ERROR_CODES, PUSH_STATUSES, SERVER_OWNED_TABLES
 
 
 def _change_serializer(table: str, prefix: str) -> type[serializers.Serializer[Any]]:
@@ -56,12 +56,28 @@ class ConflictRefSerializer(serializers.Serializer[dict[str, Any]]):
     field = serializers.CharField()
 
 
+class PushResultSerializer(serializers.Serializer[dict[str, Any]]):
+    table = serializers.ChoiceField(choices=PUSHABLE_TABLES)
+    id = serializers.UUIDField()
+    status = serializers.ChoiceField(
+        choices=PUSH_STATUSES,
+        help_text="`applied`: written. `noop`: the same write again (equal `updated_at`, same "
+        "device or identical content), nothing written. `rejected`: the server's row wins; it "
+        "is in `changes`.",
+    )
+
+
 class SyncResponseSerializer(serializers.Serializer[dict[str, Any]]):
-    applied = serializers.ListField(child=serializers.UUIDField())
+    results = PushResultSerializer(many=True, help_text="One per pushed record, in request order.")
     conflicts = ConflictRefSerializer(many=True)
     changes = _changes("PulledChange", list(SYNCED_TABLE_NAMES), "Pulled")
     cursor = serializers.IntegerField()
     server_time = TimestampField()
+    epoch = serializers.UUIDField(
+        help_text="Random id of the server's database. If it differs from the one a device "
+        "stored, the device's cursor refers to another database: it resets the cursor to 0 "
+        "and pushes every row again."
+    )
 
 
 class RecordErrorSerializer(serializers.Serializer[dict[str, Any]]):

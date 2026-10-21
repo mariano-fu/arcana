@@ -1,16 +1,27 @@
 """`POST /api/sync/` against the rules in specs/plan.md, "Sync protocol"."""
 
 import datetime as dt
+import io
 import uuid
 from typing import Any
 
 import pytest
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.management import call_command
 from django.utils import timezone
 from rest_framework.test import APIClient
 
-from sync.models import SERVER_DEVICE_ID, CardNote, Client, Conflict, Session, SyncedModel
+from sync.models import (
+    SERVER_DEVICE_ID,
+    CardNote,
+    Client,
+    Conflict,
+    Session,
+    SyncedModel,
+    SyncEpoch,
+    current_epoch,
+)
 from sync.serializers import format_timestamp, record_serializer
 from sync.service import PULL_PAGE_SIZE
 from tests import factories
@@ -52,6 +63,11 @@ def push(api: APIClient, device: uuid.UUID, changes: list[dict[str, Any]], curso
     return response
 
 
+def results(body: dict[str, Any]) -> list[tuple[str, uuid.UUID, str]]:
+    """The push results as (table, id, status), in request order."""
+    return [(r["table"], uuid.UUID(r["id"]), r["status"]) for r in body["results"]]
+
+
 def ok(response: Any) -> dict[str, Any]:
     assert response.status_code == 200, response.json()
     body: dict[str, Any] = response.json()
@@ -87,7 +103,7 @@ def test_new_rows_are_inserted_with_server_versions(api: APIClient) -> None:
     # Child first: a push isn't ordered by dependency.
     body = ok(push(api, DEVICE_A, [change(session), change(client)]))
 
-    assert body["applied"] == [str(session.id), str(client.id)]
+    assert results(body) == [("session", session.id, "applied"), ("client", client.id, "applied")]
     assert stored(Session, session.id).client_id == client.id
     assert stored(Client, client.id).server_version > 0
 
@@ -126,7 +142,7 @@ def test_timestamps_are_compared_in_milliseconds(api: APIClient) -> None:
     body = ok(push(api, DEVICE_B, [change(client)]))  # The ms echo, from another device.
 
     assert stored(Client, client.id).updated_at == at(1)
-    assert body["applied"] == [str(client.id)]
+    assert results(body) == [("client", client.id, "noop")]
     assert stored(Client, client.id).server_version == version
 
 
@@ -227,7 +243,7 @@ def test_newer_edit_overwrites(api: APIClient) -> None:
 
     body = ok(push(api, DEVICE_A, [change(client, name="After", updated_at=at(2))]))
 
-    assert body["applied"] == [str(client.id)]
+    assert results(body) == [("client", client.id, "applied")]
     row = stored(Client, client.id)
     assert (row.name, row.updated_at, row.device_id) == ("After", at(2), DEVICE_A)
 
@@ -238,7 +254,7 @@ def test_older_edit_is_rejected_and_the_server_row_returned(api: APIClient) -> N
 
     body = ok(push(api, DEVICE_A, [change(client, name="Older", updated_at=at(1))]))
 
-    assert body["applied"] == []
+    assert results(body) == [("client", client.id, "rejected")]
     assert pulled(body, "client")[str(client.id)]["name"] == "Newer"
     assert stored(Client, client.id).server_version == version
 
@@ -256,7 +272,7 @@ def test_equal_updated_at_from_another_device_is_rejected(api: APIClient) -> Non
 
     body = ok(push(api, DEVICE_A, [change(client, name="A")]))
 
-    assert body["applied"] == []
+    assert results(body) == [("client", client.id, "rejected")]
     assert stored(Client, client.id).name == "B"
 
 
@@ -268,7 +284,7 @@ def test_pulled_row_echoed_back_unchanged_is_a_no_op(api: APIClient) -> None:
 
     body = ok(push(api, DEVICE_A, [{"table": "client", "record": record}], cursor=pull["cursor"]))
 
-    assert body["applied"] == [str(client.id)]
+    assert results(body) == [("client", client.id, "noop")]
     assert stored(Client, client.id).server_version == client.server_version
 
 
@@ -282,7 +298,7 @@ def test_server_created_conflict_round_trips_as_a_no_op(api: APIClient) -> None:
 
     echo = ok(push(api, DEVICE_A, [{"table": "conflict", "record": record}], cursor=version))
 
-    assert echo["applied"] == [record["id"]]
+    assert results(echo) == [("conflict", uuid.UUID(record["id"]), "noop")]
     assert pulled(echo, "conflict") == {}
     conflict = Conflict.objects.get()
     assert (conflict.server_version, conflict.resolved) == (version, False)
@@ -301,7 +317,9 @@ def test_same_push_twice_is_idempotent(api: APIClient) -> None:
     ]
     second = ok(push(api, DEVICE_A, changes, cursor=first["cursor"]))
 
-    assert second["applied"] == first["applied"]
+    assert [status for *_, status in results(first)] == ["applied", "applied"]
+    # The retried push (its response was lost) writes nothing: every record is a noop.
+    assert results(second) == [(t, i, "noop") for t, i, _ in results(first)]
     assert second["conflicts"] == []
     assert second["changes"] == []
     assert second["cursor"] == first["cursor"]
@@ -344,7 +362,7 @@ def test_older_edit_after_a_delete_is_rejected_and_gets_the_tombstone(api: APICl
 
     body = ok(push(api, DEVICE_A, [change(client, deleted_at=None, updated_at=at(1))]))
 
-    assert body["applied"] == []
+    assert results(body) == [("client", client.id, "rejected")]
     assert pulled(body, "client")[str(client.id)]["deleted_at"] == format_timestamp(at(2))
     assert stored(Client, client.id).deleted_at == at(2)
 
@@ -356,7 +374,7 @@ def test_child_of_a_tombstoned_parent_is_accepted_and_both_are_pulled(api: APICl
 
     body = ok(push(api, DEVICE_B, [change(session)]))
 
-    assert body["applied"] == [str(session.id)]
+    assert results(body) == [("session", session.id, "applied")]
     assert stored(Client, client.id).deleted_at == at(2)
     body = ok(push(api, DEVICE_A, [], cursor=client.server_version - 1))
     assert pulled(body, "client")[str(client.id)]["deleted_at"] == format_timestamp(at(2))
@@ -510,7 +528,10 @@ def test_offline_for_a_week_then_sync(api: APIClient) -> None:
         seen |= set(pulled(body, "card_note"))
         cursor = body["cursor"]
 
-    assert first["applied"] == [str(a_new.id)]
+    assert results(first) == [
+        ("client", shared.id, "rejected"),
+        ("client", a_new.id, "applied"),
+    ]
     assert pulled(first, "client")[str(shared.id)]["notes"] == "B, midweek"
     assert Conflict.objects.get().losing_value == "A, offline"
     assert seen == {str(row.id) for row in b_rows}
@@ -601,7 +622,7 @@ def test_updated_at_more_than_a_day_ahead_rejects_the_whole_push(api: APIClient)
 def test_updated_at_within_a_day_ahead_is_accepted(api: APIClient) -> None:
     ahead = new_client(updated_at=timezone.now() + dt.timedelta(hours=23))
 
-    assert ok(push(api, DEVICE_A, [change(ahead)]))["applied"] == [str(ahead.id)]
+    assert results(ok(push(api, DEVICE_A, [change(ahead)]))) == [("client", ahead.id, "applied")]
 
 
 def test_card_note_round_trips_through_push_and_pull(api: APIClient) -> None:
@@ -617,3 +638,66 @@ def test_card_note_round_trips_through_push_and_pull(api: APIClient) -> None:
         str(DEVICE_A),
     )
     assert CardNote.objects.get().note == "Mine"
+
+
+def test_every_response_carries_the_database_epoch(api: APIClient) -> None:
+    first = ok(push(api, DEVICE_A, []))["epoch"]
+    second = ok(push(api, DEVICE_B, [], cursor=5))["epoch"]
+
+    assert first == second == str(current_epoch())
+    # Created by the migration, with the database.
+    assert SyncEpoch.objects.filter(pk=1).exists()
+
+
+def test_rotate_sync_epoch_gives_the_database_a_new_epoch(api: APIClient) -> None:
+    before = ok(push(api, DEVICE_A, []))["epoch"]
+    out = io.StringIO()
+
+    call_command("rotate_sync_epoch", stdout=out)
+
+    after = ok(push(api, DEVICE_A, []))["epoch"]
+    assert after != before
+    assert after in out.getvalue()
+    assert SyncEpoch.objects.count() == 1
+
+
+def test_results_give_one_status_per_pushed_record_in_request_order(api: APIClient) -> None:
+    newer = factories.ClientFactory(device_id=DEVICE_B, updated_at=at(1), name="Server")
+    same = factories.ClientFactory(device_id=DEVICE_A, updated_at=at(1))
+    winner = factories.ClientFactory(device_id=DEVICE_B, updated_at=at(5), name="Server wins")
+    fresh = new_client(updated_at=at(1))
+
+    body = ok(
+        push(
+            api,
+            DEVICE_A,
+            [
+                change(winner, name="Older", updated_at=at(2)),
+                change(fresh),
+                change(same),
+                change(newer, name="Mine", updated_at=at(3)),
+            ],
+        )
+    )
+
+    assert results(body) == [
+        ("client", winner.id, "rejected"),
+        ("client", fresh.id, "applied"),
+        ("client", same.id, "noop"),
+        ("client", newer.id, "applied"),
+    ]
+    # Only the rejected record's server row comes back; written rows are left out.
+    assert pulled(body, "client")[str(winner.id)]["name"] == "Server wins"
+    assert str(newer.id) not in pulled(body, "client")
+    assert str(fresh.id) not in pulled(body, "client")
+
+
+def test_repush_after_a_lost_response_is_noop_with_the_old_cursor(api: APIClient) -> None:
+    client = new_client(updated_at=at(1))
+    ok(push(api, DEVICE_A, [change(client)]))  # Applied; the device never saw the response.
+    version = stored(Client, client.id).server_version
+
+    again = ok(push(api, DEVICE_A, [change(client)], cursor=0))
+
+    assert results(again) == [("client", client.id, "noop")]
+    assert stored(Client, client.id).server_version == version

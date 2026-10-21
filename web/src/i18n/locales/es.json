@@ -548,5 +548,29 @@
     "geonames": "Datos de ciudades: GeoNames, bajo licencia Creative Commons Atribución 4.0 (CC BY 4.0). Se seleccionaron ciudades y se tradujeron nombres al español.",
     "geonamesLink": "geonames.org",
     "licenseLink": "Licencia CC BY 4.0"
+  },
+  "sync": {
+    "now": "Sincronizar",
+    "syncing": "Sincronizando…",
+    "stopped": {
+      "title": "La sincronización está detenida",
+      "body": "El servidor no aceptó algunos cambios. Siguen guardados en este teléfono; toque «Sincronizar» para intentarlo de nuevo.",
+      "details": "Detalles técnicos"
+    },
+    "clockAhead": {
+      "title": "Revise la fecha y hora del teléfono",
+      "body": "Algunos cambios tienen una fecha futura. Corrija la fecha y hora en los ajustes del teléfono y toque «Sincronizar»."
+    },
+    "sessionExpired": {
+      "title": "Sesión expirada",
+      "body": "Inicie sesión de nuevo en Ajustes. Sus datos siguen guardados en este teléfono."
+    },
+    "code": {
+      "invalid": "Datos no válidos",
+      "server_owned": "Datos de solo lectura",
+      "clock_ahead": "Fecha futura",
+      "constraint": "Choca con otro registro",
+      "missing_parent": "Falta un registro relacionado"
+    }
   }
 }

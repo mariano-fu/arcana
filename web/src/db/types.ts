@@ -203,3 +203,14 @@ export interface MetaRow {
   key: string;
   value: string;
 }
+
+/**
+ * The signed-in session's JWTs (`auth` table, one row with key `tokens`). Local-only and kept
+ * apart from `meta` so nothing that exports or copies `meta` can include them. Auth failures
+ * clear only this table, never the data.
+ */
+export interface AuthRow {
+  key: 'tokens';
+  access: string;
+  refresh: string;
+}
