@@ -35,6 +35,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [x] T1.15 Playwright e2e on WebKit iPhone viewport: create client → session → Cruz Celta → reload offline → data still there. Runs in CI on Ubuntu (GitHub Actions), not locally: Playwright doesn't support Arch-based distros.
 - [ ] T4.7 Service-worker update toast ("Nueva versión disponible — recargar"). Moved up from Phase 4. Switches `registerType` in `web/pwa.config.ts` to `prompt`.
   - Note: On app version change, clear the sync 'stopped' state so a fixed bug doesn't leave sync paused.
+  - Note: Add /api and /admin (and /static) to the service worker navigateFallbackDenylist.
 - [ ] T1.16 Storage survival check on her iPhone: confirm `navigator.storage.persist()` was granted, and after a week of real use verify all data is intact; record results in `docs/spikes/`.
 - [ ] **Checkpoint:** she uses it for real readings for a week. Collect feedback, update `spec.md`.
 
@@ -72,12 +73,14 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [ ] T3.9 Two-device e2e: two browser contexts, offline edits on both, sync, assert outcome.
 
 ## Phase 4 — Deploy & horoscopes
-- [ ] T4.1 `deploy/docker-compose.yml`: caddy (serves built PWA + proxies /api), api, db, cron. `.env.example`. Caddy must serve .webmanifest as application/manifest+json.
+- [x] T4.1 `deploy/docker-compose.yml`: caddy (serves built PWA + proxies /api), api, db, cron. `.env.example`. Caddy must serve .webmanifest as application/manifest+json.
   - Note: Set REST_FRAMEWORK NUM_PROXIES to the number of proxies in the chain (2: tailscale serve → Caddy) so auth throttling keys on the client IP; add a test.
   - Note: The chain is tailscale serve → Caddy → gunicorn. Configure Caddy trusted_proxies and the matching NUM_PROXIES for the full chain, and test that throttling keys on the device's address, not a proxy's.
   - Note: Cron: run `manage.py flushexpiredtokens` daily; deploy runs `migrate` (simplejwt blacklist tables).
 - [ ] T4.2 Tailscale setup doc in `docs/deploy.md`: enable MagicDNS + HTTPS certificates, `tailscale serve` → Caddy, share the node with her account, ACL limiting her to the app port. Install on her iPhone from the ts.net URL.
   - Note: On the real node, confirm Caddy's access log shows client_ip = the device's 100.x address and that a second device isn't throttled by the first; if tailscale serve doesn't set X-Forwarded-For, fix the chain before she uses it.
+  - Note: The app origin must stay exactly https://zombiejesus.<tailnet>.ts.net (same host, port 443, root path) when switching to tailscale serve → Caddy; a different origin strands her IndexedDB data. Verify on her iPhone that existing data is still there before anything else.
+  - Note: Narrow Caddy trusted_proxies from private_ranges to the Docker network gateway used by the loopback publish.
 - [ ] T4.3 Nightly `pg_dump` backups + tested restore procedure.
   - Note: The restore script itself runs rotate_sync_epoch after restoring (not a manual step); test that a restore changes the epoch.
   - Note: The one-shot migrate service runs a pg_dump to the backup volume before `migrate` when there are unapplied migrations.
