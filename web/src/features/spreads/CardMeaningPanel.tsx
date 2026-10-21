@@ -100,7 +100,8 @@ export default function CardMeaningPanel({
               <h4 className="text-sm font-medium text-stone-700">
                 {t('spreads.panel.position', { name: position.name })}
               </h4>
-              <p className="text-base">{position.meaning}</p>
+              {/* Custom spreads may leave a position's meaning empty. */}
+              {position.meaning !== '' && <p className="text-base">{position.meaning}</p>}
             </div>
             {cardNote !== undefined && cardNote !== '' && (
               <div className="flex flex-col gap-1 rounded-lg bg-amber-50 p-3">

@@ -5,6 +5,8 @@ import ClientFormPage from '../features/clients/ClientFormPage';
 import ClientListPage from '../features/clients/ClientListPage';
 import PaymentsPage from '../features/payments/PaymentsPage';
 import SessionPage from '../features/sessions/SessionPage';
+import SpreadFormPage from '../features/spreads/builder/SpreadFormPage';
+import SpreadListPage from '../features/spreads/builder/SpreadListPage';
 import ReadingPage from '../features/spreads/ReadingPage';
 import TemplatePickerPage from '../features/spreads/TemplatePickerPage';
 import AppLayout from './AppLayout';
@@ -23,6 +25,10 @@ export const routes: RouteObject[] = [
       { path: 'sessions/:id', element: <SessionPage /> },
       { path: 'sessions/:id/readings/new', element: <TemplatePickerPage /> },
       { path: 'sessions/:id/readings/:readingId', element: <ReadingPage /> },
+      // Her spreads are managed from a session's "Nueva tirada" chooser, so they nest under it.
+      { path: 'sessions/:id/spreads', element: <SpreadListPage /> },
+      { path: 'sessions/:id/spreads/new', element: <SpreadFormPage /> },
+      { path: 'sessions/:id/spreads/:spreadId/edit', element: <SpreadFormPage /> },
       { path: 'payments', element: <PaymentsPage /> },
     ],
   },
