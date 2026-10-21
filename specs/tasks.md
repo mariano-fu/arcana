@@ -26,7 +26,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [x] T1.8d "Pagos" screen: monthly income per currency, pending balances list, filterable payment list, CSV export for a month.
 - [x] T1.9 Spreads: choose template → position grid with card thumbnails → card picker (search + browse by suit with thumbnails, ≤3 taps) → reversed toggle (image rotates) → meaning panel (full image + card meaning + position meaning + her card note). Save into session. Creating the reading must write `reading.spread_snapshot` (spread name + each position's number, name, meaning, layout `{col, row, rotated}`); past readings render from the snapshot, never from the current template.
 - [x] T1.10 Custom spread builder.
-- [ ] T1.11 Card reference screen (image + meanings) with her personal notes per card.
+- [x] T1.11 Card reference screen (image + meanings) with her personal notes per card.
 - [ ] T1.12 Home: upcoming follow-ups, pending balances, recent sessions.
 - [ ] T1.13 Export to JSON / import from JSON (Zod-validated, versioned format). Round-trip test.
 - [ ] T1.14 Settings: storage persistence request + status, export/import, versions.
@@ -47,7 +47,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
   - When ascendantAndHouses returns system 'whole-sign', show: 'Casas por signo entero: el sistema Placidus no se puede calcular a esta latitud.'
   - Display positions with one shared formatter that floors total arc-minutes (29.9999° → 29°59′, never 29°60′ or 30°00′); test it at sign boundaries.
 - [ ] T2.7 Crystal library: browse, search, filter by chakra/sign/intention; add/edit/hide.
-- [ ] T2.8 Crystal recommender: score = sign matches (sun ×2, moon ×1, rising ×1) + intention matches ×3; show reasons. Unit tests.
+- [x] T2.8 Crystal recommender: score = sign matches (sun ×2, moon ×1, rising ×1) + intention matches ×3; show reasons. Unit tests.
 - [ ] T2.9 Recommendations on client detail and inside a session (attach to session).
 
 ## Phase 3 — Backend & sync
