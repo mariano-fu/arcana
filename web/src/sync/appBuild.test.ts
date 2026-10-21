@@ -1,5 +1,5 @@
 import { ArcanaDB } from '../db';
-import { APP_BUILD, APP_BUILD_KEY, clearStoppedOnNewBuild } from './appBuild';
+import { APP_BUILD, APP_BUILD_KEY, appBuild, clearStoppedOnNewBuild } from './appBuild';
 import { INITIAL_STATUS, readStatus, writeStatus, type SyncState, type SyncStatus } from './status';
 
 let db: ArcanaDB;
@@ -22,8 +22,19 @@ const stopped: SyncStatus = {
 const storedBuild = async () => (await db.meta.get(APP_BUILD_KEY))?.value;
 
 describe('clearStoppedOnNewBuild', () => {
-  it('names the build by version and commit', () => {
-    expect(APP_BUILD).toBe(`${__APP_VERSION__}+${__APP_COMMIT__}`);
+  it('names the build by version, commit and build date', () => {
+    expect(APP_BUILD).toBe(`${__APP_VERSION__}+${__APP_COMMIT__}@${__APP_BUILT_AT__}`);
+  });
+
+  it('tells apart two "dev" builds of the same version by their build date', async () => {
+    const first = appBuild('0.1.0', 'dev', '2026-10-21T18:00:00.000Z');
+    const second = appBuild('0.1.0', 'dev', '2026-10-22T09:30:00.000Z');
+    expect(second).not.toBe(first);
+
+    await clearStoppedOnNewBuild(db, first);
+    await writeStatus(db, stopped);
+    expect(await clearStoppedOnNewBuild(db, second)).toBe(true);
+    expect((await readStatus(db)).state).toBe('idle');
   });
 
   it('clears a stopped status once on a new build, keeping the last success and skew', async () => {
