@@ -60,8 +60,31 @@ describe('PWA offline shell', () => {
     expect(MAX_PRECACHE_FILE_BYTES).toBe(2 * 1024 * 1024);
   });
 
-  it('never serves the app shell for API requests', () => {
-    const denylist = pwaOptions.workbox?.navigateFallbackDenylist ?? [];
-    expect(denylist.some((pattern) => pattern.test('/api/sync/'))).toBe(true);
+  const denied = (path: string) =>
+    (pwaOptions.workbox?.navigateFallbackDenylist ?? []).some((pattern) => pattern.test(path));
+
+  it.each(['/api', '/api/sync/', '/admin', '/admin/login/', '/static', '/static/admin/base.css'])(
+    'never serves the app shell for the server path %s',
+    (path) => {
+      expect(denied(path)).toBe(true);
+    },
+  );
+
+  it.each(['/', '/clients', '/clients/123/edit', '/settings', '/apis', '/administrar'])(
+    'falls back to index.html for the app route %s',
+    (path) => {
+      expect(denied(path)).toBe(false);
+    },
+  );
+});
+
+describe('PWA updates', () => {
+  it('waits for her tap on "Recargar" instead of updating by itself', () => {
+    expect(pwaOptions.registerType).toBe('prompt');
+    expect(pwaOptions.workbox?.skipWaiting).toBeUndefined();
+  });
+
+  it('controls the page on first install, so it works offline without a reload', () => {
+    expect(pwaOptions.workbox?.clientsClaim).toBe(true);
   });
 });

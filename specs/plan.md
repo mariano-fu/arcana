@@ -45,6 +45,8 @@ TypeScript is pinned to `~6.0` until typescript-eslint supports 7.x (its peer ra
 
 **Inicio (T1.12; D1–D5 confirmed by Mariano on 2026-10-21; constants in `features/home/home.ts`).** "Today" is the device's local calendar date (D5, same rule as `paid_at`), compared with `follow_up_date` as calendar dates and rechecked at local midnight and when the app returns to the foreground. Seguimientos: live sessions with a follow-up date from 30 days overdue to 30 days ahead (D1, D4), overdue oldest first, then today, then soonest; a follow-up counts as handled once the same client has a session that started later (D1); archived clients' follow-ups are hidden (D2). Saldos pendientes: `pendingBalances` as on Pagos (archived clients included), oldest first, with a total per currency, never summed across currencies. Sesiones recientes: newest first. Limits 10 / 5 / 5 (D3); a non-empty balances list always ends with a "Ver todos" link to Pagos.
 
+**App updates (T4.7, provisional until Mariano confirms U1–U7).** `registerType: 'prompt'` with `clientsClaim` (the first install controls the page at once; a new version waits). `src/app/UpdateToast.tsx` registers the service worker and, when a new version is waiting, shows "Nueva versión disponible" with "Recargar" and "Ahora no". It never reloads by itself: "Recargar" first awaits `flushAllAutosaves()` (every on-screen autosaved field, `features/sessions/autosave.ts`) and does not reload if a save failed; forms with an explicit "Guardar" are not saved first. "Ahora no" hides it until the next start, when the waiting version takes over on a cold start. Besides navigation, the app checks for a new version when it returns to the foreground, online, at most once an hour (`src/app/updates.ts`), since iOS resumes home-screen apps without either. On start, before the sync triggers, `sync/appBuild.ts` compares the build (`version+commit`) with `meta['app:build']`: on a new build (or none stored), a `stopped` sync status becomes `idle` once, errors cleared; other states are kept. `navigateFallbackDenylist`: `/api`, `/admin`, `/static`.
+
 ### Folder layout
 ```
 web/
@@ -91,7 +93,7 @@ All synced tables share these columns:
 
 Local-only (IndexedDB, never sent to the server):
 - `pending` (`0|1`, not boolean, because IndexedDB can't index booleans): 1 while a row has unsynced changes. The sync push reads `where('pending').equals(1)`, tombstones included.
-- `meta` key/value table: `device_id` (UUIDv7 created on first run), `seed_version:spreads` and `seed_version:crystals` (the bundled `version` last loaded, see "Seed vs. user edits"), `fresh_session:<id>` (a session just created by "Nueva sesión": its fields as created, its `updated_at`, and whether creating it unarchived the client; read and removed by the discard-on-leave check and the startup sweep in `features/sessions/actions.ts`), later the sync cursor.
+- `meta` key/value table: `device_id` (UUIDv7 created on first run), `seed_version:spreads` and `seed_version:crystals` (the bundled `version` last loaded, see "Seed vs. user edits"), `app:build` (the build that last started, T4.7), `fresh_session:<id>` (a session just created by "Nueva sesión": its fields as created, its `updated_at`, and whether creating it unarchived the client; read and removed by the discard-on-leave check and the startup sweep in `features/sessions/actions.ts`), later the sync cursor.
 
 Local conventions: field names stay snake_case so rows go to the sync API as-is; timestamps are ISO 8601 UTC strings (sort lexically, which last-write-wins relies on); `server_version` is null until first sync. Deletes are soft (`deleted_at` set, row re-stamped `pending`), and repository reads hide tombstones by default.
 
@@ -287,5 +289,5 @@ Docker Compose on the homelab (`deploy/docker-compose.yml`, run from `deploy/` w
 - She installs once via Safari → Compartir → Agregar a inicio, **with Tailscale connected**. After that the app opens and works offline even with Tailscale off; only sync and app updates need it on.
 - Install must be done from Safari itself, not from a link opened inside WhatsApp/Instagram.
 - iOS allows one active VPN at a time: if she uses another VPN, sync waits until Tailscale is back on.
-- iOS updates the service worker on next launch; show a "Nueva versión disponible — recargar" toast.
+- iOS checks for a new service worker on launch (and the app also checks on returning to the foreground); a waiting version shows the "Nueva versión disponible" toast (T4.7).
 - Storage for installed home-screen apps is far less likely to be evicted than for regular Safari tabs, but backups remain mandatory.

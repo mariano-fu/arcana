@@ -15,8 +15,8 @@ export const MAX_PRECACHE_FILE_BYTES = 2 * 1024 * 1024;
 // The manifest is static, so its Spanish copy is read from the es locale at
 // build time instead of being duplicated here.
 export const pwaOptions: Partial<VitePWAOptions> = {
-  // T4.7 switches this to 'prompt' for the "Nueva versión disponible" toast.
-  registerType: 'autoUpdate',
+  // A new version waits for her tap on "Recargar" (src/app/UpdateToast.tsx, T4.7).
+  registerType: 'prompt',
   includeManifestIcons: false,
   manifest: {
     name: es.app.name,
@@ -48,8 +48,14 @@ export const pwaOptions: Partial<VitePWAOptions> = {
     // adds manifest.webmanifest itself, and the glob already covers the icons.
     globPatterns: ['**/*.{js,css,html,svg,png,ico,webp}'],
     navigateFallback: 'index.html',
-    navigateFallbackDenylist: [/^\/api\//],
+    // Server paths (API, admin, static files) are never answered with the app shell (T4.7).
+    // Provisional (T4.7 U7): each prefix matches the bare path and its subpaths, not `/apis`.
+    navigateFallbackDenylist: [/^\/api(\/|$)/, /^\/admin(\/|$)/, /^\/static(\/|$)/],
     cleanupOutdatedCaches: true,
+    // Provisional (T4.7 U6): the first install controls the open page at once, so it works offline without a reload
+    // ('autoUpdate' did this implicitly). A new version still waits: it only takes over after
+    // SKIP_WAITING, which the "Recargar" tap sends; no skipWaiting here.
+    clientsClaim: true,
     maximumFileSizeToCacheInBytes: MAX_PRECACHE_FILE_BYTES,
   },
 };
