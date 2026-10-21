@@ -24,7 +24,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [x] T1.8b Payments core: `paymentStatus()` and money helpers (integer minor units, per-currency totals, ₡/US$ formatting in es-CR). Unit tests incl. partial, overpaid, mixed currencies, free reading.
 - [x] T1.8c Payments UI: record/edit/delete payments on a session (method, date, reference), status badge on sessions, client totals + balance.
 - [x] T1.8d "Pagos" screen: monthly income per currency, pending balances list, filterable payment list, CSV export for a month.
-- [ ] T1.9 Spreads: choose template → position grid with card thumbnails → card picker (search + browse by suit with thumbnails, ≤3 taps) → reversed toggle (image rotates) → meaning panel (full image + card meaning + position meaning + her card note). Save into session. Creating the reading must write `reading.spread_snapshot` (spread name + each position's number, name, meaning, layout `{col, row, rotated}`); past readings render from the snapshot, never from the current template.
+- [x] T1.9 Spreads: choose template → position grid with card thumbnails → card picker (search + browse by suit with thumbnails, ≤3 taps) → reversed toggle (image rotates) → meaning panel (full image + card meaning + position meaning + her card note). Save into session. Creating the reading must write `reading.spread_snapshot` (spread name + each position's number, name, meaning, layout `{col, row, rotated}`); past readings render from the snapshot, never from the current template.
 - [ ] T1.10 Custom spread builder.
 - [ ] T1.11 Card reference screen (image + meanings) with her personal notes per card.
 - [ ] T1.12 Home: upcoming follow-ups, pending balances, recent sessions.
@@ -54,7 +54,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [x] T3.3 Auth: simplejwt login/refresh, throttling. Tests.
 - [x] T3.4 `POST /api/sync/` implementing plan.md rules. Tests for every scenario listed in plan.md.
   - Note: server_version is assigned in save(); the sync endpoint must write rows through save() or take nextval itself — no bulk_update.
-- [ ] T3.5 OpenAPI via drf-spectacular; generate TS types for the web client.
+- [x] T3.5 OpenAPI via drf-spectacular; generate TS types for the web client.
 - [ ] T3.6 `web/sync/` engine: push pending → apply response → pull pages → advance cursor. Single-flight, triggers (open, online, interval, manual). Unit tests with a fake server.
   - Note: Refresh-token rotation means a lost refresh response leaves the device with a blacklisted token. On a 401 from refresh: keep all local data, mark sync as ‘sesión expirada’, and prompt re-login in Settings; never clear IndexedDB on auth failure. Refreshes must be single-flight.
   - Note: updated_at is strictly increasing per row: max(now, previous + 1 ms).
