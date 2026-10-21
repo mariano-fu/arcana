@@ -41,6 +41,17 @@
       "earth": "Tierra"
     },
     "minorName": "{{rank}} de {{suit}}",
+    "reference": {
+      "title": "Cartas",
+      "back": "Todas las cartas",
+      "orientation": "Orientación",
+      "upright": "Derecha",
+      "reversed": "Invertida",
+      "note": "Mis notas",
+      "noteHint": "Lo que usted ha aprendido de esta carta. Se muestra también en las tiradas.",
+      "noteBadge": "Nota",
+      "withNote": "{{name}}, con nota"
+    },
     "field": {
       "element": "Elemento",
       "astrology": "Astrología",
@@ -375,7 +386,8 @@
     "label": "Navegación principal",
     "home": "Inicio",
     "payments": "Pagos",
-    "clients": "Clientes"
+    "clients": "Clientes",
+    "cards": "Cartas"
   },
   "common": {
     "back": "Volver",
