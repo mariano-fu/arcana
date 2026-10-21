@@ -23,7 +23,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [x] T1.8 Sessions: create from client, autosave notes, type, price + currency, follow-up. Client timeline.
 - [x] T1.8b Payments core: `paymentStatus()` and money helpers (integer minor units, per-currency totals, ₡/US$ formatting in es-CR). Unit tests incl. partial, overpaid, mixed currencies, free reading.
 - [x] T1.8c Payments UI: record/edit/delete payments on a session (method, date, reference), status badge on sessions, client totals + balance.
-- [ ] T1.8d "Pagos" screen: monthly income per currency, pending balances list, filterable payment list, CSV export for a month.
+- [x] T1.8d "Pagos" screen: monthly income per currency, pending balances list, filterable payment list, CSV export for a month.
 - [ ] T1.9 Spreads: choose template → position grid with card thumbnails → card picker (search + browse by suit with thumbnails, ≤3 taps) → reversed toggle (image rotates) → meaning panel (full image + card meaning + position meaning + her card note). Save into session. Creating the reading must write `reading.spread_snapshot` (spread name + each position's number, name, meaning, layout `{col, row, rotated}`); past readings render from the snapshot, never from the current template.
 - [ ] T1.10 Custom spread builder.
 - [ ] T1.11 Card reference screen (image + meanings) with her personal notes per card.
@@ -40,7 +40,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [ ] T2.2 Cities dataset build script (GeoNames subset → `cities.json`). Offline city autocomplete in client form; manual lat/lng/tz fallback.
 - [x] T2.3 `astro/` `toUtc` with historical timezones. Tests incl. Costa Rica DST years (CR used DST briefly — verify which years) and a Southern-hemisphere case.
 - [x] T2.4 `astro/` planet positions via astronomy-engine + moon-sign uncertainty. Reference-chart tests (±1°).
-- [ ] T2.5 `astro/` ascendant + Placidus houses (+ whole-sign fallback). Reference tests.
+- [x] T2.5 `astro/` ascendant + Placidus houses (+ whole-sign fallback). Reference tests.
 - [ ] T2.6 Client astrology panel: sun profile; natal summary when place known; rising/houses when time known; clear messaging when data is missing. When `toUtc` returns `adjusted` other than `'none'`, show a short warning, e.g. "Esta hora coincide con un cambio de horario; el ascendente podría variar."
   - When ascendantAndHouses returns system 'whole-sign', show: 'Casas por signo entero: el sistema Placidus no se puede calcular a esta latitud.'
   - Display positions with one shared formatter that floors total arc-minutes (29.9999° → 29°59′, never 29°60′ or 30°00′); test it at sign boundaries.
@@ -51,8 +51,8 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 ## Phase 3 — Backend & sync
 - [x] T3.1 `api/`: Django 5 + DRF + Postgres, settings via env, pytest, mypy, ruff. Dockerfile. CI job.
 - [x] T3.2 Models mirroring the data model + global `server_version` sequence. Admin registered. References to seed-backed tables (`reading.spread_template_id`, crystal and intention tag references) are plain UUID fields, not foreign keys, since unedited seed rows never sync (plan.md, Backend).
-- [ ] T3.3 Auth: simplejwt login/refresh, throttling. Tests.
-- [ ] T3.4 `POST /api/sync/` implementing plan.md rules. Tests for every scenario listed in plan.md.
+- [x] T3.3 Auth: simplejwt login/refresh, throttling. Tests.
+- [x] T3.4 `POST /api/sync/` implementing plan.md rules. Tests for every scenario listed in plan.md.
   - Note: server_version is assigned in save(); the sync endpoint must write rows through save() or take nextval itself — no bulk_update.
 - [ ] T3.5 OpenAPI via drf-spectacular; generate TS types for the web client.
 - [ ] T3.6 `web/sync/` engine: push pending → apply response → pull pages → advance cursor. Single-flight, triggers (open, online, interval, manual). Unit tests with a fake server.
