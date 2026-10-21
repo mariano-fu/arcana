@@ -410,12 +410,26 @@
       "birthTime": "Hora de nacimiento",
       "birthTimeUnknown": "No sabe la hora",
       "birthPlace": "Lugar de nacimiento",
+      "birthPlaceHint": "Escriba la ciudad y elíjala de la lista.",
+      "citySuggestions": "Ciudades sugeridas",
+      "birthPlaceCoordinates": "Coordenadas: {{lat}}, {{lng}} · {{tz}}",
+      "birthPlaceNoCoordinates": "Sin coordenadas: elija una ciudad de la lista o ingréselas manualmente.",
+      "birthPlaceManual": "Ingresar coordenadas manualmente",
+      "birthLat": "Latitud",
+      "birthLatHint": "Positiva al norte. San José: 9.93",
+      "birthLng": "Longitud",
+      "birthLngHint": "Negativa al oeste. San José: -84.08",
+      "birthTz": "Zona horaria",
+      "birthTzPlaceholder": "Elija una zona horaria",
       "notes": "Notas",
       "tags": "Etiquetas",
       "tagsHint": "Separadas por comas, por ejemplo: ansiedad, trabajo, cliente frecuente.",
       "error": {
         "nameRequired": "Escriba el nombre.",
-        "email": "Revise el correo electrónico."
+        "email": "Revise el correo electrónico.",
+        "lat": "Escriba una latitud entre -90 y 90.",
+        "lng": "Escriba una longitud entre -180 y 180.",
+        "tz": "Elija una zona horaria."
       }
     },
     "detail": {
@@ -435,7 +449,8 @@
       "archive": "Archivar",
       "unarchive": "Desarchivar",
       "delete": "Eliminar",
-      "newSession": "Nueva sesión"
+      "newSession": "Nueva sesión",
+      "noCoordinates": "sin coordenadas"
     },
     "delete": {
       "title": "¿Eliminar a {{name}}?",
@@ -505,5 +520,13 @@
       "irreversible": "Esto no se puede deshacer.",
       "confirm": "Eliminar definitivamente"
     }
+  },
+  "about": {
+    "title": "Acerca de",
+    "link": "Acerca de",
+    "creditsTitle": "Créditos",
+    "geonames": "Datos de ciudades: GeoNames, bajo licencia Creative Commons Atribución 4.0 (CC BY 4.0). Se seleccionaron ciudades y se tradujeron nombres al español.",
+    "geonamesLink": "geonames.org",
+    "licenseLink": "Licencia CC BY 4.0"
   }
 }

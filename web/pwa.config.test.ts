@@ -2,7 +2,12 @@ import { readFileSync } from 'node:fs';
 
 import { describe, expect, it } from 'vitest';
 
-import { BACKGROUND_COLOR, pwaOptions, THEME_COLOR } from './pwa.config.ts';
+import {
+  BACKGROUND_COLOR,
+  MAX_PRECACHE_FILE_BYTES,
+  pwaOptions,
+  THEME_COLOR,
+} from './pwa.config.ts';
 import es from './src/i18n/locales/es.json' with { type: 'json' };
 
 const manifest = pwaOptions.manifest;
@@ -48,6 +53,11 @@ describe('PWA offline shell', () => {
   it('precaches the app shell and card images, and falls back to index.html for navigations', () => {
     expect(pwaOptions.workbox?.globPatterns).toEqual(['**/*.{js,css,html,svg,png,ico,webp}']);
     expect(pwaOptions.workbox?.navigateFallback).toBe('index.html');
+  });
+
+  it('makes the Workbox per-file limit explicit for the post-build cities check', () => {
+    expect(pwaOptions.workbox?.maximumFileSizeToCacheInBytes).toBe(MAX_PRECACHE_FILE_BYTES);
+    expect(MAX_PRECACHE_FILE_BYTES).toBe(2 * 1024 * 1024);
   });
 
   it('never serves the app shell for API requests', () => {

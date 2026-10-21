@@ -9,6 +9,7 @@ import SpreadFormPage from '../features/spreads/builder/SpreadFormPage';
 import SpreadListPage from '../features/spreads/builder/SpreadListPage';
 import ReadingPage from '../features/spreads/ReadingPage';
 import TemplatePickerPage from '../features/spreads/TemplatePickerPage';
+import AboutPage from './AboutPage';
 import AppLayout from './AppLayout';
 import HomePage from './HomePage';
 
@@ -30,6 +31,7 @@ export const routes: RouteObject[] = [
       { path: 'sessions/:id/spreads/new', element: <SpreadFormPage /> },
       { path: 'sessions/:id/spreads/:spreadId/edit', element: <SpreadFormPage /> },
       { path: 'payments', element: <PaymentsPage /> },
+      { path: 'about', element: <AboutPage /> },
     ],
   },
 ];
