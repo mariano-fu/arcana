@@ -7,7 +7,11 @@ WORKDIR /web
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 COPY . .
-RUN npm run build
+# The commit shown in Ajustes → Versiones. The build context has no .git, so vite.config.ts
+# would fall back to "dev"; compose passes it in (BUILD_COMMIT, see deploy/README.md).
+ARG BUILD_COMMIT=
+# `npm run build` also checks licenses.json against the installed dependencies.
+RUN GITHUB_SHA="${BUILD_COMMIT}" npm run build
 
 FROM caddy:2.11.7-alpine@sha256:d8542f48d34a9cf4e4c11a478865229840e87e4c96ea3f439101f31a5d35f75f
 # The image's binary carries a file capability (bind ports < 1024). Caddy here listens on 8080

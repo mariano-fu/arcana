@@ -61,6 +61,10 @@ header() { # name, path, extra curl args: prints that response header's value
 API_HOST=(-H "Host: app.example.test")
 status_of() { curl -s -o /dev/null -w '%{http_code}' "${@:2}" "$1"; }
 
+# The commit the PWA is built with (Ajustes → Versiones): CI's, else this checkout's.
+COMMIT=$(printf '%s' "${GITHUB_SHA:-$(git rev-parse HEAD)}" | cut -c1-7)
+export BUILD_COMMIT=$COMMIT
+
 docker volume create "$PGDATA_VOLUME" >/dev/null
 compose up -d --build --wait
 
@@ -80,6 +84,9 @@ done
 asset=$(curl -s "$BASE/" | grep -o '/assets/index-[A-Za-z0-9_-]*\.js' | head -1)
 check "found a hashed asset in index.html ($asset)" test -n "$asset"
 check "hashed asset is immutable" test "$(header cache-control "$asset")" = "public, max-age=31536000, immutable"
+# The minifier may quote it with ", ' or a backtick.
+commit_built_in() { compose exec -T caddy grep -rlqE "[\"'\`]$COMMIT[\"'\`]" /srv/assets; }
+check "the PWA is built with commit $COMMIT, not \"dev\"" commit_built_in
 check "hashed JS is compressed" test -n "$(header content-encoding "$asset" -H 'Accept-Encoding: zstd, gzip')"
 spa_root() { test "$(status_of "$BASE/")" = 200 && curl -s "$BASE/" | grep -q '<div id="root">'; }
 spa() { test "$(status_of "$BASE/clients/123")" = 200 && curl -s "$BASE/clients/123" | grep -q '<div id="root">'; }

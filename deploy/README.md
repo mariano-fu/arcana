@@ -13,7 +13,7 @@ context).
 cd deploy
 docker volume create arcana_pgdata      # the database; outside the project, so `down -v` can't remove it
 cp .env.example .env                     # fill in; .env is gitignored, never commit it
-docker compose up -d --build
+BUILD_COMMIT=$(git rev-parse --short=7 HEAD) docker compose up -d --build
 docker compose exec api python manage.py createsuperuser
 ```
 
@@ -22,8 +22,10 @@ Then point `tailscale serve` on the host at `http://127.0.0.1:8080` (`CADDY_PORT
 ## Updating
 
 ```sh
-git pull && docker compose up -d --build
+git pull && BUILD_COMMIT=$(git rev-parse --short=7 HEAD) docker compose up -d --build
 ```
+
+`BUILD_COMMIT` is the commit Ajustes → Versiones shows; without it, it shows "dev".
 
 Every `up` runs `migrate` first; `api` and `cron` start only once it has succeeded.
 
