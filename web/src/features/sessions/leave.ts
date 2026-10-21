@@ -14,9 +14,12 @@ export function registerSessionFlush(sessionId: string, flush: () => Promise<voi
   flushers.set(sessionId, flush);
 }
 
-/** `/sessions/:id` → id; null for any other path. */
+/**
+ * `/sessions/:id` and its sub-pages (`/sessions/:id/readings/...`) → id; null for any other
+ * path. Opening one of the session's readings is still being in the session, not leaving it.
+ */
 export function sessionIdFromPath(pathname: string): string | null {
-  return /^\/sessions\/([^/]+)\/?$/.exec(pathname)?.[1] ?? null;
+  return /^\/sessions\/([^/]+)(?:\/.*)?$/.exec(pathname)?.[1] ?? null;
 }
 
 /**

@@ -64,6 +64,47 @@
       "generated": "Generado a partir de spreads.json (versión {{version}}). Las correcciones que anote aquí se pasan luego al archivo de datos.",
       "layout": "Disposición",
       "corrections": "Correcciones"
+    },
+    "chooser": {
+      "title": "Elija una tirada",
+      "empty": "No hay tiradas disponibles."
+    },
+    "reading": {
+      "position": "{{index}} · {{name}}",
+      "chooseCard": "Elegir carta",
+      "positions": "Posiciones",
+      "positionButton": "{{position}}: {{card}}",
+      "positionButtonEmpty": "{{position}}: sin carta",
+      "reversedCard": "{{card}}, invertida",
+      "delete": {
+        "button": "Eliminar tirada",
+        "title": "¿Eliminar esta tirada?",
+        "summary_one": "Se eliminarán la tirada y {{count}} carta colocada.",
+        "summary_other": "Se eliminarán la tirada y {{count}} cartas colocadas.",
+        "onlyReading": "Se eliminará la tirada. No tiene cartas colocadas.",
+        "irreversible": "Esta acción no se puede deshacer.",
+        "confirm": "Eliminar tirada"
+      }
+    },
+    "picker": {
+      "title": "Carta para {{position}}",
+      "search": "Buscar por nombre o número",
+      "groups": "Grupos de cartas",
+      "major": "Mayores",
+      "noResults": "No hay cartas que coincidan con «{{query}}».",
+      "inSpread": "En {{index}}",
+      "duplicate": {
+        "title": "Esta carta ya está en la tirada",
+        "body": "{{card}} ya está en la posición {{positions}}. ¿Quiere usarla de todos modos? Puede hacerlo si lee con más de un mazo.",
+        "confirm": "Usar de todos modos"
+      }
+    },
+    "panel": {
+      "position": "Posición: {{name}}",
+      "cardNote": "Sus notas sobre esta carta",
+      "drawNote": "Nota de esta posición",
+      "change": "Cambiar carta",
+      "remove": "Quitar carta"
     }
   },
   "zodiac": {
@@ -274,7 +315,8 @@
     "cancel": "Cancelar",
     "save": "Guardar",
     "edit": "Editar",
-    "notFound": "No se encontró lo que busca."
+    "notFound": "No se encontró lo que busca.",
+    "close": "Cerrar"
   },
   "clients": {
     "title": "Clientes",
@@ -375,7 +417,9 @@
     },
     "readings": {
       "title": "Tiradas",
-      "soon": "Las tiradas estarán disponibles pronto."
+      "new": "Nueva tirada",
+      "empty": "Aún no hay tiradas en esta sesión.",
+      "placed": "{{placed}} de {{total}} cartas"
     },
     "timeline": {
       "noPrice": "Sin precio",

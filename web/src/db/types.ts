@@ -74,6 +74,8 @@ export interface SpreadSnapshotPosition {
   index: number;
   name: string;
   meaning: string;
+  /** Copied from the template, so a past reading can redraw the spread's shape. */
+  layout: SpreadLayout | null;
 }
 
 /**
