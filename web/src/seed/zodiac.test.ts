@@ -1,5 +1,6 @@
 import es from '../i18n/locales/es.json';
 import { masculineWords } from '../test/gender-neutral';
+import { healthClaims } from '../test/health-claims';
 import { ELEMENTS, type Element } from './cards';
 import raw from './zodiac.es.json';
 import {
@@ -191,5 +192,17 @@ describe('gender-neutral texts', () => {
   it('uses no masculine-only words about people', () => {
     const texts = zodiacSeed.signs.flatMap((s) => [s.description, ...s.traits]);
     expect(texts.flatMap(masculineWords)).toEqual([]);
+  });
+});
+
+describe('health claims', () => {
+  it('makes no health or medical claims', () => {
+    expect(zodiacSeed.signs).toHaveLength(12);
+    const claims = zodiacSeed.signs.flatMap((s) =>
+      [s.name, ...s.traits, s.description].flatMap((t) =>
+        healthClaims(t).map((w) => `${s.key}: ${w}`),
+      ),
+    );
+    expect(claims).toEqual([]);
   });
 });

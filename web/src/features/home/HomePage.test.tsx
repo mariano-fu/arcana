@@ -90,13 +90,15 @@ describe('Inicio', () => {
   it('shows each empty state', async () => {
     renderAt();
     expect((await section(H.followUps.title)).getByText(H.followUps.empty)).toBeVisible();
-    expect((await section(H.balances.title)).getByText(H.balances.empty)).toBeVisible();
+    const balances = await section(H.balances.title);
+    expect(balances.getByText(H.balances.empty)).toBeVisible();
+    expect(balances.queryByRole('link', { name: H.balances.all })).toBeNull();
     const recent = await section(H.recent.title);
     expect(recent.getByText(H.recent.empty)).toBeVisible();
     expect(recent.getByRole('link', { name: H.recent.start })).toHaveAttribute('href', '/clients');
   });
 
-  it('totals balances per currency, oldest first, and links to Pagos past 5', async () => {
+  it('totals balances per currency, oldest first, and ends with a link to Pagos', async () => {
     const crc = await sessionFor('Ana Prueba', {
       started_at: '2026-09-01T15:00:00.000Z',
       price_minor: 2_000_000,
@@ -132,10 +134,19 @@ describe('Inicio', () => {
     });
     expect(fold(rows[0]?.textContent ?? null)).toContain(fold(formatMoney(1_500_000, 'CRC')));
     expect(fold(rows[1]?.textContent ?? null)).toContain(fold(formatMoney(4_000, 'USD')));
-    expect(balances.getByRole('link', { name: 'Ver todos en Pagos (7)' })).toHaveAttribute(
+    expect(balances.getByRole('link', { name: H.balances.all })).toHaveAttribute(
       'href',
       '/payments',
     );
+  });
+
+  it('ends a short balances list with the link to Pagos too', async () => {
+    await sessionFor('Ana Prueba', { price_minor: 1_000_000 });
+    renderAt();
+
+    const balances = await section(H.balances.title);
+    expect(await balances.findByRole('link', { name: /Ana Prueba/ })).toBeVisible();
+    expect(balances.getByRole('link', { name: 'Ver todos' })).toHaveAttribute('href', '/payments');
   });
 
   it('lists the 5 newest sessions with their status and opens one', async () => {
@@ -173,6 +184,8 @@ describe('Inicio', () => {
     await repos.session.remove(removed.id);
     renderAt();
     expect((await section(H.recent.title)).getByText(H.recent.empty)).toBeVisible();
-    expect((await section(H.balances.title)).getByText(H.balances.empty)).toBeVisible();
+    const balances = await section(H.balances.title);
+    expect(balances.getByText(H.balances.empty)).toBeVisible();
+    expect(balances.queryByRole('link', { name: H.balances.all })).toBeNull();
   });
 });

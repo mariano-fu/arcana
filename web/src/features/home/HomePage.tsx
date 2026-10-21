@@ -114,11 +114,9 @@ function BalanceList({
           </li>
         ))}
       </ul>
-      {balances.length > shown.length && (
-        <Link to="/payments" className="flex min-h-11 items-center self-start text-base underline">
-          {t('home.balances.all', { count: balances.length })}
-        </Link>
-      )}
+      <Link to="/payments" className="flex min-h-11 items-center self-start text-base underline">
+        {t('home.balances.all')}
+      </Link>
     </>
   );
 }
