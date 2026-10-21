@@ -129,18 +129,21 @@ describe('editing helpers', () => {
     expect(movePosition(['a', 'b', 'c'], 0, -1)).toEqual(['a', 'b', 'c']);
   });
 
-  it('moves a position off the grid when another takes its cell and orientation', () => {
-    const positions = [
-      pos('A', { col: 0, row: 0, rotated: false }),
-      pos('B', { col: 0, row: 0, rotated: true }),
-      pos('C'),
-    ];
-    const upright = placePosition(positions, 'C', { col: 0, row: 0, rotated: false });
-    expect(upright.map((p) => p.layout)).toEqual([
-      null,
+  it("swaps two positions when one is placed on the other's cell and orientation", () => {
+    const a = { col: 0, row: 0, rotated: false };
+    const b = { col: 2, row: 1, rotated: false };
+    const positions = [pos('A', a), pos('B', b), pos('C', { col: 0, row: 0, rotated: true })];
+    expect(placePosition(positions, 'B', a).map((p) => p.layout)).toEqual([
+      b,
+      a,
       { col: 0, row: 0, rotated: true },
-      { col: 0, row: 0, rotated: false },
     ]);
+    // Unplaced before the move: the other one goes to "Sin lugar".
+    const unplaced = placePosition([pos('A', a), pos('B')], 'B', a);
+    expect(unplaced.map((p) => p.layout)).toEqual([null, a]);
+    // The same cell crosswise is not a collision.
+    const crosswise = placePosition([pos('A', a), pos('B')], 'B', { ...a, rotated: true });
+    expect(crosswise[0]?.layout).toEqual(a);
     expect(placePosition(positions, 'A', null)[0]?.layout).toBeNull();
   });
 

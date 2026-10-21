@@ -122,6 +122,20 @@ describe('custom spread builder', () => {
     expect(cell(2, 2)).toHaveAccessibleName('Fila 2, columna 2: 1');
   });
 
+  it('swaps two positions when one is placed on an occupied cell', async () => {
+    const user = userEvent.setup();
+    renderAt(`/sessions/${session.id}/spreads/new`);
+    await screen.findByRole('heading', { name: L.form.newTitle });
+    await fillSpread(user, 'Cambio', ['Uno', 'Dos']);
+    await user.click(cell(1, 1)); // 1
+    await user.click(cell(1, 2)); // 2, still picked: nothing is left unplaced
+    expect(screen.getByRole('button', { name: '2', pressed: true })).toBeVisible();
+    await user.click(cell(1, 1));
+
+    expect(cell(1, 1)).toHaveAccessibleName('Fila 1, columna 1: 2');
+    expect(cell(1, 2)).toHaveAccessibleName('Fila 1, columna 2: 1');
+  });
+
   it('rejects a name that a seed or custom spread already has', async () => {
     const user = userEvent.setup();
     await createCustomSpread(db, {

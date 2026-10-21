@@ -115,14 +115,16 @@ export function movePosition<T>(positions: readonly T[], from: number, to: numbe
 }
 
 /**
- * Puts the position with `key` at `layout` (null: "Sin lugar"). Another position holding the
- * same cell and orientation is moved off the grid rather than stacked under it.
+ * Puts the position with `key` at `layout` (null: "Sin lugar"). A position already holding the
+ * same cell and orientation swaps with it: it takes the moved position's previous placement,
+ * or goes off the grid if the moved one had none.
  */
 export function placePosition(
   positions: readonly SpreadFormPosition[],
   key: string,
   layout: SpreadLayout | null,
 ): SpreadFormPosition[] {
+  const previous = positions.find((position) => position.key === key)?.layout ?? null;
   return positions.map((position) => {
     if (position.key === key) return { ...position, layout };
     const other = position.layout;
@@ -133,7 +135,7 @@ export function placePosition(
       other.row === layout.row &&
       other.rotated === layout.rotated
     ) {
-      return { ...position, layout: null };
+      return { ...position, layout: previous && { ...previous } };
     }
     return position;
   });
