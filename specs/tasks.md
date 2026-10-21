@@ -44,7 +44,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [x] T2.3 `astro/` `toUtc` with historical timezones. Tests incl. Costa Rica DST years (CR used DST briefly — verify which years) and a Southern-hemisphere case.
 - [x] T2.4 `astro/` planet positions via astronomy-engine + moon-sign uncertainty. Reference-chart tests (±1°).
 - [x] T2.5 `astro/` ascendant + Placidus houses (+ whole-sign fallback). Reference tests.
-- [ ] T2.6 Client astrology panel: sun profile; natal summary when place known; rising/houses when time known; clear messaging when data is missing. When `toUtc` returns `adjusted` other than `'none'`, show a short warning, e.g. "Esta hora coincide con un cambio de horario; el ascendente podría variar."
+- [x] T2.6 Client astrology panel: sun profile; natal summary when place known; rising/houses when time known; clear messaging when data is missing. When `toUtc` returns `adjusted` other than `'none'`, show a short warning, e.g. "Esta hora coincide con un cambio de horario; el ascendente podría variar."
   - When ascendantAndHouses returns system 'whole-sign', show: 'Casas por signo entero: el sistema Placidus no se puede calcular a esta latitud.'
   - Display positions with one shared formatter that floors total arc-minutes (29.9999° → 29°59′, never 29°60′ or 30°00′); test it at sign boundaries.
 - [ ] T2.7 Crystal library: browse, search, filter by chakra/sign/intention; add/edit/hide.
