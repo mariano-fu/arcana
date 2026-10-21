@@ -10,6 +10,7 @@ import type { Api, ApiResult, PushChange, SyncBadRequest, SyncRejected, SyncResp
 import {
   applyResponse,
   NOTHING_PUSHED,
+  prepareFirstSync,
   readPending,
   resetForEpoch,
   restampClockAhead,
@@ -135,6 +136,7 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
     if (manual && previous.state === 'clock_ahead') {
       await restampClockAhead(db, previous.errors, clock());
     }
+    await prepareFirstSync(db);
     const deviceId = await getDeviceId(db);
 
     async function exchange(changes: PushChange[], snapshot: PushSnapshot): Promise<Step> {

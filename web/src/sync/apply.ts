@@ -119,26 +119,47 @@ function leftOut<T extends PushableTable>(table: T, row: SyncedTables[T]): boole
 }
 
 /**
+ * Marks a table's rows pending, live or tombstoned, except untouched seed rows the server never
+ * had. Callers loop over `PUSH_ORDER` inside their transaction: one level of native `await`
+ * below the transaction scope, which Dexie keeps the transaction alive across.
+ */
+async function markForPush(db: ArcanaDB, table: PushableTable): Promise<void> {
+  const rows = await tableOf(db, table).where('pending').equals(0).toArray();
+  await tableOf(db, table).bulkPut(
+    rows
+      .filter((row) => row.server_version !== null || !leftOut(table, row))
+      .map((row) => ({ ...row, pending: 1 })),
+  );
+}
+
+/**
  * The server's database changed (its epoch differs from the stored one): the cursor refers to
- * another database, which may lack rows this device already pushed. Marks every row, live or
- * tombstoned, pending again and resets the cursor to 0, keeping each `updated_at` exactly as is
- * so last-write-wins compares the real edit times on the re-push.
+ * another database, which may lack rows this device already pushed. Marks every row pending
+ * again and resets the cursor to 0, keeping each `updated_at` exactly as is so last-write-wins
+ * compares the real edit times on the re-push.
  */
 export function resetForEpoch(db: ArcanaDB, epoch: string): Promise<void> {
   return writeVerbatim(db, [...pushTables(db), db.meta], async () => {
-    async function mark(table: PushableTable) {
-      const rows = await tableOf(db, table).where('pending').equals(0).toArray();
-      await tableOf(db, table).bulkPut(
-        rows
-          .filter((row) => row.server_version !== null || !leftOut(table, row))
-          .map((row) => ({ ...row, pending: 1 })),
-      );
-    }
-    for (const table of PUSH_ORDER) await mark(table);
+    for (const table of PUSH_ORDER) await markForPush(db, table);
     await db.meta.bulkPut([
       { key: CURSOR_KEY, value: '0' },
       { key: EPOCH_KEY, value: epoch },
     ]);
+  });
+}
+
+/**
+ * Before this device's first sync (no epoch stored, cursor 0): rows written before sync
+ * existed may carry `pending = 0` without ever having reached the server, so every row is
+ * marked pending, `updated_at` unchanged, as for an epoch change. Untouched seed rows still
+ * never sync. Runs again until the first response stores an epoch; marking twice is harmless.
+ */
+export function prepareFirstSync(db: ArcanaDB): Promise<void> {
+  return writeVerbatim(db, [...pushTables(db), db.meta], async () => {
+    const epoch = await db.meta.get(EPOCH_KEY);
+    const cursor = (await db.meta.get(CURSOR_KEY))?.value ?? '0';
+    if (epoch !== undefined || cursor !== '0') return;
+    for (const table of PUSH_ORDER) await markForPush(db, table);
   });
 }
 

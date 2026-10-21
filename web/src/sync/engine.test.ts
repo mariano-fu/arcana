@@ -385,11 +385,54 @@ describe('if the app closes mid-sync', () => {
 });
 
 describe('server epoch', () => {
-  it('adopts the epoch on a fresh device without re-pushing', async () => {
+  it('adopts the epoch on a new device; untouched seed rows never sync', async () => {
+    await loadSeed(db);
+
     await engine.sync('open');
 
     expect((await db.meta.get(EPOCH_KEY))?.value).toBe(server.epoch);
     expect(server.requests.every((request) => (request.changes ?? []).length === 0)).toBe(true);
+  });
+
+  it('first sync of pre-sync data uploads every user row, pending or not, and pulls nothing over it', async () => {
+    // Written by pre-T3.6 code: no epoch, no cursor, some rows with pending = 0.
+    await loadSeed(db);
+    const old = '2026-09-01T10:00:00.000Z';
+    const client = await createRepositories(db, () => old).client.create(newClient());
+    const session = await repos.session.create(newSession(client.id));
+    const deleted = await repos.client.create(newClient({ name: 'Eliminada' }));
+    await repos.client.remove(deleted.id);
+    await db.client.bulkPut(
+      (await db.client.toArray()).map((row) => ({ ...row, pending: 0 as const })),
+    );
+    await db.session.put({ ...session, pending: 0 });
+    const crystalId = seedId('crystal', 'amethyst');
+    await repos.crystal.update(crystalId, { hidden: true }); // An edited seed row, pending = 1.
+    const before = new Map(
+      [...(await db.client.toArray()), ...(await db.session.toArray())].map((row) => [row.id, row]),
+    );
+    // The server holds an older copy of her client, from another device.
+    server.put('client', { ...remoteClient(client.id, '2026-08-01T00:00:00.000Z', 'Vieja') });
+
+    expect((await engine.sync('open')).state).toBe('idle');
+
+    for (const [id, row] of before) {
+      const local = (await db.client.get(id)) ?? (await db.session.get(id));
+      expect(local).toEqual({ ...row, pending: 0 });
+      const table = 'client_id' in row ? 'session' : 'client';
+      expect(server.get(table, id)?.updated_at).toBe(row.updated_at);
+    }
+    expect(server.get('client', client.id)?.name).toBe('Cliente de prueba');
+    expect(server.get('client', deleted.id)?.deleted_at).not.toBeNull();
+    expect(server.get('crystal', crystalId)?.hidden).toBe(true);
+    const tables = new Set([...server.rows.values()].map((row) => row.table));
+    expect(tables.has('spread_template')).toBe(false);
+    expect(tables.has('intention_tag')).toBe(false);
+
+    // Only the first sync: later runs push only real edits.
+    const pushed = server.requests.flatMap((request) => request.changes ?? []).length;
+    await engine.sync('manual');
+    expect(server.requests.flatMap((request) => request.changes ?? [])).toHaveLength(pushed);
   });
 
   it('on an epoch change: cursor to 0, every row re-pushed with its updated_at, nothing lost', async () => {
