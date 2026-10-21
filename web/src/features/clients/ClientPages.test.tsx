@@ -27,7 +27,7 @@ describe('client form', () => {
     const [saved] = await repos.client.list();
     expect(saved).toMatchObject({ name: 'Ana Prueba', birth_date: null, archived: false });
     expect(router.state.location.pathname).toBe(`/clients/${saved?.id ?? ''}`);
-    expect(screen.getAllByText(es.clients.detail.astrologyMissingBirthDate)).toHaveLength(1);
+    expect(screen.getAllByText(es.astro.panel.missingDate)).toHaveLength(1);
   });
 
   it('shows an error and saves nothing without a name', async () => {

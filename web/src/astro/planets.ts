@@ -79,18 +79,27 @@ export function planetPositions(utc: Date): Record<PlanetKey, PlanetPosition> {
 }
 
 /**
- * True if the Moon changes sign at some point during the local calendar day `date` in `tz`.
+ * The Moon's sign at the start and at the end of the local calendar day `date` in `tz`.
  *
  * The day runs from its first local instant (00:00, or the end of a DST gap at midnight, as
  * resolved by `toUtc`) to the first instant of the next day. The Moon moves well under 30° a
- * day, so it changes sign at most once and comparing both ends of the day is enough.
+ * day, so it changes sign at most once and the two ends tell the whole story.
  */
-export function moonSignUncertain(date: IsoDate, tz: string): boolean {
+export function moonSignsOnLocalDay(date: IsoDate, tz: string): { start: SignKey; end: SignKey } {
   const start = toUtc(date, '00:00', tz).utc;
   const nextDate = DateTime.fromISO(date, { zone: 'utc' }).plus({ days: 1 }).toISODate();
   if (nextDate === null) {
     throw new RangeError(`date must be a valid YYYY-MM-DD date, got "${date}"`);
   }
   const end = new Date(toUtc(nextDate, '00:00', tz).utc.getTime() - 1);
-  return signForLongitude(moonLongitude(start)) !== signForLongitude(moonLongitude(end));
+  return {
+    start: signForLongitude(moonLongitude(start)),
+    end: signForLongitude(moonLongitude(end)),
+  };
+}
+
+/** True if the Moon changes sign at some point during the local calendar day `date` in `tz`. */
+export function moonSignUncertain(date: IsoDate, tz: string): boolean {
+  const { start, end } = moonSignsOnLocalDay(date, tz);
+  return start !== end;
 }

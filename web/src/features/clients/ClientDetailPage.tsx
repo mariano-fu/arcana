@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router';
 
 import { db, repos, type Client } from '../../db';
+import AstrologyPanel from '../astrology/AstrologyPanel';
 import ClientPaymentSummary from '../payments/ClientPaymentSummary';
 import { createSession } from '../sessions/actions';
 import type { SessionRouteState } from '../sessions/form';
@@ -145,14 +146,11 @@ function ClientDetail({ client }: { client: Client }) {
         </div>
       </Section>
 
-      {/* Shells filled by later tasks: astrology (T2.6), crystals (T2.9). */}
+      {/* Provisional (T2.6 A8): after Sesiones, where the shell was. */}
       <Section title={t('clients.detail.astrology')}>
-        <p className="text-stone-600">
-          {client.birth_date === null
-            ? t('clients.detail.astrologyMissingBirthDate')
-            : t('clients.detail.astrologySoon')}
-        </p>
+        <AstrologyPanel client={client} />
       </Section>
+      {/* Shell filled by a later task: crystals (T2.9). */}
       <Section title={t('clients.detail.crystals')}>
         <p className="text-stone-600">{t('clients.detail.crystalsSoon')}</p>
       </Section>
