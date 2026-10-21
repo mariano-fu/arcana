@@ -28,6 +28,12 @@ const COUNTRY_NAMES: Record<string, string> = {
   PA: 'Panamá',
 };
 
+const spanishNames = (first: string, preferred?: string, more: string[] = []): SpanishNames => ({
+  first,
+  ...(preferred === undefined ? {} : { preferred }),
+  all: [first, ...(preferred === undefined ? [] : [preferred]), ...more],
+});
+
 let nextId = 1000;
 function city(fields: Partial<GeoNamesCity>): GeoNamesCity {
   nextId += 1;
@@ -118,8 +124,12 @@ describe('GeoNames parsers', () => {
       ['6', '43', 'es', 'Sin preferido', '', '', '', ''],
     ];
     const names = parseSpanishNames(rows.map((r) => r.join('\t')).join('\n'));
-    expect(names.get('42')).toEqual({ first: 'Zarcero', preferred: 'Cantón de Zarcero' });
-    expect(names.get('43')).toEqual({ first: 'Sin preferido' });
+    expect(names.get('42')).toEqual({
+      first: 'Zarcero',
+      preferred: 'Cantón de Zarcero',
+      all: ['Zarcero', 'Cantón de Zarcero'],
+    });
+    expect(names.get('43')).toEqual({ first: 'Sin preferido', all: ['Sin preferido'] });
   });
 });
 
@@ -152,8 +162,8 @@ describe('admin names', () => {
 
   it('prefers the preferred Spanish name, then the first Spanish name, then GeoNames', () => {
     const spanish = new Map<string, SpanishNames>([
-      ['1', { first: 'Yucatán', preferred: 'Estado de Yucatán' }],
-      ['2', { first: 'Provincia de Alajuela' }],
+      ['1', spanishNames('Yucatán', 'Estado de Yucatán')],
+      ['2', spanishNames('Provincia de Alajuela')],
     ]);
     expect(adminDisplayName({ name: 'Yucatan', geonameid: '1' }, spanish)).toBe('Yucatán');
     expect(adminDisplayName({ name: 'Alajuela Province', geonameid: '2' }, spanish)).toBe(
@@ -190,12 +200,20 @@ describe('buildCities', () => {
           city({ name: 'Pueblito', country: 'CR', population: 1200 }),
           city({ name: 'Puebla', country: 'MX', tz: 'America/Mexico_City' }),
           city({ name: 'Lyon', country: 'FR', tz: 'Europe/Paris' }),
+          city({ name: 'Portland', country: 'US', tz: 'America/Los_Angeles' }),
+          city({ name: 'Calgary', country: 'CA', tz: 'America/Edmonton' }),
           city({ name: 'Paris', country: 'FR', featureCode: 'PPLC', tz: 'Europe/Paris' }),
           city({ name: 'Ruinas', country: 'MX', featureCode: 'PPLQ' }),
         ],
       }),
     );
-    expect(cities.map((c) => c.name).sort()).toEqual(['Paris', 'Puebla', 'Pueblito']);
+    expect(cities.map((c) => c.name).sort()).toEqual([
+      'Calgary',
+      'Paris',
+      'Portland',
+      'Puebla',
+      'Pueblito',
+    ]);
   });
 
   it('labels Costa Rica as city, canton, province, without the country', () => {
@@ -217,14 +235,15 @@ describe('buildCities', () => {
     ]);
   });
 
-  it('uses the Spanish preferred city name and keeps the GeoNames name searchable', () => {
+  it('names cities like provinces: preferred Spanish, else first Spanish, else GeoNames', () => {
     const { cities } = buildCities(
       input({
-        admin1: admin({ 'MX.09': ['Mexico City', '30'], 'GB.ENG': ['England', '31'] }),
+        admin1: admin({ 'MX.09': ['Mexico City', '30'] }),
         spanish: new Map([
-          ['500', { first: 'Ciudad de México', preferred: 'Ciudad de México' }],
-          ['30', { first: 'Ciudad de México', preferred: 'Ciudad de México' }],
-          ['501', { first: 'Londres' }],
+          ['500', spanishNames('Ciudad de México', 'Ciudad de México', ['México D. F.'])],
+          ['30', spanishNames('Ciudad de México', 'Ciudad de México')],
+          ['501', spanishNames('Londres')],
+          ['502', spanishNames('Múnich', undefined, ['Munich', 'Munchen'])],
         ]),
         cities15000: [
           city({
@@ -232,27 +251,35 @@ describe('buildCities', () => {
             name: 'Mexico City',
             country: 'MX',
             admin1: '09',
-            population: 2,
+            population: 4,
           }),
           city({
             geonameid: '501',
             name: 'London',
             country: 'GB',
             featureCode: 'PPLC',
-            population: 1,
+            population: 3,
           }),
+          // Synthetic: Munich is not a capital, so the real dataset leaves it out.
+          city({
+            geonameid: '502',
+            name: 'Munich',
+            country: 'DE',
+            featureCode: 'PPLC',
+            population: 2,
+          }),
+          city({ name: 'Tórshavn', country: 'FO', featureCode: 'PPLC', population: 1 }),
         ],
+        countryName: (code) =>
+          ({ MX: 'México', GB: 'Reino Unido', DE: 'Alemania', FO: 'Islas Feroe' })[code] ?? code,
       }),
     );
-    expect(cities).toEqual([
-      expect.objectContaining({
-        name: 'Ciudad de México',
-        label: 'Ciudad de México, México',
-        alt: 'Mexico City',
-      }),
-      expect.objectContaining({ name: 'London', label: 'London, Reino Unido' }),
+    expect(cities.map(({ label, alt }) => ({ label, alt }))).toEqual([
+      { label: 'Ciudad de México, México', alt: ['Mexico City', 'México D. F.'] },
+      { label: 'Londres, Reino Unido', alt: ['London'] },
+      { label: 'Múnich, Alemania', alt: ['Munich', 'Munchen'] },
+      { label: 'Tórshavn, Islas Feroe', alt: undefined },
     ]);
-    expect(cities[1]).not.toHaveProperty('alt');
   });
 
   it('adds admin1 outside Latin America, Spain and the US only when the city name repeats', () => {
@@ -265,7 +292,7 @@ describe('buildCities', () => {
           'FR.84': ['Auvergne-Rhône-Alpes', '43'],
           'GB.ENG': ['England', '44'],
         }),
-        spanish: new Map([['40', { first: 'Oregón', preferred: 'Oregón' }]]),
+        spanish: new Map([['40', spanishNames('Oregón', 'Oregón')]]),
         cities15000: [
           city({
             name: 'Portland',
@@ -336,9 +363,42 @@ describe('buildCities', () => {
     ]);
     expect(collisions).toEqual([
       expect.objectContaining({
-        resolution: 'kept-most-populous',
+        resolution: 'kept-one',
         kept: [expect.stringContaining('pop. 900')],
         dropped: [expect.stringContaining('pop. 100')],
+      }),
+    ]);
+  });
+
+  it('prefers a populated place over a more populous neighbourhood (PPLX) with the same label', () => {
+    const { cities, collisions } = buildCities(
+      input({
+        admin1: crAdmin1,
+        admin2: crAdmin2,
+        cities1000: [
+          city({
+            name: 'Guachipelín',
+            admin1: '08',
+            admin2: '102',
+            featureCode: 'PPLX',
+            population: 900,
+          }),
+          city({
+            name: 'Guachipelín',
+            admin1: '08',
+            admin2: '102',
+            featureCode: 'PPL',
+            population: 100,
+          }),
+        ],
+      }),
+    );
+    expect(cities).toHaveLength(1);
+    expect(collisions).toEqual([
+      expect.objectContaining({
+        resolution: 'kept-one',
+        kept: [expect.stringContaining('PPL, pop. 100')],
+        dropped: [expect.stringContaining('PPLX, pop. 900')],
       }),
     ]);
   });

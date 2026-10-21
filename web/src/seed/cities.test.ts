@@ -75,6 +75,13 @@ describe('cities.json', () => {
     ['Managua, Nicaragua', 'NI'],
     ['Buenos Aires, Argentina', 'AR'],
     ['Washington, Distrito de Columbia, Estados Unidos', 'US'],
+    ['Londres, Reino Unido', 'GB'],
+    ['Nueva York, Estados Unidos', 'US'],
+    ['Filadelfia, Pensilvania, Estados Unidos', 'US'],
+    ['Nueva Orleans, Louisiana, Estados Unidos', 'US'],
+    ['Portland, Oregón, Estados Unidos', 'US'],
+    ['Portland, Maine, Estados Unidos', 'US'],
+    ['Toronto, Canadá', 'CA'],
   ])('has "%s" with Spanish country names baked in', (label, country) => {
     expect(byLabel.get(label)).toMatchObject({ country });
   });
@@ -109,13 +116,40 @@ describe('searchCities', () => {
     expect(labels('sevilla colombia')).toEqual(['Sevilla, Valle del Cauca, Colombia']);
   });
 
-  it('matches the GeoNames name kept as `alt`', () => {
+  it('matches the GeoNames name and other Spanish names kept as `alt`', () => {
     expect(labels('mexico city')[0]).toBe('Ciudad de México, México');
+    expect(labels('london')[0]).toBe('Londres, Reino Unido');
+    expect(labels('new york')[0]).toBe('Nueva York, Estados Unidos');
+    expect(labels('philadelphia')[0]).toBe('Filadelfia, Pensilvania, Estados Unidos');
+    expect(labels('new orleans')[0]).toBe('Nueva Orleans, Louisiana, Estados Unidos');
+  });
+
+  it('separates same-name US cities by state', () => {
+    expect(labels('portland')).toEqual(
+      expect.arrayContaining([
+        'Portland, Oregón, Estados Unidos',
+        'Portland, Maine, Estados Unidos',
+      ]),
+    );
   });
 
   it('returns nothing for an empty query or no match', () => {
     expect(labels('  ')).toEqual([]);
     expect(labels('zzzzqx')).toEqual([]);
+  });
+
+  it('puts Costa Rica first within a rank, ahead of more populous places', () => {
+    const results = labels('san jose');
+    expect(results[0]).toBe('San José');
+    expect(results).toContain('San José, California, Estados Unidos');
+    const tiny = indexCities([
+      { name: 'Liberia', label: 'Liberia, Kenia', country: 'KE', lat: 0, lng: 0, tz: 'UTC' },
+      { name: 'Liberia', label: 'Liberia, Guanacaste', country: 'CR', lat: 0, lng: 0, tz: 'UTC' },
+    ]);
+    expect(searchCities(tiny, 'liberia').map((city) => city.label)).toEqual([
+      'Liberia, Guanacaste',
+      'Liberia, Kenia',
+    ]);
   });
 
   it('ranks by name match, then by population order', () => {

@@ -3,12 +3,13 @@
 //
 // Selection (specs/plan.md, Cities):
 // - Central America (BZ, GT, SV, HN, NI, CR, PA): every place in cities1000 (population ≥ 1000).
-// - Rest of Latin America and Spain: cities15000.
+// - Rest of Latin America, Spain, the US and Canada: cities15000.
 // - Elsewhere: national capitals (feature code PPLC) from cities15000.
 //
 // Names:
 // - City: the Spanish preferred alternate name (isolanguage `es` and isPreferredName = 1), else
-//   the GeoNames name. A GeoNames name that differs stays searchable (`alt`).
+//   the first Spanish name, else the GeoNames name. The GeoNames name and every other Spanish
+//   name stay searchable (`alt`): "Londres" shows, "London" still finds it.
 // - Province / canton (admin1 / admin2): the Spanish preferred name, else the first Spanish name,
 //   else the GeoNames name; then a fixed list of administrative prefixes and suffixes is
 //   stripped ("Provincia de Alajuela" → "Alajuela", "Estado de Yucatán" → "Yucatán"), except
@@ -23,7 +24,8 @@
 // - Consecutive repeated parts collapse ("San José, San José, San José" → "San José").
 // - Collision rule, if two entries still share a label: add the next admin level (admin2;
 //   Costa Rica has none after the canton) to every entry in the clash; if the labels still clash,
-//   keep the most populous entry and drop the rest. Every resolution is reported.
+//   keep one entry: a populated place over a section of one (PPLX, e.g. a neighbourhood), then
+//   the most populous. Every resolution is reported.
 
 export const CENTRAL_AMERICA = ['BZ', 'GT', 'SV', 'HN', 'NI', 'CR', 'PA'] as const;
 export const LATIN_AMERICA = [
@@ -77,6 +79,8 @@ export interface AdminCode {
 export interface SpanishNames {
   preferred?: string;
   first?: string;
+  /** Every Spanish name, in file order. */
+  all: string[];
 }
 
 /** One entry of cities.json. */
@@ -92,12 +96,12 @@ export interface CityEntry {
   /** IANA timezone. */
   tz: string;
   /** GeoNames name when it differs from `name`, so it stays searchable. */
-  alt?: string;
+  alt?: string[];
 }
 
 export interface CollisionReport {
   label: string;
-  resolution: 'next-admin-level' | 'kept-most-populous';
+  resolution: 'next-admin-level' | 'kept-one';
   kept: string[];
   dropped: string[];
 }
@@ -143,8 +147,9 @@ export function parseSpanishNames(text: string, into = new Map<string, SpanishNa
   for (const line of lines(text)) {
     const [, geonameid = '', lang, name = '', preferred, , colloquial, historic] = line.split('\t');
     if (lang !== 'es' || colloquial === '1' || historic === '1' || name === '') continue;
-    const entry = into.get(geonameid) ?? {};
+    const entry = into.get(geonameid) ?? { all: [] };
     entry.first ??= name;
+    if (!entry.all.includes(name)) entry.all.push(name);
     if (preferred === '1') entry.preferred ??= name;
     into.set(geonameid, entry);
   }
@@ -203,7 +208,7 @@ export function adminDisplayName(
 export function selectCities(cities15000: GeoNamesCity[], cities1000: GeoNamesCity[]) {
   const centralAmerica = new Set<string>(CENTRAL_AMERICA);
   const restOfRegion = new Set<string>(
-    [...LATIN_AMERICA, 'ES'].filter((c) => !centralAmerica.has(c)),
+    [...LATIN_AMERICA, 'ES', 'US', 'CA'].filter((c) => !centralAmerica.has(c)),
   );
   const selected = [
     ...cities1000.filter((c) => centralAmerica.has(c.country)),
@@ -265,7 +270,7 @@ export function buildCities(input: BuildInput): {
     const names = input.spanish.get(city.geonameid);
     return {
       city,
-      name: names?.preferred ?? city.name,
+      name: names?.preferred ?? names?.first ?? city.name,
       admin1: adminDisplayName(input.admin1.get(`${city.country}.${city.admin1}`), input.spanish),
       admin2: adminDisplayName(
         input.admin2.get(`${city.country}.${city.admin1}.${city.admin2}`),
@@ -315,12 +320,15 @@ export function buildCities(input: BuildInput): {
         continue;
       }
     }
-    // `drafts` is sorted by importance, so the first entry is the most populous.
-    const [first, ...rest] = group;
+    const [first, ...rest] = [...group].sort(
+      (a, b) =>
+        Number(a.city.featureCode === 'PPLX') - Number(b.city.featureCode === 'PPLX') ||
+        compareImportance(a.city, b.city),
+    );
     rest.forEach((d) => kept.delete(d));
     collisions.push({
       label,
-      resolution: 'kept-most-populous',
+      resolution: 'kept-one',
       kept: first ? [describe(first)] : [],
       dropped: rest.map(describe),
     });
@@ -337,10 +345,25 @@ export function buildCities(input: BuildInput): {
         lng: round4(city.lng),
         tz: city.tz,
       };
-      if (city.name !== name) entry.alt = city.name;
+      const alt = searchableNames(name, [
+        city.name,
+        ...(input.spanish.get(city.geonameid)?.all ?? []),
+      ]);
+      if (alt.length > 0) entry.alt = alt;
       return entry;
     });
   return { cities, collisions };
+}
+
+/** Other names that find this city, without repeats or names equal to `name` (ignoring case). */
+function searchableNames(name: string, candidates: string[]): string[] {
+  const seen = new Set([name.toLowerCase()]);
+  return candidates.filter((candidate) => {
+    const key = candidate.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 function groupByLabel(drafts: Draft[]): Draft[][] {

@@ -17,11 +17,14 @@ export const citySchema = z.strictObject({
   lng: z.number().min(-180).max(180),
   /** IANA timezone. */
   tz: z.string().min(1),
-  /** GeoNames name when it differs from `name`; searchable, not shown. */
-  alt: z.string().min(1).optional(),
+  /** Other names (GeoNames, other Spanish names); searchable, not shown. */
+  alt: z.array(z.string().min(1)).min(1).optional(),
 });
 
 export type City = z.infer<typeof citySchema>;
+
+/** Her clients are mostly Costa Rican: its places come first within each rank. */
+const HOME_COUNTRY = 'CR';
 
 /** Most results the autocomplete shows (fits above the iPhone keyboard). */
 export const MAX_RESULTS = 8;
@@ -38,7 +41,7 @@ export function normalizeForSearch(text: string): string {
 
 interface IndexedCity {
   city: City;
-  /** Normalized city name and GeoNames name. */
+  /** Normalized city name and its other names. */
   names: string[];
   /** Words of the whole label plus the GeoNames name. */
   words: string[];
@@ -54,17 +57,18 @@ export function indexCities(cities: readonly City[]): CityIndex {
   return {
     cities,
     entries: cities.map((city) => {
-      const names = [city.name, city.alt].filter((n) => n !== undefined).map(normalizeForSearch);
-      const words = normalizeForSearch(`${city.label} ${city.alt ?? ''}`).split(' ');
+      const names = [city.name, ...(city.alt ?? [])].map(normalizeForSearch);
+      const words = normalizeForSearch([city.label, ...(city.alt ?? [])].join(' ')).split(' ');
       return { city, names, words };
     }),
   };
 }
 
 /**
- * Cities matching `query`: every query word must start a word of the label (or of the GeoNames
+ * Cities matching `query`: every query word must start a word of the label (or of another
  * name). Ranked: city name starts with the whole query, then a word of the city name starts
- * with the first query word, then any other match; within a rank, most populous first.
+ * with the first query word, then any other match. Within a rank, Costa Rica first, then most
+ * populous first.
  */
 export function searchCities(index: CityIndex, query: string, limit = MAX_RESULTS): City[] {
   const normalized = normalizeForSearch(query);
@@ -72,7 +76,12 @@ export function searchCities(index: CityIndex, query: string, limit = MAX_RESULT
   const tokens = normalized.split(' ');
   const first = tokens[0] ?? '';
 
-  const ranked: City[][] = [[], [], []];
+  // [rank][home country first]
+  const ranked: City[][][] = [
+    [[], []],
+    [[], []],
+    [[], []],
+  ];
   for (const { city, names, words } of index.entries) {
     if (!tokens.every((token) => words.some((word) => word.startsWith(token)))) continue;
     const rank = names.some((name) => name.startsWith(normalized))
@@ -80,9 +89,9 @@ export function searchCities(index: CityIndex, query: string, limit = MAX_RESULT
       : names.some((name) => name.split(' ').some((word) => word.startsWith(first)))
         ? 1
         : 2;
-    ranked[rank]?.push(city);
+    ranked[rank]?.[city.country === HOME_COUNTRY ? 0 : 1]?.push(city);
   }
-  return ranked.flat().slice(0, limit);
+  return ranked.flat(2).slice(0, limit);
 }
 
 let loading: Promise<CityIndex> | undefined;
