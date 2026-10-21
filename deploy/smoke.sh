@@ -121,8 +121,11 @@ for service in api cron caddy; do
 done
 
 echo "== Caddy without the API"
-compose stop api >/dev/null 2>&1
-check "with api stopped, / still serves the app shell" spa_root
+# As after a failed migration: api never starts. Caddy must start anyway and serve the shell.
+compose rm -sf api caddy >/dev/null 2>&1
+compose up -d --wait caddy >/dev/null 2>&1
+check "caddy starts on its own, without pulling in api" test -z "$(compose ps -q api)"
+check "with no api, / still serves the app shell" spa_root
 check "  …and /api/health/ is 502" test "$(status_of "$BASE/api/health/" "${API_HOST[@]}")" = 502
 
 echo "== the database volume survives down -v"
