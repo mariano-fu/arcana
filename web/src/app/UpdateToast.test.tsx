@@ -1,7 +1,8 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { RegisterSWOptions } from 'virtual:pwa-register/react';
 
+import PaymentForm from '../features/payments/PaymentForm';
 import { flushAllAutosaves } from '../features/sessions/autosave';
 import es from '../i18n/locales/es.json';
 import UpdateToast from './UpdateToast';
@@ -106,5 +107,65 @@ describe('UpdateToast', () => {
 
     expect(screen.queryByRole('status')).toBeNull();
     expect(pwa.updateServiceWorker).not.toHaveBeenCalled();
+  });
+
+  describe('with a "Guardar" form open', () => {
+    function renderWithPaymentForm() {
+      pwa.needRefresh = true;
+      render(
+        <>
+          <PaymentForm
+            initial={{
+              amount: '',
+              currency: 'CRC',
+              method: 'sinpe',
+              paid_at: '2026-10-21',
+              reference: '',
+              note: '',
+            }}
+            onSave={() => Promise.resolve()}
+            onCancel={() => undefined}
+          />
+          <UpdateToast />
+        </>,
+      );
+    }
+
+    it('asks before reloading over unsaved edits, and reloads only once she confirms', async () => {
+      renderWithPaymentForm();
+      await userEvent.type(screen.getByLabelText(es.payments.field.amount), '15000');
+
+      await userEvent.click(screen.getByRole('button', { name: U.reload }));
+
+      const dialog = screen.getByRole('alertdialog', { name: U.unsaved.body });
+      expect(screen.getByRole('button', { name: U.unsaved.back })).toHaveFocus();
+      expect(pwa.updateServiceWorker).not.toHaveBeenCalled();
+
+      await userEvent.click(within(dialog).getByRole('button', { name: U.unsaved.reloadAnyway }));
+
+      expect(pwa.updateServiceWorker).toHaveBeenCalledWith(true);
+    });
+
+    it('"Volver al formulario" cancels the reload and keeps what she typed', async () => {
+      renderWithPaymentForm();
+      await userEvent.type(screen.getByLabelText(es.payments.field.amount), '15000');
+
+      await userEvent.click(screen.getByRole('button', { name: U.reload }));
+      await userEvent.click(screen.getByRole('button', { name: U.unsaved.back }));
+
+      expect(screen.queryByRole('alertdialog')).toBeNull();
+      expect(screen.getByRole('status')).toHaveTextContent(U.available);
+      expect(screen.getByLabelText(es.payments.field.amount)).toHaveValue('15000');
+      expect(pwa.updateServiceWorker).not.toHaveBeenCalled();
+    });
+
+    it('reloads right away while the form is untouched', async () => {
+      renderWithPaymentForm();
+
+      await userEvent.click(screen.getByRole('button', { name: U.reload }));
+
+      expect(screen.queryByRole('alertdialog')).toBeNull();
+      expect(pwa.updateServiceWorker).toHaveBeenCalledWith(true);
+    });
   });
 });

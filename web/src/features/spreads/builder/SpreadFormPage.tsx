@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useBlocker, useNavigate, useParams, useSearchParams } from 'react-router';
 
 import { db, type SpreadTemplate } from '../../../db';
+import { useUnsavedForm } from '../../forms/unsaved';
 import { useSession } from '../../sessions/hooks';
 import ConfirmDialog from '../ConfirmDialog';
 import {
@@ -87,6 +88,8 @@ function SpreadForm({
   const leaving = useRef(false);
 
   const dirty = useMemo(() => !sameForm(values, initial), [values, initial]);
+  // Cancel and the leave guard need no clear: leaving unmounts the form, which clears it.
+  const clearUnsaved = useUnsavedForm(dirty);
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
       dirty && !leaving.current && currentLocation.pathname !== nextLocation.pathname,
@@ -114,6 +117,7 @@ function SpreadForm({
     try {
       if (template) await updateCustomSpread(db, template.id, result.fields);
       else await createCustomSpread(db, result.fields);
+      clearUnsaved();
       await navigate(returnPath, { replace: true });
     } catch (error) {
       leaving.current = false;

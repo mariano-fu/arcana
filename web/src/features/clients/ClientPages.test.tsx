@@ -5,6 +5,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router';
 import { routes } from '../../app/routes';
 import { repos } from '../../db';
 import es from '../../i18n/locales/es.json';
+import { hasUnsavedForms } from '../forms/unsaved';
 import { clearDb, newClient, seedClientWithHistory } from './test-utils';
 
 function renderAt(path: string) {
@@ -28,6 +29,24 @@ describe('client form', () => {
     expect(saved).toMatchObject({ name: 'Ana Prueba', birth_date: null, archived: false });
     expect(router.state.location.pathname).toBe(`/clients/${saved?.id ?? ''}`);
     expect(screen.getAllByText(es.astro.panel.missingDate)).toHaveLength(1);
+  });
+
+  it('counts as unsaved once edited, and not after "Cancelar" or saving', async () => {
+    const user = userEvent.setup();
+    const router = renderAt('/clients/new');
+    expect(hasUnsavedForms()).toBe(false);
+
+    await user.type(screen.getByLabelText(es.clients.form.name), 'Ana Prueba');
+    expect(hasUnsavedForms()).toBe(true);
+    await user.click(screen.getByRole('link', { name: es.common.cancel }));
+    expect(router.state.location.pathname).toBe('/clients');
+    expect(hasUnsavedForms()).toBe(false);
+
+    await router.navigate('/clients/new');
+    await user.type(await screen.findByLabelText(es.clients.form.name), 'Ana Prueba');
+    await user.click(screen.getByRole('button', { name: es.common.save }));
+    await screen.findByRole('heading', { level: 1, name: 'Ana Prueba' });
+    expect(hasUnsavedForms()).toBe(false);
   });
 
   it('shows an error and saves nothing without a name', async () => {

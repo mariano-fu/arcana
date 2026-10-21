@@ -9,7 +9,7 @@ import { readStatus, writeStatus } from './status';
 export const APP_BUILD_KEY = 'app:build';
 
 /**
- * Provisional (T4.7 U2): the build identity is version, commit and build date. A bug-fix deploy
+ * T4.7 U2: the build identity is version, commit and build date. A bug-fix deploy
  * usually doesn't bump package.json, and the commit is "dev" when a build can't see it (no
  * GITHUB_SHA and no git checkout), so the date keeps every build distinct.
  */

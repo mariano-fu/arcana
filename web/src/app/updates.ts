@@ -2,7 +2,7 @@
 // but a home-screen app on iOS resumes from the background without either, so this also
 // checks when the app comes back to the foreground.
 
-/** Provisional (T4.7 U4): foreground checks run at most this often. */
+/** T4.7 U4: foreground checks run at most this often. */
 export const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000;
 
 /**

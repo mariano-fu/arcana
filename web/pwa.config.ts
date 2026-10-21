@@ -49,10 +49,10 @@ export const pwaOptions: Partial<VitePWAOptions> = {
     globPatterns: ['**/*.{js,css,html,svg,png,ico,webp}'],
     navigateFallback: 'index.html',
     // Server paths (API, admin, static files) are never answered with the app shell (T4.7).
-    // Provisional (T4.7 U7): each prefix matches the bare path and its subpaths, not `/apis`.
+    // T4.7 U7: each prefix matches the bare path and its subpaths, not `/apis`.
     navigateFallbackDenylist: [/^\/api(\/|$)/, /^\/admin(\/|$)/, /^\/static(\/|$)/],
     cleanupOutdatedCaches: true,
-    // Provisional (T4.7 U6): the first install controls the open page at once, so it works offline without a reload
+    // T4.7 U6: the first install controls the open page at once, so it works offline without a reload
     // ('autoUpdate' did this implicitly). A new version still waits: it only takes over after
     // SKIP_WAITING, which the "Recargar" tap sends; no skipWaiting here.
     clientsClaim: true,

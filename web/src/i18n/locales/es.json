@@ -6,7 +6,12 @@
       "available": "Nueva versión disponible",
       "reload": "Recargar",
       "later": "Ahora no",
-      "saveFailed": "No se pudieron guardar los cambios; no se recargó. Revise sus notas e intente de nuevo."
+      "saveFailed": "No se pudieron guardar los cambios; no se recargó. Revise sus notas e intente de nuevo.",
+      "unsaved": {
+        "body": "Tiene cambios sin guardar en un formulario. Si recarga, se perderán.",
+        "back": "Volver al formulario",
+        "reloadAnyway": "Recargar de todos modos"
+      }
     }
   },
   "home": {
