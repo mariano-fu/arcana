@@ -53,13 +53,14 @@ describe('Ajustes', () => {
     expect(await screen.findByRole('heading', { level: 1, name: S.title })).toBeVisible();
   });
 
-  it('has storage, versions and about sections and no export, import or delete buttons', async () => {
+  it('has storage, backup, versions and about sections and no delete or reset buttons', async () => {
     renderAt('/settings');
     await section(S.storage.title);
+    await section(S.backup.title);
     await section(S.versions.title);
     await section(es.about.title);
     const buttons = screen.getAllByRole('button').map((button) => button.textContent);
-    expect(buttons.join(' ')).not.toMatch(/export|import|borrar|eliminar|restablecer/i);
+    expect(buttons.join(' ')).not.toMatch(/borrar|eliminar|restablecer/i);
   });
 });
 

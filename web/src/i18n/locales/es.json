@@ -641,6 +641,42 @@
       "retry": "Volver a pedir",
       "usage": "Usa aproximadamente {{usage}} de unos {{quota}} disponibles."
     },
+    "backup": {
+      "title": "Respaldo",
+      "explain": "Guarde una copia de todos sus datos en un archivo y vuelva a cargarla en este u otro dispositivo cuando la necesite. Importar no borra nada: agrega lo que falta y, en cada registro, conserva la versión más reciente.",
+      "private": "El archivo contiene los datos de sus clientes: guárdelo en un lugar privado.",
+      "export": "Exportar respaldo",
+      "preparing": "Preparando…",
+      "filename": "arcana-respaldo-{{date}}.json",
+      "exportError": "No se pudo crear el respaldo: algunos datos de este teléfono no pasaron la revisión. Sus datos siguen guardados aquí.",
+      "import": "Importar respaldo",
+      "reading": "Revisando el archivo…",
+      "previewTitle": "Respaldo del {{date}}",
+      "previewIntro": "Esto es lo que cambiará en este teléfono:",
+      "future": "Algunos registros tienen una fecha futura; revise la fecha y hora del teléfono.",
+      "confirm": "Importar",
+      "cancel": "Cancelar",
+      "importing": "Importando…",
+      "done": "Respaldo importado.",
+      "count": {
+        "added": "Nuevos: {{count}}",
+        "updated": "Actualizados: {{count}}",
+        "deleted": "Borrados: {{count}}",
+        "kept": "Se conserva la versión de este teléfono, más reciente: {{count}}",
+        "unchanged": "Sin cambios: {{count}}"
+      },
+      "error": {
+        "notJson": "El archivo no se pudo leer. Elija un respaldo de Arcana (.json).",
+        "notBackup": "Este archivo no es un respaldo de Arcana.",
+        "futureVersion": "Este respaldo se hizo con una versión más nueva de la app. Actualice la app e intente de nuevo.",
+        "unknownVersion": "No se reconoce la versión de este respaldo.",
+        "invalid_one": "El respaldo tiene datos inválidos ({{count}} problema). No se importó nada.",
+        "invalid_other": "El respaldo tiene datos inválidos ({{count}} problemas). No se importó nada.",
+        "missingParent": "El respaldo tiene registros incompletos. No se importó nada.",
+        "tooLarge": "El archivo es demasiado grande para ser un respaldo de Arcana.",
+        "failed": "No se pudo importar. Sus datos no cambiaron."
+      }
+    },
     "versions": {
       "title": "Versiones",
       "app": "Aplicación: versión {{version}} ({{commit}}, {{date}})",
