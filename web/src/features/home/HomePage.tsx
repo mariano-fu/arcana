@@ -209,10 +209,10 @@ export default function HomePage() {
       <h1 className="text-2xl font-semibold">{t('home.title')}</h1>
       <HomeSections />
       <Link
-        to="/about"
+        to="/settings"
         className="flex min-h-11 items-center self-center text-base text-stone-600 underline"
       >
-        {t('about.link')}
+        {t('settings.link')}
       </Link>
     </div>
   );

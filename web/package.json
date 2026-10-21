@@ -1,14 +1,14 @@
 {
   "name": "arcana-web",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "engines": {
     "node": "^26"
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && node scripts/check-precache.ts",
+    "build": "node scripts/check-licenses.ts && tsc -b && vite build && node scripts/check-precache.ts",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -23,6 +23,7 @@
     "build:crystals-review": "node scripts/build-crystals-review.ts",
     "build:card-images": "node scripts/build-card-images.ts",
     "build:cities": "node scripts/build-cities.ts",
+    "build:licenses": "node scripts/build-licenses.ts",
     "fetch:horizons-reference": "node scripts/fetch-horizons-reference.ts"
   },
   "dependencies": {

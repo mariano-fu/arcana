@@ -1,4 +1,4 @@
-import type { RouteObject } from 'react-router';
+import { Navigate, type RouteObject } from 'react-router';
 
 import CardDetailPage from '../features/cards/CardDetailPage';
 import CardListPage from '../features/cards/CardListPage';
@@ -8,11 +8,11 @@ import ClientFormPage from '../features/clients/ClientFormPage';
 import ClientListPage from '../features/clients/ClientListPage';
 import PaymentsPage from '../features/payments/PaymentsPage';
 import SessionPage from '../features/sessions/SessionPage';
+import SettingsPage from '../features/settings/SettingsPage';
 import SpreadFormPage from '../features/spreads/builder/SpreadFormPage';
 import SpreadListPage from '../features/spreads/builder/SpreadListPage';
 import ReadingPage from '../features/spreads/ReadingPage';
 import TemplatePickerPage from '../features/spreads/TemplatePickerPage';
-import AboutPage from './AboutPage';
 import AppLayout from './AppLayout';
 
 // Paths are English (code); only what she reads is Spanish.
@@ -35,7 +35,9 @@ export const routes: RouteObject[] = [
       { path: 'payments', element: <PaymentsPage /> },
       { path: 'cards', element: <CardListPage /> },
       { path: 'cards/:key', element: <CardDetailPage /> },
-      { path: 'about', element: <AboutPage /> },
+      { path: 'settings', element: <SettingsPage /> },
+      // Acerca de moved into Ajustes (T1.14); old links still land there.
+      { path: 'about', element: <Navigate to="/settings" replace /> },
     ],
   },
 ];

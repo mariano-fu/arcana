@@ -124,7 +124,8 @@ describe('birth place', () => {
 
     await user.clear(screen.getByLabelText(form.birthLat));
     await user.type(screen.getByLabelText(form.birthLat), '9.66');
-    await user.selectOptions(screen.getByLabelText(form.birthTz), 'America/Costa_Rica');
+    await user.click(screen.getByRole('combobox', { name: form.birthTz }));
+    await user.click(screen.getByRole('option', { name: /^Costa Rica \(San José\)/ }));
     await user.click(screen.getByRole('button', { name: es.common.save }));
 
     await screen.findByRole('heading', { level: 1, name: 'Ana Prueba' });
