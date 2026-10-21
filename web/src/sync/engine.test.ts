@@ -540,7 +540,7 @@ describe('server epoch', () => {
     server.script.push({
       kind: 'ok',
       body: {
-        applied: [],
+        results: [],
         conflicts: [],
         changes: [{ table: 'client', record: { ...bogus, server_version: 99 } }],
         cursor: 99,

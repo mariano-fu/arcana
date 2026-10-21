@@ -1,5 +1,5 @@
 // An in-memory stand-in for the API, for sync engine tests. Its sync is plain last-write-wins
-// on `updated_at` (newer overwrites, equal is a no-op, older is rejected and returned), with
+// on `updated_at` (newer is applied, equal is a noop, older is rejected and returned), with
 // pages, the 24 h clock_ahead check and an epoch. Conflict rows, constraints and the rest of the
 // server's rules are tested in the API (api/tests/test_sync.py) and end to end in T3.9.
 
@@ -7,6 +7,7 @@ import type {
   Api,
   ApiResult,
   PulledChange,
+  PushResult,
   RecordError,
   SyncBadRequest,
   SyncRequest,
@@ -145,7 +146,7 @@ export class FakeSyncServer implements Api {
     });
     if (errors.length > 0) return { kind: 'rejected', body: { records: errors } };
 
-    const applied: string[] = [];
+    const results: PushResult[] = [];
     const written = new Set<string>();
     const returned = new Map<string, StoredRow>();
     for (const change of changes) {
@@ -156,11 +157,12 @@ export class FakeSyncServer implements Api {
         this.version++;
         this.rows.set(key, { table: change.table, record, version: this.version });
         written.add(key);
-        applied.push(record.id);
+        results.push({ table: change.table, id: record.id, status: 'applied' });
       } else if (record.updated_at === stored.record.updated_at) {
-        applied.push(record.id);
+        results.push({ table: change.table, id: record.id, status: 'noop' });
       } else {
         returned.set(key, stored);
+        results.push({ table: change.table, id: record.id, status: 'rejected' });
       }
     }
 
@@ -174,7 +176,7 @@ export class FakeSyncServer implements Api {
     return {
       kind: 'ok',
       body: {
-        applied,
+        results,
         conflicts: [],
         changes: [...returned.values()]
           .sort((a, b) => a.version - b.version)

@@ -57,10 +57,16 @@ export function readPending(
 }
 
 /**
- * Applies one sync response: clears `pending` on pushed rows the server applied, stores the
- * rows it sent, and moves the cursor, all in one transaction (so the cursor never gets ahead of
- * the rows it covers). A pending local row is overwritten only when the server rejected that
- * exact version; one edited since it was read for the push stays pending for the next push.
+ * Applies one sync response in one transaction with the cursor, so the cursor never gets ahead
+ * of the rows it covers. What happened to each pushed row comes only from `results`, never
+ * from which rows are in `changes`:
+ * - A pulled row overwrites a local row that isn't pending. A pending local row is overwritten
+ *   only when `results` marks that row `rejected` and it is unchanged since it was read for the
+ *   push: the server's row (in `changes`) won.
+ * - `applied` / `noop`: `pending` is cleared if the row is unchanged since the push. An edit
+ *   made meanwhile stays pending for the next push.
+ * Pulled rows are stored first, while the pushed rows are still pending, so a server copy of a
+ * row this push wrote can't overwrite it.
  */
 export function applyResponse(
   db: ArcanaDB,
@@ -69,16 +75,27 @@ export function applyResponse(
 ): Promise<void> {
   const tables = [...SYNCED_TABLES.map((table) => db.table(table)), db.meta];
   return db.transaction('rw', tables, async () => {
-    for (const id of body.applied) {
-      const pushed = snapshot.get(id);
-      if (!pushed) continue;
-      const rows = db.table<SyncedRow, string>(pushed.table);
+    const settled: { table: PushableTable; id: string; updated_at: IsoDateTime }[] = [];
+    const rejected = new Set<string>();
+    for (const result of body.results) {
+      const pushed = snapshot.get(result.id);
+      if (pushed?.table !== result.table) {
+        console.warn('Sync result for a row not in this push; ignored', result);
+        continue;
+      }
+      if (result.status === 'rejected') rejected.add(rowKey(result.table, result.id));
+      else settled.push({ table: result.table, id: result.id, updated_at: pushed.updated_at });
+    }
+
+    for (const change of body.changes) await storePulled(db, change, snapshot, rejected);
+
+    for (const { table, id, updated_at } of settled) {
+      const rows = db.table<SyncedRow, string>(table);
       const row = await rows.get(id);
-      if (row?.pending === 1 && row.updated_at === pushed.updated_at) {
+      if (row?.pending === 1 && row.updated_at === updated_at) {
         await rows.put({ ...row, pending: 0 });
       }
     }
-    for (const change of body.changes) await storePulled(db, change, snapshot);
     await db.meta.bulkPut([
       { key: CURSOR_KEY, value: String(body.cursor) },
       { key: EPOCH_KEY, value: body.epoch },
@@ -86,17 +103,21 @@ export function applyResponse(
   });
 }
 
+const rowKey = (table: string, id: string) => `${table}:${id}`;
+
 async function storePulled<T extends SyncedTableName>(
   db: ArcanaDB,
   change: { table: T; record: PulledRecordOf<T> },
   snapshot: PushSnapshot,
+  rejected: ReadonlySet<string>,
 ): Promise<void> {
   const table = tableOf(db, change.table);
   const local = await table.get(change.record.id);
-  const pushed = snapshot.get(change.record.id);
-  const rejected =
-    local !== undefined && pushed?.table === change.table && local.updated_at === pushed.updated_at;
-  if (local === undefined || local.pending === 0 || rejected) {
+  const lost =
+    local !== undefined &&
+    rejected.has(rowKey(change.table, change.record.id)) &&
+    local.updated_at === snapshot.get(change.record.id)?.updated_at;
+  if (local === undefined || local.pending === 0 || lost) {
     // Tombstones and conflict rows are stored like any other row.
     await table.put(fromPulled(change.table, change.record));
   }

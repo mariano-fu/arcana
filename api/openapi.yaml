@@ -1242,6 +1242,27 @@ components:
       required:
       - record
       - table
+    PushResult:
+      type: object
+      properties:
+        table:
+          $ref: '#/components/schemas/PushableTableEnum'
+        id:
+          type: string
+          format: uuid
+        status:
+          allOf:
+          - $ref: '#/components/schemas/PushStatusEnum'
+          description: |-
+            `applied`: written. `noop`: the same write again (equal `updated_at`, same device or identical content), nothing written. `rejected`: the server's row wins; it is in `changes`.
+
+            * `applied` - applied
+            * `noop` - noop
+            * `rejected` - rejected
+      required:
+      - table
+      - id
+      - status
     PushSessionChangeRequest:
       type: object
       properties:
@@ -1266,6 +1287,40 @@ components:
       required:
       - record
       - table
+    PushStatusEnum:
+      enum:
+      - applied
+      - noop
+      - rejected
+      type: string
+      description: |-
+        * `applied` - applied
+        * `noop` - noop
+        * `rejected` - rejected
+    PushableTableEnum:
+      enum:
+      - client
+      - session
+      - payment
+      - reading
+      - card_draw
+      - spread_template
+      - crystal
+      - intention_tag
+      - card_note
+      - conflict
+      type: string
+      description: |-
+        * `client` - client
+        * `session` - session
+        * `payment` - payment
+        * `reading` - reading
+        * `card_draw` - card_draw
+        * `spread_template` - spread_template
+        * `crystal` - crystal
+        * `intention_tag` - intention_tag
+        * `card_note` - card_note
+        * `conflict` - conflict
     ReadingRecord:
       type: object
       properties:
@@ -1720,11 +1775,11 @@ components:
     SyncResponse:
       type: object
       properties:
-        applied:
+        results:
           type: array
           items:
-            type: string
-            format: uuid
+            $ref: '#/components/schemas/PushResult'
+          description: One per pushed record, in request order.
         conflicts:
           type: array
           items:
@@ -1745,7 +1800,7 @@ components:
             one a device stored, the device''s cursor refers to another database:
             it resets the cursor to 0 and pushes every row again.'
       required:
-      - applied
+      - results
       - conflicts
       - changes
       - cursor

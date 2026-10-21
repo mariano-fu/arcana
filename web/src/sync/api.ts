@@ -11,6 +11,7 @@ export type SyncRejected = Schemas['SyncRejected'];
 export type RecordError = Schemas['RecordError'];
 export type PushChange = Schemas['PushChangeRequest'];
 export type PulledChange = Schemas['PulledChange'];
+export type PushResult = Schemas['PushResult'];
 export type TokenPair = Schemas['TokenObtainPair'];
 export type TokenRefreshed = Schemas['TokenRefresh'];
 export type Credentials = Schemas['TokenObtainPairRequest'];

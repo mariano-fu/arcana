@@ -1,6 +1,6 @@
 import { newClient } from '../features/clients/test-utils';
 import { ArcanaDB, createRepositories, type Client, type Repositories } from '../db';
-import type { PulledChange, SyncResponse } from './api';
+import type { PulledChange, PushResult, SyncResponse } from './api';
 import { applyResponse, NOTHING_PUSHED, readPending, restampClockAhead } from './apply';
 import { CURSOR_KEY, EPOCH_KEY, readCursor } from './status';
 
@@ -18,7 +18,7 @@ afterEach(async () => {
 
 function response(overrides: Partial<SyncResponse> = {}): SyncResponse {
   return {
-    applied: [],
+    results: [],
     conflicts: [],
     changes: [],
     cursor: 10,
@@ -28,27 +28,36 @@ function response(overrides: Partial<SyncResponse> = {}): SyncResponse {
   };
 }
 
+const result = (id: string, status: PushResult['status']): PushResult => ({
+  table: 'client',
+  id,
+  status,
+});
+
 function serverClient(client: Client, fields: Partial<Client> = {}): PulledChange {
   const { pending, ...record } = { ...client, ...fields };
   return { table: 'client', record: { ...record, server_version: fields.server_version ?? 9 } };
 }
 
 describe('applyResponse', () => {
-  it('clears pending on applied rows that are unchanged since the push', async () => {
-    const client = await repos.client.create(newClient());
-    const { snapshot } = await readPending(db);
+  it.each(['applied', 'noop'] as const)(
+    'clears pending on %s rows that are unchanged since the push',
+    async (status) => {
+      const client = await repos.client.create(newClient());
+      const { snapshot } = await readPending(db);
 
-    await applyResponse(db, response({ applied: [client.id] }), snapshot);
+      await applyResponse(db, response({ results: [result(client.id, status)] }), snapshot);
 
-    expect((await db.client.get(client.id))?.pending).toBe(0);
-  });
+      expect(await db.client.get(client.id)).toEqual({ ...client, pending: 0 });
+    },
+  );
 
   it('keeps pending on an applied row edited while the request was in flight', async () => {
     const client = await repos.client.create(newClient());
     const { snapshot } = await readPending(db);
     const edited = await repos.client.update(client.id, { notes: 'Durante la sincronización' });
 
-    await applyResponse(db, response({ applied: [client.id] }), snapshot);
+    await applyResponse(db, response({ results: [result(client.id, 'applied')] }), snapshot);
 
     const stored = await db.client.get(client.id);
     expect(stored?.pending).toBe(1);
@@ -63,26 +72,16 @@ describe('applyResponse', () => {
       updated_at: '2030-01-01T00:00:00.000Z',
     });
 
-    await applyResponse(db, response({ changes: [winner] }), snapshot);
+    await applyResponse(
+      db,
+      response({ results: [result(client.id, 'rejected')], changes: [winner] }),
+      snapshot,
+    );
 
     const stored = await db.client.get(client.id);
     expect(stored?.name).toBe('Servidor');
     expect(stored?.pending).toBe(0);
     expect(stored?.server_version).toBe(9);
-  });
-
-  it('keeps a pending local row that was not part of this push', async () => {
-    const client = await repos.client.create(newClient({ name: 'Local' }));
-    const incoming = serverClient(client, {
-      name: 'Servidor',
-      updated_at: '2030-01-01T00:00:00.000Z',
-    });
-
-    await applyResponse(db, response({ changes: [incoming] }), NOTHING_PUSHED);
-
-    const stored = await db.client.get(client.id);
-    expect(stored?.name).toBe('Local');
-    expect(stored?.pending).toBe(1);
   });
 
   it('keeps a pending row edited after the push even if the server rejected the pushed version', async () => {
@@ -94,9 +93,72 @@ describe('applyResponse', () => {
       updated_at: '2030-01-01T00:00:00.000Z',
     });
 
-    await applyResponse(db, response({ changes: [incoming] }), snapshot);
+    await applyResponse(
+      db,
+      response({ results: [result(client.id, 'rejected')], changes: [incoming] }),
+      snapshot,
+    );
 
     expect((await db.client.get(client.id))?.name).toBe('Editado después');
+  });
+
+  describe('a pulled row for a still-pending local record never overwrites it', () => {
+    it('when the row is in the push but results say nothing about it', async () => {
+      const client = await repos.client.create(newClient({ name: 'Local' }));
+      const { snapshot } = await readPending(db);
+      const incoming = serverClient(client, {
+        name: 'Servidor',
+        updated_at: '2030-01-01T00:00:00.000Z',
+      });
+
+      await applyResponse(db, response({ changes: [incoming] }), snapshot);
+
+      expect(await db.client.get(client.id)).toEqual(client);
+    });
+
+    it('when the row is in the push with status applied', async () => {
+      const client = await repos.client.create(newClient({ name: 'Local' }));
+      const { snapshot } = await readPending(db);
+      const incoming = serverClient(client, {
+        name: 'Servidor',
+        updated_at: '2030-01-01T00:00:00.000Z',
+      });
+
+      await applyResponse(
+        db,
+        response({ results: [result(client.id, 'applied')], changes: [incoming] }),
+        snapshot,
+      );
+
+      expect(await db.client.get(client.id)).toEqual({ ...client, pending: 0 });
+    });
+
+    it('when the row is outside the push', async () => {
+      const client = await repos.client.create(newClient({ name: 'Local' }));
+      const incoming = serverClient(client, {
+        name: 'Servidor',
+        updated_at: '2030-01-01T00:00:00.000Z',
+      });
+
+      await applyResponse(
+        db,
+        response({ results: [result(client.id, 'rejected')], changes: [incoming] }),
+        NOTHING_PUSHED,
+      );
+
+      expect(await db.client.get(client.id)).toEqual(client);
+    });
+  });
+
+  it('ignores and logs a result for a row not in this push', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const client = await repos.client.create(newClient());
+
+    await applyResponse(db, response({ results: [result(client.id, 'applied')] }), NOTHING_PUSHED);
+
+    expect((await db.client.get(client.id))?.pending).toBe(1);
+    expect(warn).toHaveBeenCalledOnce();
+    warn.mockRestore();
   });
 
   it('stores new rows, updates synced ones, and stores tombstones, conflicts and horoscopes', async () => {
@@ -178,7 +240,11 @@ describe('applyResponse', () => {
     vi.spyOn(db.meta, 'bulkPut').mockRejectedValueOnce(new Error('closed mid-sync'));
 
     await expect(
-      applyResponse(db, response({ applied: [client.id], changes: [incoming] }), snapshot),
+      applyResponse(
+        db,
+        response({ results: [result(client.id, 'applied')], changes: [incoming] }),
+        snapshot,
+      ),
     ).rejects.toThrow('closed mid-sync');
 
     expect((await db.client.get(client.id))?.pending).toBe(1);
