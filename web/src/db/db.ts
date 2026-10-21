@@ -41,6 +41,11 @@ export const SCHEMA_V2: Record<'auth', string> = {
   auth: 'key',
 };
 
+/** Tables whose rows sync: everything in v1 but `meta`. They refuse hard deletes. */
+export const SYNCED_TABLE_NAMES: ReadonlySet<string> = new Set(
+  Object.keys(SCHEMA_V1).filter((name) => name !== 'meta'),
+);
+
 export const DEFAULT_DB_NAME = 'arcana';
 
 // Plain `Table` rather than `EntityTable`: ids are always generated before insert, never by IndexedDB.
@@ -68,7 +73,7 @@ export class ArcanaDB extends Dexie {
     this.use(
       monotonicUpdatedAt(() => {
         for (const listener of this.localWriteListeners) listener();
-      }),
+      }, SYNCED_TABLE_NAMES),
     );
   }
 

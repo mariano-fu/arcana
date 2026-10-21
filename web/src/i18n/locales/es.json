@@ -672,5 +672,58 @@
       "constraint": "Choca con otro registro",
       "missing_parent": "Falta un registro relacionado"
     }
+  },
+  "conflicts": {
+    "title": "Conflictos",
+    "intro": "Se editó el mismo texto en dos dispositivos. Elija qué versión conservar; nada se pierde hasta que usted decida.",
+    "empty": "No hay nada por revisar.",
+    "inicio": {
+      "title": "Revisar cambios",
+      "count_one": "Tiene {{count}} elemento por revisar.",
+      "count_other": "Tiene {{count}} elementos por revisar.",
+      "action": "Revisar"
+    },
+    "badge_one": "{{count}} elemento por revisar",
+    "badge_other": "{{count}} elementos por revisar",
+    "where": {
+      "client": "Notas · {{name}}",
+      "session_notes": "Notas de la sesión · {{date}} · {{name}}",
+      "session_follow_up_note": "Nota de seguimiento · {{date}} · {{name}}",
+      "payment": "Nota del pago · {{date}} · {{name}}",
+      "card_draw": "Nota de {{card}} en una tirada",
+      "card_note": "Mis notas · {{card}}",
+      "other": "{{table}} · {{field}}",
+      "noName": "(sin nombre)",
+      "noDate": "(sin fecha)",
+      "open": "Abrir"
+    },
+    "current": "Versión actual",
+    "emptyText": "(vacío)",
+    "fromOtherDevice": "Otra versión · de otro dispositivo, {{date}}",
+    "fromThisDevice": "Otra versión · de este dispositivo, {{date}}",
+    "keep": "Conservar la actual",
+    "use": "Usar esta",
+    "combine": "Combinar",
+    "combined": "Texto combinado",
+    "saveCombined": "Guardar combinación",
+    "cancel": "Cancelar",
+    "structured": "Este dato no es texto libre: se conserva el valor actual.",
+    "missing": "Pendiente de sincronizar: el registro todavía no llegó a este dispositivo.",
+    "deleted": {
+      "body": "Este registro se eliminó. Puede copiar el texto antes de descartarlo.",
+      "copy": "Copiar texto",
+      "copied": "Copiado",
+      "discard": "Descartar"
+    },
+    "orphan": {
+      "title": "Sesión de una ficha eliminada",
+      "body": "La ficha de {{name}} se eliminó, pero esta sesión del {{date}} sigue activa.",
+      "readings_one": "{{count}} tirada",
+      "readings_other": "{{count}} tiradas",
+      "payments_one": "{{count}} pago",
+      "payments_other": "{{count}} pagos",
+      "restore": "Restaurar la ficha",
+      "delete": "Eliminar la sesión"
+    }
   }
 }

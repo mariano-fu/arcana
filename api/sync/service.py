@@ -247,6 +247,10 @@ def _keep_losing_text(
                 created_at=now,
             )
             conflict.save()
+        elif conflict.resolved or conflict.deleted_at is not None:
+            # Already resolved on a device (and tombstoned): a retried push of the losing
+            # edit neither reopens it nor reports it again.
+            continue
         result.conflicts.append(conflict)
         returned[("conflict", conflict.pk)] = conflict
 

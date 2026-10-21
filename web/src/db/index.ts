@@ -9,9 +9,9 @@ import {
 import type { Horoscope, SyncedTableName, SyncedTables } from './types';
 
 export { ArcanaDB } from './db';
-export { getDeviceId } from './device';
+export { forgetDeviceId, getDeviceId } from './device';
 export { newId, nowIso } from './ids';
-export { nextUpdatedAt, writeVerbatim } from './monotonic';
+export { HardDeleteError, nextUpdatedAt, writeVerbatim } from './monotonic';
 export * from './repository';
 export type * from './types';
 

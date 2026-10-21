@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet } from 'react-router';
 
+import { useReviewCount } from '../features/conflicts/hooks';
 import { useDiscardSessionOnLeave } from '../features/sessions/leave';
 import SyncBanner from '../features/sync/SyncBanner';
 
@@ -18,6 +19,8 @@ const NAV_ITEMS = [
 export default function AppLayout() {
   const { t } = useTranslation();
   useDiscardSessionOnLeave();
+  // Conflicts and orphaned sessions to review (T3.7), badged on Inicio.
+  const reviewCount = useReviewCount();
 
   return (
     <div className="min-h-dvh bg-stone-50 text-stone-900">
@@ -42,6 +45,14 @@ export default function AppLayout() {
                 }
               >
                 {t(item.key)}
+                {item.to === '/' && reviewCount > 0 && (
+                  <span
+                    aria-label={t('conflicts.badge', { count: reviewCount })}
+                    className="ml-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-amber-600 px-1.5 text-xs font-semibold text-white"
+                  >
+                    {reviewCount}
+                  </span>
+                )}
               </NavLink>
             </li>
           ))}

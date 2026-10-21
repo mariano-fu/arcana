@@ -1,4 +1,12 @@
-import { db, repos, type Client, type NewRow, type Payment, type Session } from '../../db';
+import {
+  db,
+  forgetDeviceId,
+  repos,
+  type Client,
+  type NewRow,
+  type Payment,
+  type Session,
+} from '../../db';
 
 /** Fake data only: never real clients in tests (CLAUDE.md). */
 export function newClient(overrides: Partial<NewRow<Client>> = {}): NewRow<Client> {
@@ -55,8 +63,14 @@ export function newPayment(
   };
 }
 
+/**
+ * A fresh, empty database. Synced tables refuse hard deletes (db/monotonic.ts), so instead of
+ * clearing tables the database is deleted and reopened.
+ */
 export async function clearDb(): Promise<void> {
-  await Promise.all(db.tables.map((table) => table.clear()));
+  await db.delete();
+  forgetDeviceId(db);
+  await db.open();
 }
 
 /** A client with `sessions` sessions and the given payments spread over the first session. */

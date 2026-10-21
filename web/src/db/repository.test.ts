@@ -206,3 +206,27 @@ describe('every writable table', () => {
     expect(await db.payment.where('session_id').equals(session.id).toArray()).toEqual([payment]);
   });
 });
+
+describe('restore', () => {
+  it('undoes a soft delete with a new stamp, pending again', async () => {
+    const client = await repos.client.create(newClient());
+    await repos.client.remove(client.id);
+
+    const restored = await repos.client.restore(client.id);
+
+    expect(restored.deleted_at).toBeNull();
+    expect(restored.pending).toBe(1);
+    expect(restored.updated_at > client.updated_at).toBe(true);
+    expect(await repos.client.get(client.id)).toEqual(restored);
+  });
+
+  it('leaves a live row as it is', async () => {
+    const client = await repos.client.create(newClient());
+
+    expect(await repos.client.restore(client.id)).toEqual(client);
+  });
+
+  it('throws for a row that does not exist', async () => {
+    await expect(repos.client.restore('missing')).rejects.toThrow(RowNotFoundError);
+  });
+});

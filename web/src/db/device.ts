@@ -22,3 +22,8 @@ export function getDeviceId(db: ArcanaDB): Promise<string> {
   }
   return deviceId;
 }
+
+/** Drops the cached id, for a database that was deleted and recreated (tests). */
+export function forgetDeviceId(db: ArcanaDB): void {
+  cache.delete(db);
+}

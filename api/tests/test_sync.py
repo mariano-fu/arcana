@@ -701,3 +701,45 @@ def test_repush_after_a_lost_response_is_noop_with_the_old_cursor(api: APIClient
 
     assert results(again) == [("client", client.id, "noop")]
     assert stored(Client, client.id).server_version == version
+
+
+def test_a_resolved_conflict_is_applied_and_a_retried_losing_push_does_not_reopen_it(
+    api: APIClient,
+) -> None:
+    # B's newer notes win; A's older edit loses and is kept as a conflict.
+    client = factories.ClientFactory(device_id=DEVICE_B, updated_at=at(2), notes="B")
+    losing = change(client, notes="A", updated_at=at(1))
+    first = ok(push(api, DEVICE_A, [losing]))
+    conflict_record = pulled(first, "conflict")
+    assert len(conflict_record) == 1
+    (record,) = conflict_record.values()
+
+    # A resolves it: resolved and tombstoned, stamped later than the server's own write.
+    resolved_at = format_timestamp(timezone.now() + dt.timedelta(minutes=1))
+    resolution = {
+        "table": "conflict",
+        "record": {
+            **{k: v for k, v in record.items() if k != "server_version"},
+            "resolved": True,
+            "deleted_at": resolved_at,
+            "updated_at": resolved_at,
+        },
+    }
+    body = ok(push(api, DEVICE_A, [resolution], cursor=first["cursor"]))
+    assert results(body) == [("conflict", uuid.UUID(record["id"]), "applied")]
+    stored_conflict = stored(Conflict, record["id"])
+    assert stored_conflict.resolved
+    assert stored_conflict.deleted_at is not None
+    version = stored_conflict.server_version
+
+    # The original losing edit is pushed again (a retry from before the device saw anything).
+    again = ok(push(api, DEVICE_A, [losing], cursor=0))
+
+    assert results(again) == [("client", client.id, "rejected")]
+    assert again["conflicts"] == []
+    assert Conflict.objects.count() == 1
+    unchanged = stored(Conflict, record["id"])
+    assert (unchanged.resolved, unchanged.server_version) == (True, version)
+    assert unchanged.deleted_at is not None
+    # From cursor 0 the pull still lists it, as the tombstone it is now.
+    assert pulled(again, "conflict")[record["id"]]["deleted_at"] is not None
