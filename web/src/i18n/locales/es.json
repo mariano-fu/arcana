@@ -3,9 +3,30 @@
     "name": "Arcana",
     "description": "Clientes, lecturas, cartas y cristales para su práctica de tarot, disponible aun sin conexión."
   },
-  "hello": {
-    "title": "Le damos la bienvenida",
-    "subtitle": "Su espacio para clientes, lecturas y referencias, disponible aun sin conexión."
+  "home": {
+    "title": "Inicio",
+    "followUps": {
+      "title": "Seguimientos",
+      "empty": "No tiene seguimientos pendientes.",
+      "today": "Hoy",
+      "tomorrow": "Mañana",
+      "overdue_one": "Atrasado · hace {{count}} día",
+      "overdue_other": "Atrasado · hace {{count}} días",
+      "more_one": "y {{count}} más",
+      "more_other": "y {{count}} más"
+    },
+    "balances": {
+      "title": "Saldos pendientes",
+      "empty": "No hay saldos pendientes.",
+      "total": "Pendiente",
+      "all_one": "Ver todos en Pagos ({{count}})",
+      "all_other": "Ver todos en Pagos ({{count}})"
+    },
+    "recent": {
+      "title": "Sesiones recientes",
+      "empty": "Todavía no hay sesiones.",
+      "start": "Empiece desde la ficha de una persona en Clientes"
+    }
   },
   "cards": {
     "arcana": {

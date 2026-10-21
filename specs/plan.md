@@ -41,6 +41,8 @@
 
 TypeScript is pinned to `~6.0` until typescript-eslint supports 7.x (its peer range is `<6.1`).
 
+**Inicio (T1.12, provisional until Mariano confirms D1–D5; constants in `features/home/home.ts`).** "Today" is the device's local calendar date (D5, same rule as `paid_at`), compared with `follow_up_date` as calendar dates and rechecked at local midnight and when the app returns to the foreground. Seguimientos: live sessions with a follow-up date from 30 days overdue to 30 days ahead (D1, D4), overdue oldest first, then today, then soonest; a follow-up counts as handled once the same client has a session that started later (D1); archived clients' follow-ups are hidden (D2). Saldos pendientes: `pendingBalances` as on Pagos (archived clients included), oldest first, with a total per currency, never summed across currencies. Sesiones recientes: newest first. Limits 10 / 5 / 5 (D3); balances link to Pagos for the rest.
+
 ### Folder layout
 ```
 web/
