@@ -30,7 +30,7 @@ export type NatalCase = 'noDate' | 'noPlace' | 'noTime' | 'full';
 export interface NatalPlanet {
   planet: PlanetKey;
   sign: SignKey;
-  /** Null without a birth time: noon positions are only good for the sign (Provisional T2.6 A3). */
+  /** Null without a birth time: noon positions are only good for the sign (T2.6 A3). */
   longitude: number | null;
 }
 
@@ -41,7 +41,7 @@ export interface NatalView {
   placeWithoutCoordinates: boolean;
   /**
    * The Moon's sign at the start and end of the birth day, when it changed sign that day and
-   * the time is unknown (Provisional T2.6 A2: shown as "X o Y" with a warning).
+   * the time is unknown (T2.6 A2: shown as "X o Y" with a warning).
    */
   moonOptions: { start: SignKey; end: SignKey } | null;
   /** Sun to Pluto; null in `noDate` and `noPlace`. Sun and Moon rows follow `signs`. */

@@ -1,16 +1,16 @@
 // Inicio: which follow-ups, balances and recent sessions show, and in what order.
-// The rules marked "Provisional (T1.12 Dn)" are recommendations Mariano still has to confirm
+// The rules marked "Decision (T1.12 Dn)" were confirmed by Mariano on 2026-10-21
 // (specs/plan.md, "Inicio").
 
 import type { Client, IsoDate, Session } from '../../db';
 import { sumByCurrency, type CurrencyTotals, type PendingBalance } from '../payments';
 import { newestFirst } from '../sessions/timeline';
 
-/** Provisional (T1.12 D1): overdue follow-ups show for this many days, then drop off. */
+/** Decision (T1.12 D1): overdue follow-ups show for this many days, then drop off. */
 export const OVERDUE_DAYS = 30;
-/** Provisional (T1.12 D4): how far ahead an upcoming follow-up shows. */
+/** Decision (T1.12 D4): how far ahead an upcoming follow-up shows. */
 export const UPCOMING_DAYS = 30;
-/** Provisional (T1.12 D3): items per section. */
+/** Decision (T1.12 D3): items per section. */
 export const FOLLOW_UP_LIMIT = 10;
 export const BALANCE_LIMIT = 5;
 export const RECENT_LIMIT = 5;
@@ -32,7 +32,7 @@ export interface FollowUp {
 }
 
 /**
- * Follow-ups to show on `today` (the device's local date, Provisional T1.12 D5): live sessions
+ * Follow-ups to show on `today` (the device's local date, T1.12 D5): live sessions
  * with a follow-up date from OVERDUE_DAYS ago to UPCOMING_DAYS ahead, overdue first (oldest
  * first), then today, then upcoming (soonest first); ties by client name, then session id.
  * `clients` holds the live clients; a session whose client is missing is left out.
@@ -48,11 +48,11 @@ export function followUps(
     if (session.follow_up_date === null) continue;
     const client = clients.get(session.client_id);
     if (!client) continue;
-    // Provisional (T1.12 D2): archived clients' follow-ups are hidden.
+    // Decision (T1.12 D2): archived clients' follow-ups are hidden.
     if (client.archived) continue;
     const days = daysBetween(today, session.follow_up_date);
     if (days < -OVERDUE_DAYS || days > UPCOMING_DAYS) continue;
-    // Provisional (T1.12 D1): a later session with the same client handles the follow-up.
+    // Decision (T1.12 D1): a later session with the same client handles the follow-up.
     const handled = live.some(
       (other) => other.client_id === session.client_id && other.started_at > session.started_at,
     );
