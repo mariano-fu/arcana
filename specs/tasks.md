@@ -34,6 +34,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
   - Manual birth-place entry: make the timezone dropdown searchable, with Spanish labels and common zones (America/Costa_Rica, US, Central America, Spain) first.
 - [ ] T1.15 Playwright e2e on WebKit iPhone viewport: create client → session → Cruz Celta → reload offline → data still there. Runs in CI on Ubuntu (GitHub Actions), not locally: Playwright doesn't support Arch-based distros.
 - [ ] T4.7 Service-worker update toast ("Nueva versión disponible — recargar"). Moved up from Phase 4. Switches `registerType` in `web/pwa.config.ts` to `prompt`.
+  - Note: On app version change, clear the sync 'stopped' state so a fixed bug doesn't leave sync paused.
 - [ ] T1.16 Storage survival check on her iPhone: confirm `navigator.storage.persist()` was granted, and after a week of real use verify all data is intact; record results in `docs/spikes/`.
 - [ ] **Checkpoint:** she uses it for real readings for a week. Collect feedback, update `spec.md`.
 
@@ -57,7 +58,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [x] T3.4 `POST /api/sync/` implementing plan.md rules. Tests for every scenario listed in plan.md.
   - Note: server_version is assigned in save(); the sync endpoint must write rows through save() or take nextval itself — no bulk_update.
 - [x] T3.5 OpenAPI via drf-spectacular; generate TS types for the web client.
-- [ ] T3.6 `web/sync/` engine: push pending → apply response → pull pages → advance cursor. Single-flight, triggers (open, online, interval, manual). Unit tests with a fake server.
+- [x] T3.6 `web/sync/` engine: push pending → apply response → pull pages → advance cursor. Single-flight, triggers (open, online, interval, manual). Unit tests with a fake server.
   - Note: Refresh-token rotation means a lost refresh response leaves the device with a blacklisted token. On a 401 from refresh: keep all local data, mark sync as ‘sesión expirada’, and prompt re-login in Settings; never clear IndexedDB on auth failure. Refreshes must be single-flight.
   - Note: updated_at is strictly increasing per row: max(now, previous + 1 ms).
   - Note: A 400 from /api/sync/ is not retried in a loop: show 'La sincronización está detenida' with details, keep local data and pending rows.
@@ -66,6 +67,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [ ] T3.7 Conflict review screen ("Conflictos": show both versions, keep one or merge text).
   - Note: Surface orphaned rows (child of a tombstoned parent) as 'Sesión de una ficha eliminada' with options to restore the ficha or delete the session.
   - Note: Test: resolving a server-created conflict row from a device whose clock is behind the server still wins (relies on T3.6's max(now, previous + 1 ms)).
+  - Note: Synced tables: local hard delete/deleteRange throws (tombstones only), with a test.
 - [ ] T3.8 Settings: login, last sync, sync now, clock-skew warning.
 - [ ] T3.9 Two-device e2e: two browser contexts, offline edits on both, sync, assert outcome.
 
