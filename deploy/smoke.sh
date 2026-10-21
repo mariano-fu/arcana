@@ -28,11 +28,13 @@ WEB_CONCURRENCY=1
 EOF
 
 compose() { docker compose -p "$PROJECT" --env-file "$ENV_FILE" "$@"; }
+# Every profile, so cleanup also removes the opt-in admin service.
+compose_all() { compose --profile admin "$@"; }
 
 cleanup() {
 	status=$?
 	if [ "$status" -ne 0 ]; then compose logs --no-color --tail 80 || true; fi
-	compose down -v --remove-orphans >/dev/null 2>&1 || true
+	compose_all down -v --remove-orphans >/dev/null 2>&1 || true
 	docker volume rm "$PGDATA_VOLUME" >/dev/null 2>&1 || true
 	rm -rf "$WORK"
 	exit "$status"
@@ -79,6 +81,7 @@ asset=$(curl -s "$BASE/" | grep -o '/assets/index-[A-Za-z0-9_-]*\.js' | head -1)
 check "found a hashed asset in index.html ($asset)" test -n "$asset"
 check "hashed asset is immutable" test "$(header cache-control "$asset")" = "public, max-age=31536000, immutable"
 check "hashed JS is compressed" test -n "$(header content-encoding "$asset" -H 'Accept-Encoding: zstd, gzip')"
+spa_root() { test "$(status_of "$BASE/")" = 200 && curl -s "$BASE/" | grep -q '<div id="root">'; }
 spa() { test "$(status_of "$BASE/clients/123")" = 200 && curl -s "$BASE/clients/123" | grep -q '<div id="root">'; }
 check "SPA route gets the app shell" spa
 check "missing hashed asset is 404" test "$(status_of "$BASE/assets/missing-0000.js")" = 404
@@ -89,8 +92,14 @@ check "  …and not the app shell" not_shell
 check "/api responses are no-store" test "$(header cache-control /api/health/ "${API_HOST[@]}")" = "no-store"
 
 echo "== admin"
+ADMIN_URL="http://127.0.0.1:${ADMIN_PORT}/admin/"
 check "admin is not proxied by Caddy" test "$(status_of "$BASE/admin/")" = 404
-check "admin answers on the loopback tunnel port" test "$(status_of "http://127.0.0.1:${ADMIN_PORT}/admin/" -H 'Host: localhost')" = 302
+# 000: no connection. By default nothing on the host bypasses Caddy.
+check "by default nothing listens on ADMIN_PORT" test "$(status_of "$ADMIN_URL")" = 000
+compose --profile admin up -d --wait admin
+check "the admin profile answers on the loopback tunnel port" test "$(status_of "$ADMIN_URL" -H 'Host: localhost')" = 302
+compose --profile admin rm -sf admin >/dev/null 2>&1
+check "  …and stops listening once stopped" test "$(status_of "$ADMIN_URL")" = 000
 
 echo "== throttling keys on the device behind both proxies"
 last=""
@@ -111,8 +120,13 @@ for service in api cron caddy; do
 	check "$service runs as non-root" test "$(compose exec -T "$service" id -u)" != 0
 done
 
+echo "== Caddy without the API"
+compose stop api >/dev/null 2>&1
+check "with api stopped, / still serves the app shell" spa_root
+check "  …and /api/health/ is 502" test "$(status_of "$BASE/api/health/" "${API_HOST[@]}")" = 502
+
 echo "== the database volume survives down -v"
-compose down -v --remove-orphans >/dev/null 2>&1
+compose_all down -v --remove-orphans >/dev/null 2>&1
 volume_exists() { docker volume inspect "$PGDATA_VOLUME" >/dev/null 2>&1; }
 check "volume still exists after down -v" volume_exists
 

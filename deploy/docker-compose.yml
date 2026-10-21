@@ -62,13 +62,24 @@ services:
 
   api:
     <<: *api
+    # No published port: the app reaches the API only through Caddy (body limit, buffering,
+    # and an X-Forwarded-For the client can't fully choose).
     networks: [backend, egress]
-    # Loopback only, for the Django admin over an SSH tunnel (deploy/README.md). The app
-    # reaches the API through Caddy.
-    ports: ["127.0.0.1:${ADMIN_PORT:-8001}:8000"]
     depends_on:
       migrate: { condition: service_completed_successfully }
     restart: unless-stopped
+
+  # Opt-in, for an admin session over an SSH tunnel (deploy/README.md): a second api process
+  # on the host's loopback. Started only with `--profile admin`; stop it when done. Requests
+  # here bypass Caddy, so it must not stay up.
+  admin:
+    <<: *api
+    profiles: [admin]
+    networks: [backend, egress]
+    ports: ["127.0.0.1:${ADMIN_PORT:-8001}:8000"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    restart: "no"
 
   cron:
     <<: *api
@@ -96,9 +107,8 @@ services:
     # Caddy's state; nothing to keep (TLS ends at tailscale serve).
     tmpfs: ["/data:uid=10002,gid=10002", "/config:uid=10002,gid=10002"]
     networks: [edge, backend]
-    # Started, not healthy: the offline-first shell still loads while the API is down.
-    depends_on:
-      api: { condition: service_started }
+    # No depends_on: Caddy resolves api:8000 per request, so the app shell is served even if
+    # the API never starts (say, a failed migration); /api answers 502 until it does.
     restart: unless-stopped
 
 networks:

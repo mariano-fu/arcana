@@ -29,11 +29,16 @@ Every `up` runs `migrate` first; `api` and `cron` start only once it has succeed
 
 ## Admin
 
-The Django admin is not reachable through Caddy. From a laptop, tunnel to the api's loopback port
-(`ADMIN_PORT`, default 8001) and open http://localhost:8001/admin/:
+The Django admin is not reachable through Caddy, and by default nothing else on the host
+listens: the api has no published port. For an admin session, start the opt-in `admin` service
+(a second api process on the host's loopback, `ADMIN_PORT`, default 8001), tunnel to it from a
+laptop, open http://localhost:8001/admin/, and stop it when done. Requests to it bypass Caddy's
+body limit and the proxy chain the throttling relies on, so don't leave it running.
 
 ```sh
-ssh -L 8001:127.0.0.1:8001 <user>@<homelab-host>
+docker compose --profile admin up -d admin       # on the homelab
+ssh -L 8001:127.0.0.1:8001 <user>@<homelab-host>  # from the laptop
+docker compose --profile admin rm -sf admin       # when done
 ```
 
 For one-off commands: `docker compose exec api python manage.py <command>`.
