@@ -2,6 +2,7 @@ import type { RouteObject } from 'react-router';
 
 import CardDetailPage from '../features/cards/CardDetailPage';
 import CardListPage from '../features/cards/CardListPage';
+import HomePage from '../features/home/HomePage';
 import ClientDetailPage from '../features/clients/ClientDetailPage';
 import ClientFormPage from '../features/clients/ClientFormPage';
 import ClientListPage from '../features/clients/ClientListPage';
@@ -13,7 +14,6 @@ import ReadingPage from '../features/spreads/ReadingPage';
 import TemplatePickerPage from '../features/spreads/TemplatePickerPage';
 import AboutPage from './AboutPage';
 import AppLayout from './AppLayout';
-import HomePage from './HomePage';
 
 // Paths are English (code); only what she reads is Spanish.
 export const routes: RouteObject[] = [
