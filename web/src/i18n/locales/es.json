@@ -273,6 +273,14 @@
       "intentions": "Intenciones",
       "intentionsIntro": "Cada intención describe lo que la persona busca. Entre paréntesis, cuántos cristales la tienen.",
       "corrections": "Correcciones"
+    },
+    "reason": {
+      "sun": "Sol en {{sign}}",
+      "moon": "Luna en {{sign}}",
+      "rising": "Ascendente en {{sign}}",
+      "possible": "{{reason}} (posible: fecha en cúspide)",
+      "intentions_one": "Intención: {{list}}",
+      "intentions_other": "Intenciones: {{list}}"
     }
   },
   "payments": {
