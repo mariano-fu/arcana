@@ -315,3 +315,35 @@ class Conflict(SyncedModel):
 
     def __str__(self) -> str:
         return f"{self.table}.{self.field} ({self.record_id})"
+
+
+class SyncEpoch(models.Model):
+    """One row: a random id for this database's `server_version` sequence.
+
+    Every sync response carries it. A device that sees a different epoch than it stored knows
+    its cursor refers to another database (a reset, or a restore from backup), so it starts
+    over from cursor 0 and pushes everything again (specs/plan.md, "Sync protocol").
+    """
+
+    id = models.PositiveSmallIntegerField(primary_key=True, default=1, editable=False)
+    epoch = models.UUIDField(default=uuid.uuid4)
+
+    class Meta:
+        db_table = "sync_epoch"
+
+    def __str__(self) -> str:
+        return str(self.epoch)
+
+
+def current_epoch() -> uuid.UUID:
+    """The database's epoch, created on first use if the migration's row is gone."""
+    return SyncEpoch.objects.get_or_create(pk=1)[0].epoch
+
+
+def rotate_epoch() -> uuid.UUID:
+    """A new epoch: every device re-pushes its rows and pulls from cursor 0 on its next sync."""
+    with synced_write():
+        row, _ = SyncEpoch.objects.get_or_create(pk=1)
+        row.epoch = uuid.uuid4()
+        row.save()
+    return row.epoch

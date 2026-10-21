@@ -11,6 +11,7 @@ import { db } from './db';
 import { sweepFreshSessions } from './features/sessions/actions.ts';
 import { sessionIdFromPath } from './features/sessions/leave.ts';
 import { loadSeed } from './seed/loader.ts';
+import { startSyncTriggers, syncEngine } from './sync';
 
 // Local and quick; render doesn't wait for it, and the next start retries a failed load.
 loadSeed(db).catch((error: unknown) => {
@@ -24,6 +25,9 @@ sweepFreshSessions(db, { except: sessionIdFromPath(window.location.pathname) }).
     console.error('Fresh session sweep failed', error);
   },
 );
+
+// Open, foreground, online, every 5 min while visible, and after local edits (sync/triggers.ts).
+startSyncTriggers(syncEngine, db);
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Root element #root not found');

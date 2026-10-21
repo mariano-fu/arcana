@@ -62,6 +62,11 @@ class SyncResponseSerializer(serializers.Serializer[dict[str, Any]]):
     changes = _changes("PulledChange", list(SYNCED_TABLE_NAMES), "Pulled")
     cursor = serializers.IntegerField()
     server_time = TimestampField()
+    epoch = serializers.UUIDField(
+        help_text="Random id of the server's database. If it differs from the one a device "
+        "stored, the device's cursor refers to another database: it resets the cursor to 0 "
+        "and pushes every row again."
+    )
 
 
 class RecordErrorSerializer(serializers.Serializer[dict[str, Any]]):

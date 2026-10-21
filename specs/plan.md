@@ -151,7 +151,8 @@ POST /api/sync/
   "conflicts": [{ "table": "client", "id": "…", "field": "notes" }],
   "changes":   [ { "table": …, "record": … } ],   // server_version > cursor, excluding rows this request just wrote
   "cursor":    1907,
-  "server_time": "2026-10-19T12:00:00.000Z"
+  "server_time": "2026-10-19T12:00:00.000Z",
+  "epoch":     "…"               // random id of the server's database
 }
 ```
 
@@ -169,13 +170,28 @@ Details:
 - **Pull:** rows with `server_version > cursor` from every table, ordered, at most 500. Rows this request wrote are left out but still advance `cursor` (the last `server_version` in the page, or the request's cursor if the page is empty).
 - **Rejected pushes:** a push is applied all or nothing. Any bad record → `400`, nothing applied, `{records: [{index, table, id, code, detail}]}` with `code` one of `invalid`, `server_owned` (pushes to `horoscope`), `clock_ahead` (`updated_at` more than 24 h after server time), `constraint`, `missing_parent` (foreign key to a row that exists neither on the server nor in the push). Malformed requests (unknown table, more than 500 changes) → `400` with DRF field errors. Request bodies may be up to 10 MB (`DATA_UPLOAD_MAX_MEMORY_SIZE`).
 - **One writer at a time:** every write to a synced table goes through `synced_write()` (`sync/models.py`): a transaction holding a Postgres advisory lock, in which `SyncedModel.save()` takes the next `server_version`. The sync view runs push and pull in one such transaction, and the admin, the horoscope job and management commands write through `save()` too. Without it, a transaction that took a lower `server_version` could commit after a pull read a higher one, and the cursor would skip that row. Bulk queryset writes (`update`, `bulk_update`, `bulk_create`) on synced models raise, since they bypass `save()`.
+- **Epoch:** a random UUID created once per database (`sync_epoch` table, one row, made by its migration) and returned in every sync response. Cursors are only meaningful within one epoch: a new database (reset, or a restore from an older backup) restarts `server_version`. After restoring a backup, run `manage.py rotate_sync_epoch` so devices notice (the restored row carries the old epoch).
 - **No hard deletes:** `delete()` on a synced row or queryset raises, because a deleted row never reaches a pull. Deletes are tombstones; the admin has no delete permission and offers a "tombstone" action instead (`SyncedModel.tombstone()`: server clock, nil device). Every foreign key on or to a synced model is `PROTECT`, so no cascade can hard-delete synced rows (tested).
 
-Client rules:
-- Every local write sets `updated_at = now`, `pending = true`.
-- Sync runs on app open, on `online` event, every 5 min while visible, and on demand. Single-flight (no overlapping syncs).
-- Paginate pull at 500 records; loop until `cursor` stops advancing.
-- Clock skew: on each sync the server returns its time. If device skew > 2 min, show a warning in Settings.
+Client rules (`web/src/sync/`):
+- **Local writes:** every local edit sets `pending = 1` and `updated_at = max(now, previous + 1 ms)`, strictly increasing per row even when the clock repeats a millisecond or is behind the stored version. A Dexie middleware (`db/monotonic.ts`) enforces it for every writer; writes with `pending = 0` (seed rows, pulled rows) are stored as given. The only exception is `writeVerbatim`, used by the sync engine alone for the epoch re-push and the clock_ahead re-stamp below.
+- **Triggers:** app open; coming back to the foreground (`visibilitychange` → visible, at most once a minute: an installed iOS PWA usually resumes rather than reloads); the `online` event; every 5 min while visible; ~3 s after the last local edit (debounced); and "Sincronizar" (manual). Nothing relies on background sync, which iOS doesn't have.
+- **One run at a time:** within a tab, a call during a run queues exactly one follow-up run; across tabs, runs hold the `arcana:sync` Web Lock (`navigator.locks`).
+- **Push:** read every pending row (parents first: client, spread_template, crystal, intention_tag, card_note, session, payment, reading, card_draw, conflict), split into chunks of at most 500 rows or ~1 MB of JSON, whichever comes first (a single larger row goes alone). Each chunk is one request carrying the current cursor; its response is applied before the next chunk is sent.
+- **Pull:** then send empty requests until `cursor` stops advancing, at most 200 pages per run; a longer backlog ends the run as idle and the next run resumes from the saved cursor.
+- **Applying a response** (one IndexedDB transaction with the cursor, so the cursor never gets ahead of its rows):
+  - Pushed row in `applied`, unchanged locally since it was read for the push → `pending = 0`. Edited meanwhile → stays pending; the next run pushes the new version.
+  - Incoming row with no local row, or a local row that isn't pending → stored with `pending = 0` and its `server_version`.
+  - Incoming row for a pending local row → overwritten only if it is the server's answer to that exact pushed version (a rejected push; the losing text is already a conflict row on the server). Otherwise the local edit is kept and pushed next; the server decides.
+  - Tombstones, conflict rows and horoscopes are stored like any other row. Local `server_version` is only updated from pulled rows (pushed rows aren't echoed back); only the cursor drives pulls.
+- **State** (`meta`): `sync:cursor`, `sync:epoch`, and `sync:status` (`idle`, `stopped`, `clock_ahead`, `session_expired`, `signed_out`, `offline`, `error`; last success; clock skew; the server's errors). "Syncing" is held in memory only.
+- **Auth:** JWTs live in their own `auth` table, never in `meta` (so exporting `meta` can't leak them); `device_id` stays in `meta`. A 401 triggers one refresh and one retry. Refreshes hold the `arcana:auth` Web Lock and re-read the stored tokens first: if another tab already rotated them, its new access token is used instead of spending the blacklisted refresh token. A refused refresh (or a second 401) → `session_expired` ("Sesión expirada", log in again in Settings) and only the `auth` table is cleared: an auth failure never touches data, pending rows, the cursor or `device_id`.
+- **A 400** is never retried automatically: `stopped` ("La sincronización está detenida", with the server's details), local data and pending rows kept. Automatic triggers skip while `stopped`, `clock_ahead` or `session_expired`; each tap on "Sincronizar" retries once.
+- **clock_ahead** (a 400 for `updated_at` more than 24 h ahead): "Revise la fecha y hora del teléfono". On the manual retry, the flagged rows still pending and dated after the device's current time are re-stamped to now (`writeVerbatim`, so their `updated_at` ends up ≤ now); the server never accepted the future version, so nothing synced moves back.
+- **Network error, 5xx, 429:** the run ends (`offline` / `error`); the next trigger tries again. No retry loop.
+- **Epoch change:** if a response's `epoch` differs from the stored one, its page is not applied. The device resets the cursor to 0 and marks every row pending again, live and tombstoned, **keeping each `updated_at` unchanged** (`writeVerbatim`), so last-write-wins on the re-push compares the real edit times; then it re-pushes and pulls from 0. Seed rows never pushed and still as bundled are left out (each device has them from its bundle; pushing them would let an older bundle overwrite a newer one elsewhere). A device with no stored epoch (fresh, or from before epochs) adopts the first one without re-pushing.
+- **App closed mid-sync:** before the response arrives, rows stay pending and are re-pushed next run; the server treats a same-device, same-`updated_at` row as a no-op and lists it in `applied`, and conflict ids are deterministic, so nothing duplicates. During the apply transaction, IndexedDB rolls it back whole: rows and cursor as before. Between pages, the cursor is that of the last applied page.
+- **Clock skew:** each response's `server_time` minus the midpoint of the request is stored; T3.8 shows a warning in Settings above 2 min.
 
 Tests must cover: concurrent edits on two devices, delete vs. edit, offline for a week then sync, notes conflict preserved, re-sending the same push twice (idempotent).
 

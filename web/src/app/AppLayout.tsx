@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet } from 'react-router';
 
 import { useDiscardSessionOnLeave } from '../features/sessions/leave';
+import SyncBanner from '../features/sync/SyncBanner';
 
 const NAV_ITEMS = [
   { to: '/', key: 'nav.home', end: true },
@@ -21,6 +22,7 @@ export default function AppLayout() {
   return (
     <div className="min-h-dvh bg-stone-50 text-stone-900">
       <main className="mx-auto max-w-2xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5rem+env(safe-area-inset-bottom))]">
+        <SyncBanner />
         <Outlet />
       </main>
       <nav

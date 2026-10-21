@@ -57,5 +57,6 @@ def sync(request: Request) -> Response:
             ],
             "cursor": result.cursor,
             "server_time": format_timestamp(now),
+            "epoch": str(result.epoch),
         }
     )

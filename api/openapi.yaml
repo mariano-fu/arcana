@@ -1738,12 +1738,19 @@ components:
         server_time:
           type: string
           format: date-time
+        epoch:
+          type: string
+          format: uuid
+          description: 'Random id of the server''s database. If it differs from the
+            one a device stored, the device''s cursor refers to another database:
+            it resets the cursor to 0 and pushes every row again.'
       required:
       - applied
       - conflicts
       - changes
       - cursor
       - server_time
+      - epoch
     SyncedTableEnum:
       enum:
       - client

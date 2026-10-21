@@ -9,7 +9,9 @@ import {
 } from './actions';
 import { defaultSessionFields, pickSessionFields } from './form';
 
-const NOW = '2026-10-19T15:00:00.000Z';
+// Later than the real clock that stamps rows made through `repos`: updated_at only moves
+// forward (db/monotonic.ts), so an earlier fixed clock would be bumped past those rows.
+const NOW = '2099-10-19T15:00:00.000Z';
 const clock = () => NOW;
 
 beforeEach(clearDb);

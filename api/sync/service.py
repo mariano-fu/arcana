@@ -8,7 +8,14 @@ from typing import Any, Literal, get_args
 
 from django.db import IntegrityError, connection, transaction
 
-from sync.models import SERVER_DEVICE_ID, Conflict, SyncedModel, synced_write, to_ms
+from sync.models import (
+    SERVER_DEVICE_ID,
+    Conflict,
+    SyncedModel,
+    current_epoch,
+    synced_write,
+    to_ms,
+)
 from sync.registry import synced_models
 from sync.serializers import format_timestamp, record_serializer
 
@@ -46,6 +53,7 @@ class SyncResult:
     conflicts: list[Conflict] = field(default_factory=list)
     changes: list[SyncedModel] = field(default_factory=list)
     cursor: int = 0
+    epoch: uuid.UUID | None = None
 
 
 def table_of(row: SyncedModel) -> str:
@@ -78,6 +86,7 @@ def sync(
         for row in page:
             returned.setdefault((table_of(row), row.pk), row)
         result.changes = sorted(returned.values(), key=lambda row: row.server_version)
+        result.epoch = current_epoch()
     return result
 
 

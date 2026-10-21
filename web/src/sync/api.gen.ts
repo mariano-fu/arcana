@@ -933,6 +933,11 @@ export interface components {
             cursor: number;
             /** Format: date-time */
             server_time: string;
+            /**
+             * Format: uuid
+             * @description Random id of the server's database. If it differs from the one a device stored, the device's cursor refers to another database: it resets the cursor to 0 and pushes every row again.
+             */
+            epoch: string;
         };
         /**
          * @description * `client` - client

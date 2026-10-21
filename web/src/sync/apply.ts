@@ -1,0 +1,162 @@
+// What a sync does to IndexedDB (specs/plan.md, "Client rules"). Each function is one
+// transaction, so closing the app mid-sync leaves either all of a step or none of it.
+
+import type { Table } from 'dexie';
+
+import {
+  writeVerbatim,
+  type ArcanaDB,
+  type IsoDateTime,
+  type SyncedRow,
+  type SyncedTableName,
+  type SyncedTables,
+} from '../db';
+import { isUntouchedSeedRow } from '../seed/loader';
+import type { PushChange, SyncResponse } from './api';
+import { CURSOR_KEY, EPOCH_KEY, type SyncError } from './status';
+import {
+  fromPulled,
+  isPushable,
+  PUSH_ORDER,
+  SYNCED_TABLES,
+  toPushChange,
+  type PulledRecordOf,
+  type PushableTable,
+} from './wire';
+
+/** A pushed row's `updated_at` as it was read for the push, by row id. */
+export type PushSnapshot = ReadonlyMap<string, { table: PushableTable; updated_at: IsoDateTime }>;
+
+export const NOTHING_PUSHED: PushSnapshot = new Map();
+
+function tableOf<T extends SyncedTableName>(
+  db: ArcanaDB,
+  table: T,
+): Table<SyncedTables[T], string> {
+  return db.table<SyncedTables[T], string>(table);
+}
+
+const pushTables = (db: ArcanaDB) => PUSH_ORDER.map((table) => db.table(table));
+
+/** Every pending row, parents first, and the snapshot to recognize them in the response. */
+export function readPending(
+  db: ArcanaDB,
+): Promise<{ changes: PushChange[]; snapshot: PushSnapshot }> {
+  return db.transaction('r', pushTables(db), async () => {
+    const changes: PushChange[] = [];
+    const snapshot = new Map<string, { table: PushableTable; updated_at: IsoDateTime }>();
+    async function collect(table: PushableTable) {
+      for (const row of await tableOf(db, table).where('pending').equals(1).toArray()) {
+        changes.push(toPushChange(table, row));
+        snapshot.set(row.id, { table, updated_at: row.updated_at });
+      }
+    }
+    for (const table of PUSH_ORDER) await collect(table);
+    return { changes, snapshot };
+  });
+}
+
+/**
+ * Applies one sync response: clears `pending` on pushed rows the server applied, stores the
+ * rows it sent, and moves the cursor, all in one transaction (so the cursor never gets ahead of
+ * the rows it covers). A pending local row is overwritten only when the server rejected that
+ * exact version; one edited since it was read for the push stays pending for the next push.
+ */
+export function applyResponse(
+  db: ArcanaDB,
+  body: SyncResponse,
+  snapshot: PushSnapshot,
+): Promise<void> {
+  const tables = [...SYNCED_TABLES.map((table) => db.table(table)), db.meta];
+  return db.transaction('rw', tables, async () => {
+    for (const id of body.applied) {
+      const pushed = snapshot.get(id);
+      if (!pushed) continue;
+      const rows = db.table<SyncedRow, string>(pushed.table);
+      const row = await rows.get(id);
+      if (row?.pending === 1 && row.updated_at === pushed.updated_at) {
+        await rows.put({ ...row, pending: 0 });
+      }
+    }
+    for (const change of body.changes) await storePulled(db, change, snapshot);
+    await db.meta.bulkPut([
+      { key: CURSOR_KEY, value: String(body.cursor) },
+      { key: EPOCH_KEY, value: body.epoch },
+    ]);
+  });
+}
+
+async function storePulled<T extends SyncedTableName>(
+  db: ArcanaDB,
+  change: { table: T; record: PulledRecordOf<T> },
+  snapshot: PushSnapshot,
+): Promise<void> {
+  const table = tableOf(db, change.table);
+  const local = await table.get(change.record.id);
+  const pushed = snapshot.get(change.record.id);
+  const rejected =
+    local !== undefined && pushed?.table === change.table && local.updated_at === pushed.updated_at;
+  if (local === undefined || local.pending === 0 || rejected) {
+    // Tombstones and conflict rows are stored like any other row.
+    await table.put(fromPulled(change.table, change.record));
+  }
+}
+
+/** Seed rows the server never had and that are still as bundled; see `isUntouchedSeedRow`. */
+const leftOutOfRepush: { [T in PushableTable]: (row: SyncedTables[T]) => boolean } = {
+  ...isUntouchedSeedRow,
+  client: () => false,
+  session: () => false,
+  payment: () => false,
+  reading: () => false,
+  card_draw: () => false,
+  card_note: () => false,
+  conflict: () => false,
+};
+
+function leftOut<T extends PushableTable>(table: T, row: SyncedTables[T]): boolean {
+  return leftOutOfRepush[table](row);
+}
+
+/**
+ * The server's database changed (its epoch differs from the stored one): the cursor refers to
+ * another database, which may lack rows this device already pushed. Marks every row, live or
+ * tombstoned, pending again and resets the cursor to 0, keeping each `updated_at` exactly as is
+ * so last-write-wins compares the real edit times on the re-push.
+ */
+export function resetForEpoch(db: ArcanaDB, epoch: string): Promise<void> {
+  return writeVerbatim(db, [...pushTables(db), db.meta], async () => {
+    async function mark(table: PushableTable) {
+      const rows = await tableOf(db, table).where('pending').equals(0).toArray();
+      await tableOf(db, table).bulkPut(
+        rows
+          .filter((row) => row.server_version !== null || !leftOut(table, row))
+          .map((row) => ({ ...row, pending: 1 })),
+      );
+    }
+    for (const table of PUSH_ORDER) await mark(table);
+    await db.meta.bulkPut([
+      { key: CURSOR_KEY, value: '0' },
+      { key: EPOCH_KEY, value: epoch },
+    ]);
+  });
+}
+
+/**
+ * Before a manual retry after `clock_ahead`: the flagged rows still carry the future
+ * `updated_at` the wrong clock gave them, which the server would refuse forever. Re-stamps
+ * them to the device's time now (still pending), if that is earlier. The server never accepted
+ * the future version, so nothing that was synced moves backwards.
+ */
+export function restampClockAhead(db: ArcanaDB, errors: readonly SyncError[], now: IsoDateTime) {
+  return writeVerbatim(db, pushTables(db), async () => {
+    for (const error of errors) {
+      if (error.code !== 'clock_ahead' || error.id === null || !isPushable(error.table)) continue;
+      const rows = db.table<SyncedRow, string>(error.table);
+      const row = await rows.get(error.id);
+      if (row?.pending !== 1 || row.updated_at <= now) continue;
+      const deletedAt = row.deleted_at === row.updated_at ? now : row.deleted_at;
+      await rows.put({ ...row, updated_at: now, deleted_at: deletedAt });
+    }
+  });
+}

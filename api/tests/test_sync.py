@@ -1,16 +1,27 @@
 """`POST /api/sync/` against the rules in specs/plan.md, "Sync protocol"."""
 
 import datetime as dt
+import io
 import uuid
 from typing import Any
 
 import pytest
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.management import call_command
 from django.utils import timezone
 from rest_framework.test import APIClient
 
-from sync.models import SERVER_DEVICE_ID, CardNote, Client, Conflict, Session, SyncedModel
+from sync.models import (
+    SERVER_DEVICE_ID,
+    CardNote,
+    Client,
+    Conflict,
+    Session,
+    SyncedModel,
+    SyncEpoch,
+    current_epoch,
+)
 from sync.serializers import format_timestamp, record_serializer
 from sync.service import PULL_PAGE_SIZE
 from tests import factories
@@ -617,3 +628,24 @@ def test_card_note_round_trips_through_push_and_pull(api: APIClient) -> None:
         str(DEVICE_A),
     )
     assert CardNote.objects.get().note == "Mine"
+
+
+def test_every_response_carries_the_database_epoch(api: APIClient) -> None:
+    first = ok(push(api, DEVICE_A, []))["epoch"]
+    second = ok(push(api, DEVICE_B, [], cursor=5))["epoch"]
+
+    assert first == second == str(current_epoch())
+    # Created by the migration, with the database.
+    assert SyncEpoch.objects.filter(pk=1).exists()
+
+
+def test_rotate_sync_epoch_gives_the_database_a_new_epoch(api: APIClient) -> None:
+    before = ok(push(api, DEVICE_A, []))["epoch"]
+    out = io.StringIO()
+
+    call_command("rotate_sync_epoch", stdout=out)
+
+    after = ok(push(api, DEVICE_A, []))["epoch"]
+    assert after != before
+    assert after in out.getvalue()
+    assert SyncEpoch.objects.count() == 1

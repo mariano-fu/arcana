@@ -76,6 +76,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
   - Note: Cron: run `manage.py flushexpiredtokens` daily; deploy runs `migrate` (simplejwt blacklist tables).
 - [ ] T4.2 Tailscale setup doc in `docs/deploy.md`: enable MagicDNS + HTTPS certificates, `tailscale serve` → Caddy, share the node with her account, ACL limiting her to the app port. Install on her iPhone from the ts.net URL.
 - [ ] T4.3 Nightly `pg_dump` backups + tested restore procedure.
+  - Note: The restore procedure ends with `manage.py rotate_sync_epoch`, so devices re-push and re-pull instead of trusting cursors from before the restore (plan.md, "Epoch").
 - [ ] T4.4 Spike (1 evening): call freehoroscopeapi.com for all 12 signs, check response shape and text length; translate a sample with DeepL Free (test `formality`), review quality. ADR with decision.
 - [ ] T4.5 `horoscopes` app: `HoroscopeSource` (freehoroscopeapi, manual) and `Translator` (DeepL Free, none) interfaces. Daily job: fetch → translate → upsert `text_en`/`text_es`; skip re-translation; DeepL quota check that falls back to English-only above 90%. Tests with mocked HTTP, including DeepL down and quota exceeded.
   - Note: Horoscope job writes through the same locked sync-write helper.
