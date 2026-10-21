@@ -4,7 +4,7 @@ import datetime as dt
 import uuid
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Literal, get_args
 
 from django.db import IntegrityError, connection, transaction
 
@@ -28,6 +28,8 @@ FREE_TEXT_FIELDS: Mapping[str, tuple[str, ...]] = {
 CONFLICT_ID_NAMESPACE = uuid.UUID("6f1c2a52-3d0e-4d8b-9a57-7c0f3e1b2d94")
 
 Key = tuple[str, uuid.UUID]
+ErrorCode = Literal["invalid", "server_owned", "clock_ahead", "constraint", "missing_parent"]
+ERROR_CODES: tuple[ErrorCode, ...] = get_args(ErrorCode)
 
 
 class PushRejected(Exception):
@@ -80,7 +82,7 @@ def sync(
 
 
 def _error(
-    index: int | None, table: str | None, record_id: object, code: str, detail: object
+    index: int | None, table: str | None, record_id: object, code: ErrorCode, detail: object
 ) -> dict[str, Any]:
     return {
         "index": index,

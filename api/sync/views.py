@@ -1,12 +1,30 @@
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework.decorators import api_view
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from core.schema import ErrorDetailSerializer
 from sync import service
 from sync.models import now_ms
+from sync.schema import (
+    SYNC_BAD_REQUEST,
+    SyncResponseSerializer,
+    SyncSerializer,
+)
 from sync.serializers import SyncRequestSerializer, format_timestamp, record_serializer
 
 
+@extend_schema(
+    request=SyncSerializer,
+    responses={
+        200: SyncResponseSerializer,
+        400: OpenApiResponse(
+            SYNC_BAD_REQUEST,
+            description="Nothing applied: per-record `records`, or DRF field errors.",
+        ),
+        401: ErrorDetailSerializer,
+    },
+)
 @api_view(["POST"])
 def sync(request: Request) -> Response:
     """Push pending rows, pull the next page (specs/plan.md, "Sync protocol").

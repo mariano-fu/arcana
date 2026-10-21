@@ -5,6 +5,7 @@ from functools import cache
 from typing import Any, ClassVar
 
 from django.db import models
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from sync.models import SyncedModel, to_ms
@@ -31,10 +32,62 @@ class TimestampField(serializers.DateTimeField):
         return format_timestamp(value)
 
 
+@extend_schema_field({"type": "string", "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"})
+class ClockTimeField(serializers.TimeField):
+    """Time of day as `HH:MM`, the client's `IsoTime`. `HH:MM:00` is accepted too."""
+
+    default_error_messages: ClassVar = {"seconds": "Times travel as HH:MM, without seconds."}
+
+    def to_internal_value(self, value: Any) -> dt.time:
+        parsed = super().to_internal_value(value)
+        if parsed.second or parsed.microsecond:
+            self.fail("seconds")
+        return parsed
+
+    def to_representation(self, value: dt.time) -> str:
+        return f"{value:%H:%M}"
+
+
+# Shapes of the JSON columns, for the schema only: the server stores them as sent.
+class SpreadLayoutSerializer(serializers.Serializer[dict[str, Any]]):
+    col = serializers.IntegerField(min_value=0)
+    row = serializers.IntegerField(min_value=0)
+    rotated = serializers.BooleanField()
+
+
+class SpreadPositionSerializer(serializers.Serializer[dict[str, Any]]):
+    index = serializers.IntegerField(min_value=1, help_text="1-based.")
+    name = serializers.CharField()
+    meaning = serializers.CharField(allow_blank=True)
+    layout = SpreadLayoutSerializer(allow_null=True)
+
+
+class SpreadSnapshotSerializer(serializers.Serializer[dict[str, Any]]):
+    name = serializers.CharField()
+    positions = SpreadPositionSerializer(many=True)
+
+
+@extend_schema_field(SpreadSnapshotSerializer)
+class SpreadSnapshotField(serializers.JSONField):
+    pass
+
+
+@extend_schema_field(SpreadPositionSerializer(many=True))
+class SpreadPositionsField(serializers.JSONField):
+    pass
+
+
+JSON_FIELDS: dict[tuple[str, str], type[serializers.JSONField]] = {
+    ("reading", "spread_snapshot"): SpreadSnapshotField,
+    ("spread_template", "positions"): SpreadPositionsField,
+}
+
+
 class SyncRecordSerializer(serializers.ModelSerializer[SyncedModel]):
     serializer_field_mapping: ClassVar = {
         **serializers.ModelSerializer.serializer_field_mapping,
         models.DateTimeField: TimestampField,
+        models.TimeField: ClockTimeField,
     }
 
 
@@ -48,6 +101,11 @@ def record_serializer(model: type[SyncedModel]) -> type[SyncRecordSerializer]:
     concrete = model._meta.concrete_fields
     declared: dict[str, Any] = {
         field.attname: serializers.UUIDField() for field in concrete if field.is_relation
+    }
+    declared |= {
+        name: field_class()
+        for (table, name), field_class in JSON_FIELDS.items()
+        if table == model._meta.db_table
     }
     declared["id"] = serializers.UUIDField()
     declared["device_id"] = serializers.UUIDField(required=False)
