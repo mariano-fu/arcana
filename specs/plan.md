@@ -126,6 +126,7 @@ On app start (`seed/loader.ts`, `loadSeed`), compare each bundled seed's `versio
 - **Not synced by default:** the loader writes seed rows with `pending = 0`, because each device derives them from its own bundle. Only her edits (made through the repositories, `pending = 1`) sync. Rows that already exist keep their `pending` and `server_version`.
 - **Crystals:** insert new seed rows; update existing seed rows **only if `user_modified = false`**, and then only the seed content (name, colors, chakras, signs, intentions, description, care), never `hidden`. Never touch her own crystals (`seed_key = null`).
 - **Spreads:** seed spreads are read-only in the app, so seed rows are always updated to the bundled version (no `user_modified` flag); her custom spreads (`is_seed = false`) are never touched, and copies she made of a seed spread are independent custom rows.
+  Open issue: future seed spreads could reuse a custom spread's name; decide a rule before adding any new seed spread.
 - **Intention tags:** add-only. A seed key with no row (looked up by `key`) gets one with `label: null`; existing rows, renamed or not, are never updated.
 - **Deletes:** a seed row she deleted (tombstone) stays deleted, and rows dropped from a newer seed are kept. The loader never deletes anything.
 

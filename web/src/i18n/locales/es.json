@@ -142,7 +142,7 @@
       },
       "layout": {
         "title": "Disposición",
-        "hint": "Elija una posición y toque la casilla donde va. Las posiciones sin lugar se muestran solo en la lista.",
+        "hint": "Elija una posición y toque la casilla donde va. Si la casilla ya tiene otra posición, las dos se intercambian. Las posiciones sin lugar se muestran solo en la lista.",
         "select": "Posición a colocar",
         "crossed": "Cruzada",
         "none": "Sin lugar",
