@@ -461,7 +461,28 @@
       "birthLng": "Longitud",
       "birthLngHint": "Negativa al oeste. San José: -84.08",
       "birthTz": "Zona horaria",
-      "birthTzPlaceholder": "Elija una zona horaria",
+      "birthTzPlaceholder": "Busque por país o ciudad",
+      "tz": {
+        "suggestions": "Zonas horarias sugeridas",
+        "label": "{{name}} · hoy {{offset}}",
+        "common": {
+          "costaRica": "Costa Rica (San José)",
+          "guatemala": "Guatemala",
+          "elSalvador": "El Salvador",
+          "honduras": "Honduras (Tegucigalpa)",
+          "nicaragua": "Nicaragua (Managua)",
+          "panama": "Panamá",
+          "usEast": "Estados Unidos, Este (Nueva York)",
+          "usCentral": "Estados Unidos, Centro (Chicago)",
+          "usMountain": "Estados Unidos, Montaña (Denver)",
+          "usArizona": "Estados Unidos, Arizona (Phoenix)",
+          "usPacific": "Estados Unidos, Pacífico (Los Ángeles)",
+          "usAlaska": "Estados Unidos, Alaska (Anchorage)",
+          "usHawaii": "Estados Unidos, Hawái (Honolulu)",
+          "spainMainland": "España, península (Madrid)",
+          "spainCanary": "España, Canarias"
+        }
+      },
       "notes": "Notas",
       "tags": "Etiquetas",
       "tagsHint": "Separadas por comas, por ejemplo: ansiedad, trabajo, cliente frecuente.",
@@ -564,11 +585,38 @@
   },
   "about": {
     "title": "Acerca de",
-    "link": "Acerca de",
     "creditsTitle": "Créditos",
     "geonames": "Datos de ciudades: GeoNames, bajo licencia Creative Commons Atribución 4.0 (CC BY 4.0). Se seleccionaron ciudades y se tradujeron nombres al español.",
     "geonamesLink": "geonames.org",
-    "licenseLink": "Licencia CC BY 4.0"
+    "licenseLink": "Licencia CC BY 4.0",
+    "cardImages": "Imágenes de las cartas: dibujos de Pamela Colman Smith para el tarot Rider-Waite-Smith (Rider & Son, Londres, 1909), de dominio público. Escaneos de un mazo original de 1909, publicados en Wikimedia Commons (colección «RWS1909»).",
+    "licensesTitle": "Licencias de software",
+    "licensesIntro": "Arcana usa estos programas de código abierto. Toque uno para leer su licencia.",
+    "licensesShow": "Ver las licencias",
+    "loading": "Cargando…"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "link": "Ajustes",
+    "storage": {
+      "title": "Almacenamiento",
+      "status": "Estado: {{status}}",
+      "persisted": "persistente",
+      "not_persisted": "no persistente",
+      "unsupported": "Este navegador no permite pedir almacenamiento persistente.",
+      "checking": "Revisando…",
+      "explain": "Sus datos se guardan en este teléfono, no en internet. Cuando el almacenamiento es persistente, el teléfono no los borra por su cuenta para liberar espacio. Cuando no lo es, el sistema podría borrarlos si el teléfono se queda sin espacio o si pasa mucho tiempo sin abrir Arcana. Abrir Arcana desde el ícono en la pantalla de inicio ayuda. En cualquier caso, conviene tener siempre una copia de sus datos.",
+      "backup": "Le recomendamos guardar una copia de sus datos con frecuencia.",
+      "retry": "Volver a pedir",
+      "usage": "Usa aproximadamente {{usage}} de unos {{quota}} disponibles."
+    },
+    "versions": {
+      "title": "Versiones",
+      "app": "Aplicación: versión {{version}} ({{commit}}, {{date}})",
+      "schema": "Base de datos: versión {{schema}}",
+      "content": "Contenido: cartas {{cards}} · tiradas {{spreads}} · cristales {{crystals}}",
+      "notLoaded": "—"
+    }
   },
   "sync": {
     "now": "Sincronizar",

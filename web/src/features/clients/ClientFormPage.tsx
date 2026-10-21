@@ -1,4 +1,4 @@
-import { useId, useMemo, useState, type ReactNode } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router';
 
@@ -12,6 +12,7 @@ import {
   type ClientFormValues,
 } from './form';
 import { useClient } from './hooks';
+import TimeZoneAutocomplete from './TimeZoneAutocomplete';
 
 /** Create (`/clients/new`) or edit (`/clients/:id/edit`). */
 export default function ClientFormPage() {
@@ -60,13 +61,6 @@ function ClientForm({ client }: { client: Client | null }) {
       setSaving(false);
     }
   }
-
-  const timeZones = useMemo(() => {
-    const zones = Intl.supportedValuesOf('timeZone');
-    return values.birth_tz === '' || zones.includes(values.birth_tz)
-      ? zones
-      : [values.birth_tz, ...zones];
-  }, [values.birth_tz]);
 
   const hasCoordinates =
     values.birth_lat !== '' && values.birth_lng !== '' && values.birth_tz !== '';
@@ -258,21 +252,13 @@ function ClientForm({ client }: { client: Client | null }) {
             error={errors.birth_tz && t(`clients.form.error.${errors.birth_tz}`)}
           >
             {(id) => (
-              <select
+              <TimeZoneAutocomplete
                 id={id}
                 value={values.birth_tz}
-                onChange={(event) => {
-                  set('birth_tz', event.target.value);
+                onChange={(zone) => {
+                  set('birth_tz', zone);
                 }}
-                className={inputClass}
-              >
-                <option value="">{t('clients.form.birthTzPlaceholder')}</option>
-                {timeZones.map((zone) => (
-                  <option key={zone} value={zone}>
-                    {zone}
-                  </option>
-                ))}
-              </select>
+              />
             )}
           </Field>
         </>

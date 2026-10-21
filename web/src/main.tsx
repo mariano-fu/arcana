@@ -10,6 +10,7 @@ import App from './App.tsx';
 import { db } from './db';
 import { sweepFreshSessions } from './features/sessions/actions.ts';
 import { sessionIdFromPath } from './features/sessions/leave.ts';
+import { requestPersistence } from './features/settings/storage.ts';
 import { loadSeed } from './seed/loader.ts';
 import { startSyncTriggers, syncEngine } from './sync';
 
@@ -25,6 +26,12 @@ sweepFreshSessions(db, { except: sessionIdFromPath(window.location.pathname) }).
     console.error('Fresh session sweep failed', error);
   },
 );
+
+// Constitution: ask the browser to keep her data (Ajustes shows the result). It decides on its
+// own; only Firefox asks her. Nothing happens when it's already granted or unsupported.
+requestPersistence().catch((error: unknown) => {
+  console.error('Persistent storage request failed', error);
+});
 
 // Open, foreground, online, every 5 min while visible, and after local edits (sync/triggers.ts).
 startSyncTriggers(syncEngine, db);
