@@ -58,7 +58,8 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
 # --timeout: a sync worker handling one request longer than this is restarted. Caddy buffers
 # request bodies (deploy/caddy/Caddyfile), so a slow phone upload never holds a worker.
 # --worker-tmp-dir and --no-control-socket: nothing is written to disk, so the root filesystem
-# can be read-only.
-CMD ["gunicorn", "arcana.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2", \
+# can be read-only. Workers: WEB_CONCURRENCY (gunicorn's default when --workers isn't given).
+ENV WEB_CONCURRENCY=2
+CMD ["gunicorn", "arcana.wsgi:application", "--bind", "0.0.0.0:8000", \
      "--timeout", "60", "--graceful-timeout", "30", "--worker-tmp-dir", "/dev/shm", \
      "--no-control-socket", "--access-logfile", "-"]

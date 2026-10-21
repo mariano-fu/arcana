@@ -14,7 +14,6 @@ BASE="http://127.0.0.1:${CADDY_PORT}"
 WORK=$(mktemp -d)
 export ENV_FILE="$WORK/smoke.env"
 THROTTLE_LIMIT=3
-WORKERS=2 # gunicorn --workers: each keeps its own throttle counts
 
 cat >"$ENV_FILE" <<EOF
 SECRET_KEY=smoke-only-$(python3 -c 'import secrets; print(secrets.token_hex(24))')
@@ -23,6 +22,9 @@ ALLOWED_HOSTS=app.example.test,localhost
 CSRF_TRUSTED_ORIGINS=https://app.example.test
 NUM_PROXIES=2
 AUTH_THROTTLE_RATE=${THROTTLE_LIMIT}/min
+# One gunicorn worker: each worker keeps its own throttle counts, so with more the checks
+# below would depend on which worker a request lands on.
+WEB_CONCURRENCY=1
 EOF
 
 compose() { docker compose -p "$PROJECT" --env-file "$ENV_FILE" "$@"; }
@@ -91,9 +93,8 @@ check "admin is not proxied by Caddy" test "$(status_of "$BASE/admin/")" = 404
 check "admin answers on the loopback tunnel port" test "$(status_of "http://127.0.0.1:${ADMIN_PORT}/admin/" -H 'Host: localhost')" = 302
 
 echo "== throttling keys on the device behind both proxies"
-# Enough requests that some worker's bucket is over the limit, whichever way they're spread.
 last=""
-for _ in $(seq $((THROTTLE_LIMIT * WORKERS + 1))); do
+for _ in $(seq $((THROTTLE_LIMIT + 1))); do
 	last=$(as_device 100.64.0.1 -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d '{}' "$BASE/api/auth/token/")
 done
 check "device A is throttled (429)" test "$last" = 429
