@@ -19,8 +19,7 @@
       "title": "Saldos pendientes",
       "empty": "No hay saldos pendientes.",
       "total": "Pendiente",
-      "all_one": "Ver todos en Pagos ({{count}})",
-      "all_other": "Ver todos en Pagos ({{count}})"
+      "all": "Ver todos"
     },
     "recent": {
       "title": "Sesiones recientes",

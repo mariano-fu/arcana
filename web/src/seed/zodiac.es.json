@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "signs": [
     {
       "key": "aries",
@@ -261,7 +261,7 @@
       "ruler": "neptune",
       "traditional_ruler": "jupiter",
       "traits": ["empatía", "intuición", "imaginación", "compasión", "espiritualidad"],
-      "description": "Piscis es el signo de la empatía, la intuición y la imaginación. Siente con profundidad, tiene sensibilidad artística y espiritual, y conecta con facilidad con el dolor ajeno. Su sombra es la evasión: puede perder sus límites, idealizar a otras personas o escapar de la realidad cuando duele.",
+      "description": "Piscis es el signo de la empatía, la intuición y la imaginación. Siente con profundidad, tiene sensibilidad artística y espiritual, y conecta con facilidad con lo que sienten los demás. Su sombra es la evasión: puede perder sus límites, idealizar a otras personas o escapar de la realidad cuando duele.",
       "compatible": ["taurus", "cancer", "virgo", "scorpio", "capricorn"],
       "challenging": ["gemini", "sagittarius"]
     }
