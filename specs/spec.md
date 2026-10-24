@@ -126,6 +126,7 @@ A tarot reader starting a small business needs one place to keep track of her cl
 
 ## Feature 7 — Settings
 - Login to sync server, last sync time, manual sync, export/import, storage persistence status, seed data version, app version.
+- Sync is optional: without login the app makes no requests to the API and nothing prompts the user to log in.
 - Optional 4-digit PIN lock for the app (client data is private; the phone may be shared or handed over).
 
 ---

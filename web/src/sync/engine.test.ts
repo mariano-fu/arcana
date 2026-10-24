@@ -3,7 +3,7 @@ import { loadSeed, seedId } from '../seed/loader';
 import { FakeSyncServer } from '../test/fakeSyncServer';
 import { ArcanaDB, createRepositories, getDeviceId, type Repositories } from '../db';
 import { createAuth } from './auth';
-import { createSyncEngine, type SyncEngine } from './engine';
+import { createSyncEngine, type SyncEngine, type SyncReason } from './engine';
 import { createLocalLocks, type Locks } from './locks';
 import { EPOCH_KEY, readCursor, readStatus, STATUS_KEY } from './status';
 
@@ -51,6 +51,15 @@ function remoteClient(id: string, updatedAt: string, name = 'Cliente remoto') {
     device_id: 'other-device',
   };
 }
+
+const SYNC_REASONS: SyncReason[] = [
+  'open',
+  'visible',
+  'online',
+  'interval',
+  'local_write',
+  'manual',
+];
 
 const ago = (minutes: number) => new Date(Date.now() - minutes * 60_000).toISOString();
 
@@ -290,11 +299,61 @@ describe('auth', () => {
     expect((await engine.sync('interval')).state).toBe('idle');
   });
 
-  it('is signed_out without tokens and sends nothing', async () => {
+  it('is signed_out without tokens and sends nothing, whatever the trigger', async () => {
     await db.auth.clear();
+    const login = vi.spyOn(server, 'login');
+    const refresh = vi.spyOn(server, 'refresh');
 
-    expect((await engine.sync('open')).state).toBe('signed_out');
+    for (const reason of SYNC_REASONS) {
+      expect((await engine.sync(reason)).state).toBe('signed_out');
+    }
     expect(server.requests).toHaveLength(0);
+    expect(login).not.toHaveBeenCalled();
+    expect(refresh).not.toHaveBeenCalled();
+  });
+});
+
+describe('signOut', () => {
+  it('clears the tokens and the clock skew; data, pending rows, cursor and epoch stay', async () => {
+    server.now = () => Date.now() + 5 * 60_000;
+    await repos.client.create(newClient());
+    await engine.sync('open');
+    const pending = await repos.client.create(newClient({ name: 'Sin enviar' }));
+    const before = await localData(db);
+    expect((await readStatus(db)).clock_skew_ms).not.toBeNull();
+
+    await engine.signOut();
+
+    expect(await db.auth.count()).toBe(0);
+    const status = await readStatus(db);
+    expect(status.state).toBe('signed_out');
+    expect(status.clock_skew_ms).toBeNull();
+    expect(status.last_success).not.toBeNull();
+    expect(await localData(db)).toEqual(before);
+    expect((await db.client.get(pending.id))?.pending).toBe(1);
+  });
+
+  it('waits for a run in progress, which then ends normally; the result is signed_out', async () => {
+    const release = server.hold();
+    const run = engine.sync('open');
+    const signOut = engine.signOut();
+    await Promise.resolve();
+    expect(await db.auth.count()).toBe(1);
+
+    release();
+    expect((await run).state).toBe('idle');
+    await signOut;
+
+    expect((await readStatus(db)).state).toBe('signed_out');
+    expect(await db.auth.count()).toBe(0);
+    expect((await engine.sync('open')).state).toBe('signed_out');
+  });
+
+  it('signing in again resumes syncing', async () => {
+    await engine.signOut();
+
+    expect(await engine.auth.login({ username: 'lectora', password: 'x' })).toBe('ok');
+    expect((await engine.sync('interval')).state).toBe('idle');
   });
 });
 

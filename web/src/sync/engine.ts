@@ -55,6 +55,11 @@ export interface SyncEngine {
    * sync is paused (`stopped`, `clock_ahead`, `session_expired`); `manual` always tries once.
    */
   sync(reason: SyncReason): Promise<SyncStatus>;
+  /**
+   * "Cerrar sesión": waits for any run (in any tab) to finish, then forgets the tokens and the
+   * clock skew and saves `signed_out`. Data, pending rows, the cursor and the epoch stay.
+   */
+  signOut(): Promise<void>;
   /** Whether a run of this engine is in progress (memory only). */
   isSyncing: () => boolean;
   /** Called when a run starts or ends. Returns an unsubscribe. For `useSyncExternalStore`. */
@@ -221,6 +226,14 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
         return start(nextManual);
       });
       return followUp;
+    },
+    async signOut() {
+      // Under the sync lock: tokens cleared mid-run would end that run as `session_expired`.
+      await locks.request(SYNC_LOCK, async () => {
+        await auth.expire();
+        const status = await readStatus(db);
+        await writeStatus(db, { ...status, state: 'signed_out', clock_skew_ms: null, errors: [] });
+      });
     },
     isSyncing: () => running !== null,
     subscribe: (listener) => {

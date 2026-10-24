@@ -54,12 +54,17 @@ export function createApi(fetchFn: Fetch = (input, init) => fetch(input, init), 
     } catch {
       return { kind: 'network' };
     }
-    if (response.status === 200) return { kind: 'ok', body: await readJson<T>(response) };
-    if (response.status === 400)
-      return { kind: 'rejected', body: await readJson<Rejected>(response) };
-    if (response.status === 401) return { kind: 'unauthorized' };
     if (response.status === 429) return { kind: 'throttled' };
-    return { kind: 'server_error', status: response.status };
+    if (response.status !== 200 && response.status !== 400 && response.status !== 401) {
+      return { kind: 'server_error', status: response.status };
+    }
+    // Only a JSON body is the API's answer. Anything else (an HTML page from a proxy or the app
+    // shell while no API is deployed) is a server problem, never a refused login or push.
+    const json = await readJson(response);
+    if (json === NOT_JSON) return { kind: 'server_error', status: response.status };
+    if (response.status === 200) return { kind: 'ok', body: json as T };
+    if (response.status === 400) return { kind: 'rejected', body: json as Rejected };
+    return { kind: 'unauthorized' };
   }
 
   return {
@@ -69,10 +74,18 @@ export function createApi(fetchFn: Fetch = (input, init) => fetch(input, init), 
   };
 }
 
+const NOT_JSON = Symbol('not JSON');
+
 /**
- * The one unchecked step: the body is the shape the OpenAPI schema documents for this status.
- * The schema and `api.gen.ts` are generated from the server code and checked for drift in CI.
+ * The one unchecked step: the body is the shape the OpenAPI schema documents for this status
+ * (cast by the caller). The schema and `api.gen.ts` are generated from the server code and
+ * checked for drift in CI.
  */
-async function readJson<T>(response: Response): Promise<T> {
-  return (await response.json()) as T;
+async function readJson(response: Response): Promise<unknown> {
+  try {
+    const body: unknown = JSON.parse(await response.text());
+    return body !== null && typeof body === 'object' ? body : NOT_JSON;
+  } catch {
+    return NOT_JSON;
+  }
 }
