@@ -82,7 +82,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
   - Note: Cron: run `manage.py flushexpiredtokens` daily; deploy runs `migrate` (simplejwt blacklist tables).
 - [ ] T4.2 Tailscale setup doc in `docs/deploy.md`: enable MagicDNS + HTTPS certificates, `tailscale serve` → Caddy, share the node with her account, ACL limiting her to the app port. Install on her iPhone from the ts.net URL.
   - Note: On the real node, confirm Caddy's access log shows client_ip = the device's 100.x address and that a second device isn't throttled by the first; if tailscale serve doesn't set X-Forwarded-For, fix the chain before she uses it.
-  - Note: The app origin must stay exactly https://zombiejesus.<tailnet>.ts.net (same host, port 443, root path) when switching to tailscale serve → Caddy; a different origin strands her IndexedDB data. Verify on her iPhone that existing data is still there before anything else.
+  - Note: The app origin must stay exactly https://<host>.<tailnet>.ts.net (same host, port 443, root path) when switching to tailscale serve → Caddy; a different origin strands her IndexedDB data. Verify on her iPhone that existing data is still there before anything else.
   - Note: Narrow Caddy trusted_proxies from private_ranges to the Docker network gateway used by the loopback publish.
   - Note: Deploy API migrations with or before the web app (a new client schema, e.g. session_crystal in Dexie v3, needs the server table first).
 - [ ] T4.3 Nightly `pg_dump` backups + tested restore procedure.

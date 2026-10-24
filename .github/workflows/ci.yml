@@ -20,6 +20,9 @@ jobs:
         working-directory: web
     steps:
       - uses: actions/checkout@v7
+      # The repo is public: no real Tailscale node or tailnet names, only <host>.<tailnet>.ts.net.
+      - run: .github/scripts/check-hostnames.sh
+        working-directory: .
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
