@@ -133,8 +133,8 @@ check "flushexpiredtokens runs" compose exec -T cron python manage.py flushexpir
 echo "== backups"
 dumps() { ls "$BACKUP_DIR" | grep -E "^arcana-[0-9]{8}T[0-9]{6}Z-$1\.dump\$" || true; }
 manage() { compose exec -T api python manage.py "$@"; }
-epoch() { manage shell -c 'from sync.models import current_epoch; print(current_epoch())'; }
-user_gone() { manage shell -c "from django.contrib.auth.models import User; import sys; sys.exit(User.objects.filter(username='$1').exists())"; }
+epoch() { manage shell --no-imports -c 'from sync.models import current_epoch; print(current_epoch())'; }
+user_gone() { manage shell --no-imports -c "from django.contrib.auth.models import User; import sys; sys.exit(User.objects.filter(username='$1').exists())"; }
 check "a new database is migrated without a pre-migrate dump" test -z "$(dumps pre-migrate)"
 check "the nightly backup runs in cron" compose exec -T cron python manage.py backup_db --reason nightly
 nightly=$(dumps nightly | tail -1)
@@ -146,7 +146,7 @@ check "migrate with pending migrations succeeds" compose run --rm --no-deps migr
 check "  …after a pre-migrate dump" test -n "$(dumps pre-migrate)"
 check "  …and leaves nothing pending" compose run --rm --no-deps migrate python manage.py migrate --check
 dumped_epoch=$(epoch)
-manage shell -c "from django.contrib.auth.models import User; User.objects.create_user('after-the-backup')"
+manage shell --no-imports -c "from django.contrib.auth.models import User; User.objects.create_user('after-the-backup')"
 check "restore.sh restores the nightly dump" env COMPOSE_PROJECT_NAME="$PROJECT" ./restore.sh --yes "$nightly"
 check "  …dumping the replaced database first" test -n "$(dumps pre-restore)"
 check "  …dropping what was written after the dump" user_gone after-the-backup
