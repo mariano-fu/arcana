@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router';
 
 import { db, repos, type Client } from '../../db';
 import AstrologyPanel from '../astrology/AstrologyPanel';
+import CrystalRecommendations from '../crystals/CrystalRecommendations';
 import ClientPaymentSummary from '../payments/ClientPaymentSummary';
 import { createSession } from '../sessions/actions';
 import type { SessionRouteState } from '../sessions/form';
@@ -150,9 +151,8 @@ function ClientDetail({ client }: { client: Client }) {
       <Section title={t('clients.detail.astrology')}>
         <AstrologyPanel client={client} />
       </Section>
-      {/* Shell filled by a later task: crystals (T2.9). */}
       <Section title={t('clients.detail.crystals')}>
-        <p className="text-stone-600">{t('clients.detail.crystalsSoon')}</p>
+        <CrystalRecommendations client={client} />
       </Section>
 
       {confirmingDelete && (
