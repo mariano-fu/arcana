@@ -13,6 +13,23 @@ cd "$(dirname "$0")"
 PROJECT=${SMOKE_PROJECT:-arcana-smoke}
 export PGDATA_VOLUME=${SMOKE_PGDATA_VOLUME:-arcana_smoke_pgdata}
 export CADDY_PORT=${SMOKE_CADDY_PORT:-18080} ADMIN_PORT=${SMOKE_ADMIN_PORT:-18001}
+
+# The cleanup runs `down -v` on PROJECT and removes PGDATA_VOLUME. Refuse, before anything is
+# created or the cleanup is armed, any run that could reach the real stack or a volume this run
+# didn't create.
+refuse() {
+	echo "smoke.sh: refusing to run: $1" >&2
+	exit 2
+}
+[ -n "$PROJECT" ] || refuse "SMOKE_PROJECT is empty."
+[ "$(printf '%s' "$PROJECT" | tr '[:upper:]' '[:lower:]')" != arcana ] ||
+	refuse "SMOKE_PROJECT is arcana, the real stack's project."
+[ -n "$PGDATA_VOLUME" ] || refuse "SMOKE_PGDATA_VOLUME is empty."
+[ "$PGDATA_VOLUME" != arcana_pgdata ] || refuse "SMOKE_PGDATA_VOLUME is arcana_pgdata, the real database."
+if docker volume inspect "$PGDATA_VOLUME" >/dev/null 2>&1; then
+	refuse "volume $PGDATA_VOLUME already exists; smoke.sh only removes a volume it created itself. If it is a leftover of an earlier smoke run, remove it by hand first."
+fi
+
 BASE="http://127.0.0.1:${CADDY_PORT}"
 WORK=$(mktemp -d)
 export ENV_FILE="$WORK/smoke.env"

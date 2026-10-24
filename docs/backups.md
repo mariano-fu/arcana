@@ -88,9 +88,21 @@ is not yet migrated, so don't start the api until that's fixed.
 
 ## Restore drill
 
-Every few months, and after changing anything here: restore last night's dump on a **throwaway
-stack**, never on the real one. `deploy/smoke.sh` does exactly that under its own project name,
-volume and temporary backup directory (`backups` section) and is run by CI's `deploy` job.
+Never on the real stack. `deploy/smoke.sh` rehearses the whole procedure on a throwaway one (its
+`backups` section: nightly dump, pre-migrate dump, `restore.sh`, epoch rotation) under its own
+project name, volume and temporary backup directory; CI's `deploy` job runs it on every PR.
+It restores a dump it made itself, not one of the real backups.
+
+To run it on the homelab, keep its default names, or pick new ones with `SMOKE_PROJECT` and
+`SMOKE_PGDATA_VOLUME`; never `arcana` or `arcana_pgdata`. It refuses (exit 2) those names and any
+volume that already exists, because its cleanup removes the project's containers and that
+volume.
+
+Every few months, also check that a real dump is readable, without restoring it anywhere:
+
+```sh
+docker compose exec cron pg_restore --list /backups/<latest nightly dump> | head
+```
 
 ## Known limits
 

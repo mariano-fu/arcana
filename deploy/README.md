@@ -59,7 +59,11 @@ For one-off commands: `docker compose exec api python manage.py <command>`.
 
 `deploy/smoke.sh` builds and starts the stack under its own project name, ports and volume,
 checks it (caching headers, SPA fallback, throttling behind both proxies, cron, backups and a
-restore, non-root, the external volume), then removes what it created. It never reads `deploy/.env` or touches
-`arcana_pgdata`; its backups go to a temporary directory. `SMOKE_PROJECT`,
-`SMOKE_PGDATA_VOLUME`, `SMOKE_CADDY_PORT` and `SMOKE_ADMIN_PORT` move it off names or ports
-another stack on the machine uses. CI runs it in the `deploy` job.
+restore, non-root, the external volume), then removes what it created. It never reads
+`deploy/.env` or touches `arcana_pgdata`; its backups go to a temporary directory. CI runs it in
+the `deploy` job.
+
+`SMOKE_PROJECT`, `SMOKE_PGDATA_VOLUME`, `SMOKE_CADDY_PORT` and `SMOKE_ADMIN_PORT` move it off
+names or ports another stack on the machine uses. Its cleanup runs `down -v` on that project and
+removes that volume, so it refuses to start (exit 2) if the project is `arcana`, the volume is
+`arcana_pgdata`, or the volume already exists: it only ever removes a volume it created itself.
