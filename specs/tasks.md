@@ -70,8 +70,9 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
   - Note: Surface orphaned rows (child of a tombstoned parent) as 'Sesión de una ficha eliminada' with options to restore the ficha or delete the session.
   - Note: Test: resolving a server-created conflict row from a device whose clock is behind the server still wins (relies on T3.6's max(now, previous + 1 ms)).
   - Note: Synced tables: local hard delete/deleteRange throws (tombstones only), with a test.
-- [ ] T3.8 Settings: login, last sync, sync now, clock-skew warning.
+- [x] T3.8 Settings: login, last sync, sync now, clock-skew warning.
 - [ ] T3.9 Two-device e2e: two browser contexts, offline edits on both, sync, assert outcome.
+  - Note: Sync and login requests need a timeout (AbortController), so a stuck request (e.g. Tailscale half-up) doesn't hold up sync or sign-out; a timed-out request counts as offline.
   - Note: Add a test that Pagos (month list) and the month CSV still list a payment whose session or ficha is tombstoned, the ficha shown as '(cliente eliminado)'. Today this holds only because both filter on `payment.deleted_at` alone; no test covers it.
 
 ## Phase 4 — Deploy & horoscopes
