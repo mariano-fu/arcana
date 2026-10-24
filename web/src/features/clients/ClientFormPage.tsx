@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router';
 
 import { nowIso, repos, type Client } from '../../db';
+import { isEdited, useUnsavedForm } from '../forms/unsaved';
 import CityAutocomplete from './CityAutocomplete';
 import {
   clientToForm,
@@ -29,13 +30,15 @@ export default function ClientFormPage() {
 function ClientForm({ client }: { client: Client | null }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [values, setValues] = useState<ClientFormValues>(() =>
+  const [initial] = useState<ClientFormValues>(() =>
     client ? clientToForm(client) : emptyClientForm(),
   );
+  const [values, setValues] = useState(initial);
   const [errors, setErrors] = useState<Partial<Record<keyof ClientFormValues, ClientFormErrorKey>>>(
     {},
   );
   const [saving, setSaving] = useState(false);
+  const clearUnsaved = useUnsavedForm(isEdited(values, initial));
 
   function set<K extends keyof ClientFormValues>(key: K, value: ClientFormValues[K]) {
     setValues((current) => ({ ...current, [key]: value }));
@@ -56,6 +59,7 @@ function ClientForm({ client }: { client: Client | null }) {
             archived: false,
             created_at: nowIso(),
           });
+      clearUnsaved();
       await navigate(`/clients/${saved.id}`, { replace: true });
     } finally {
       setSaving(false);
@@ -292,6 +296,7 @@ function ClientForm({ client }: { client: Client | null }) {
       <div className="flex gap-3">
         <Link
           to={client ? `/clients/${client.id}` : '/clients'}
+          onClick={clearUnsaved}
           className="flex min-h-11 flex-1 items-center justify-center rounded-lg border border-stone-300 text-base"
         >
           {t('common.cancel')}

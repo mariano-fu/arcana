@@ -1,6 +1,5 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { registerSW } from 'virtual:pwa-register';
 
 import './i18n';
 import './index.css';
@@ -13,6 +12,7 @@ import { sessionIdFromPath } from './features/sessions/leave.ts';
 import { requestPersistence } from './features/settings/storage.ts';
 import { loadSeed } from './seed/loader.ts';
 import { startSyncTriggers, syncEngine } from './sync';
+import { clearStoppedOnNewBuild } from './sync/appBuild.ts';
 
 // Local and quick; render doesn't wait for it, and the next start retries a failed load.
 loadSeed(db).catch((error: unknown) => {
@@ -34,7 +34,14 @@ requestPersistence().catch((error: unknown) => {
 });
 
 // Open, foreground, online, every 5 min while visible, and after local edits (sync/triggers.ts).
-startSyncTriggers(syncEngine, db);
+// First, a new build clears a `stopped` sync once, in case it fixed what the server refused.
+clearStoppedOnNewBuild(db)
+  .catch((error: unknown) => {
+    console.error('New build check failed', error);
+  })
+  .finally(() => {
+    startSyncTriggers(syncEngine, db);
+  });
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Root element #root not found');
@@ -44,5 +51,3 @@ createRoot(root).render(
     <App />
   </StrictMode>,
 );
-
-registerSW({ immediate: true });

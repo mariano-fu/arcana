@@ -9,6 +9,8 @@ export interface Autosave<P extends object> {
   drop(...keys: (keyof P)[]): void;
   /** Saves whatever is waiting now and resolves once every save so far has finished. */
   flush(): Promise<void>;
+  /** The last save failed and none has succeeded since, so her latest text may not be stored. */
+  readonly failed: boolean;
 }
 
 /**
@@ -25,6 +27,7 @@ export function createAutosave<P extends object>(
   let waiting: P | null = null;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let chain: Promise<void> = Promise.resolve();
+  let failed = false;
 
   function flush(): Promise<void> {
     clearTimeout(timer);
@@ -36,9 +39,11 @@ export function createAutosave<P extends object>(
       chain = chain.then(() =>
         save(patch).then(
           () => {
+            failed = false;
             if (waiting === null && timer === undefined) onState?.('saved');
           },
           (error: unknown) => {
+            failed = true;
             console.error('Autosave failed', error);
             onState?.('error');
           },
@@ -62,7 +67,23 @@ export function createAutosave<P extends object>(
       waiting = Object.keys(rest).length > 0 ? rest : null;
     },
     flush,
+    get failed() {
+      return failed;
+    },
   };
+}
+
+/** Autosavers of the components on screen, for `flushAllAutosaves`. */
+const mounted = new Set<Autosave<object>>();
+
+/**
+ * Saves what every on-screen autosaver has waiting and resolves once all saves have finished:
+ * true when everything is stored. Used before reloading into a new version (T4.7).
+ */
+export async function flushAllAutosaves(): Promise<boolean> {
+  const all = [...mounted];
+  await Promise.all(all.map((autosave) => autosave.flush()));
+  return all.every((autosave) => !autosave.failed);
 }
 
 /**
@@ -78,6 +99,7 @@ export function useAutosave<P extends object>(
   const autosave = useMemo(() => createAutosave(save, { onState }), []);
 
   useEffect(() => {
+    mounted.add(autosave);
     const flushNow = () => void autosave.flush();
     const onVisibility = () => {
       if (document.visibilityState === 'hidden') flushNow();
@@ -87,6 +109,7 @@ export function useAutosave<P extends object>(
     return () => {
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('pagehide', flushNow);
+      mounted.delete(autosave);
       flushNow();
     };
   }, [autosave]);

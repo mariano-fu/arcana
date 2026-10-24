@@ -2,6 +2,7 @@ import { useId, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { Currency } from '../../db';
+import { isEdited, useUnsavedForm } from '../forms/unsaved';
 import {
   PAYMENT_METHODS,
   validatePaymentForm,
@@ -26,11 +27,14 @@ interface Props {
 export default function PaymentForm({ initial, onSave, onCancel, existing }: Props) {
   const { t } = useTranslation();
   const titleId = useId();
+  // The parent rebuilds `initial` on every render; compare with the values the form opened with.
+  const [start] = useState(initial);
   const [values, setValues] = useState(initial);
   const [errors, setErrors] = useState<PaymentFormErrors>({});
   const [saveFailed, setSaveFailed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const clearUnsaved = useUnsavedForm(isEdited(values, start));
 
   function set<K extends keyof PaymentFormValues>(key: K, value: PaymentFormValues[K]) {
     setValues((current) => ({ ...current, [key]: value }));
@@ -41,6 +45,7 @@ export default function PaymentForm({ initial, onSave, onCancel, existing }: Pro
     setSaveFailed(false);
     try {
       await action();
+      clearUnsaved();
     } catch {
       setSaveFailed(true);
       setBusy(false);
@@ -205,7 +210,14 @@ export default function PaymentForm({ initial, onSave, onCancel, existing }: Pro
         >
           {t('common.save')}
         </button>
-        <button type="button" onClick={onCancel} className="min-h-11 text-base text-stone-600">
+        <button
+          type="button"
+          onClick={() => {
+            clearUnsaved();
+            onCancel();
+          }}
+          className="min-h-11 text-base text-stone-600"
+        >
           {t('common.cancel')}
         </button>
       </div>

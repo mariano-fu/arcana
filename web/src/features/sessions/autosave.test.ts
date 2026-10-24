@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react';
 
-import { createAutosave, useAutosave, type AutosaveState } from './autosave';
+import { createAutosave, flushAllAutosaves, useAutosave, type AutosaveState } from './autosave';
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -146,5 +146,59 @@ describe('useAutosave', () => {
     unmount();
     await settle();
     expect(save).toHaveBeenCalledWith({ notes: 'Hola' });
+  });
+});
+
+describe('flushAllAutosaves', () => {
+  it('saves what every mounted autosaver has waiting, and forgets unmounted ones', async () => {
+    const saves = [1, 2, 3].map(() =>
+      vi.fn<(patch: { notes: string }) => Promise<void>>(() => Promise.resolve()),
+    );
+    const hooks = saves.map((save) => renderHook(() => useAutosave(save)));
+    hooks.forEach((hook, i) => {
+      hook.result.current.schedule({ notes: `Nota ${String(i + 1)}` });
+    });
+    hooks[2]?.unmount();
+    await vi.advanceTimersByTimeAsync(0);
+    saves[2]?.mockClear();
+    hooks[2]?.result.current.schedule({ notes: 'Ya no está' });
+
+    expect(await flushAllAutosaves()).toBe(true);
+    expect(saves[0]).toHaveBeenCalledWith({ notes: 'Nota 1' });
+    expect(saves[1]).toHaveBeenCalledWith({ notes: 'Nota 2' });
+    expect(saves[2]).not.toHaveBeenCalled();
+  });
+
+  it('waits for saves already running', async () => {
+    let written = '';
+    const { result } = renderHook(() =>
+      useAutosave(async ({ notes }: { notes: string }) => {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        written = notes;
+      }),
+    );
+    result.current.schedule({ notes: 'Hola' });
+    const done = flushAllAutosaves();
+    await vi.advanceTimersByTimeAsync(50);
+
+    expect(await done).toBe(true);
+    expect(written).toBe('Hola');
+  });
+
+  it('reports a failed save until a later one succeeds', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const save = vi
+      .fn<(patch: { notes: string }) => Promise<void>>()
+      .mockRejectedValueOnce(new Error('disco lleno'))
+      .mockResolvedValue(undefined);
+    const { result } = renderHook(() => useAutosave(save));
+
+    result.current.schedule({ notes: 'Hola' });
+    expect(await flushAllAutosaves()).toBe(false);
+    expect(result.current.failed).toBe(true);
+
+    result.current.schedule({ notes: 'Hola de nuevo' });
+    expect(await flushAllAutosaves()).toBe(true);
+    expect(result.current.failed).toBe(false);
   });
 });

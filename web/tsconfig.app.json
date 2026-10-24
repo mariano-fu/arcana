@@ -8,6 +8,7 @@
     "types": [
       "vite/client",
       "vite-plugin-pwa/client",
+      "vite-plugin-pwa/react",
       "vitest/globals",
       "@testing-library/jest-dom"
     ],
