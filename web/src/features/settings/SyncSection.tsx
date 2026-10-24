@@ -3,7 +3,7 @@ import { useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { db as appDb, type ArcanaDB } from '../../db';
-import { countPending, readStatus, syncEngine, type SyncEngine } from '../../sync';
+import { countPending, EPOCH_KEY, readStatus, syncEngine, type SyncEngine } from '../../sync';
 import type { LoginOutcome } from '../../sync/auth';
 import { formatDateTime } from '../sessions/format';
 import SettingsSection from './SettingsSection';
@@ -162,6 +162,10 @@ function SignedIn({ engine, db }: { engine: SyncEngine; db: ArcanaDB }) {
   const { t } = useTranslation();
   const status = useLiveQuery(() => readStatus(db), [db]);
   const pending = useLiveQuery(() => countPending(db), [db]);
+  // No epoch stored = no response applied yet. Rows from before sync existed may still read
+  // `pending = 0` until the first run marks them (`prepareFirstSync`), so the count would
+  // understate what will be sent.
+  const synced = useLiveQuery(async () => (await db.meta.get(EPOCH_KEY)) !== undefined, [db]);
   const syncing = useSyncExternalStore(engine.subscribe, engine.isSyncing);
   const [signingOut, setSigningOut] = useState(false);
 
@@ -179,8 +183,10 @@ function SignedIn({ engine, db }: { engine: SyncEngine; db: ArcanaDB }) {
       {(status.state === 'offline' || status.state === 'error') && (
         <p className="text-base text-stone-700">{t(`settings.sync.state.${status.state}`)}</p>
       )}
-      {pending !== undefined && (
-        <p className="text-base text-stone-700">{t('settings.sync.pending', { count: pending })}</p>
+      {pending !== undefined && synced !== undefined && (
+        <p className="text-base text-stone-700">
+          {synced ? t('settings.sync.pending', { count: pending }) : t('settings.sync.firstSync')}
+        </p>
       )}
       {skew && (
         <p role="alert" className="rounded-lg bg-amber-100 p-3 text-base text-amber-950">

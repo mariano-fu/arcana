@@ -6,7 +6,13 @@ import es from '../../i18n/locales/es.json';
 import { createSyncEngine, type SyncEngine } from '../../sync';
 import { createApi, type Api } from '../../sync/api';
 import { createLocalLocks } from '../../sync/locks';
-import { INITIAL_STATUS, readStatus, writeStatus, type SyncStatus } from '../../sync/status';
+import {
+  EPOCH_KEY,
+  INITIAL_STATUS,
+  readStatus,
+  writeStatus,
+  type SyncStatus,
+} from '../../sync/status';
 import { FakeSyncServer } from '../../test/fakeSyncServer';
 import { newClient } from '../clients/test-utils';
 import { formatDateTime } from '../sessions/format';
@@ -146,17 +152,20 @@ describe('Sincronización, signed out', () => {
 });
 
 describe('Sincronización, signed in', () => {
-  it('says it has never synced, with nothing pending', async () => {
+  it('before the first sync, says everything will be sent instead of a count', async () => {
     await signIn();
+    await createRepositories(db).client.create(newClient());
     const section = show();
 
     expect(await section.findByText(S.signedIn)).toBeVisible();
     expect(section.getByText(S.never)).toBeVisible();
-    expect(await section.findByText('Cambios sin enviar: 0')).toBeVisible();
+    expect(await section.findByText(S.firstSync)).toBeVisible();
+    expect(section.queryByText(/Cambios sin enviar/)).toBeNull();
   });
 
   it('counts the changes not yet sent, tombstones included', async () => {
     await signIn();
+    await db.meta.put({ key: EPOCH_KEY, value: 'epoch-1' });
     const repos = createRepositories(db);
     await repos.client.create(newClient());
     const deleted = await repos.client.create(newClient({ name: 'Otra' }));
@@ -164,6 +173,16 @@ describe('Sincronización, signed in', () => {
     const section = show();
 
     expect(await section.findByText('Cambios sin enviar: 2')).toBeVisible();
+  });
+
+  it('shows the count once a response stored an epoch, even if the run then failed', async () => {
+    await signIn({ state: 'error' });
+    await db.meta.put({ key: EPOCH_KEY, value: 'epoch-1' });
+    const section = show();
+
+    expect(await section.findByText('Cambios sin enviar: 0')).toBeVisible();
+    expect(section.getByText(S.never)).toBeVisible();
+    expect(section.queryByText(S.firstSync)).toBeNull();
   });
 
   it('shows the last sync and the offline state', async () => {
