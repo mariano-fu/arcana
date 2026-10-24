@@ -12,12 +12,10 @@
 
 ## The problem
 
-A tarot reader starting a small business needs one place for her clients and their readings,
-with reference material (cards, astrology, crystals) at hand during a session. Today that lives
-in her head, a notes app and message threads. She works from an iPhone, often with a weak
-signal or none, and can't wait for a spinner while a client is in front of her. The data is
-personal and sensitive, so it should stay on her devices and a server she controls. Clients
-never use the app.
+A solo tarot practice needs one place for clients and readings, with reference material (cards,
+astrology, crystals) at hand during a session. It must work on a phone with poor or no
+connection, and the data is sensitive, so it stays on the practitioner's devices and a
+self-hosted server. Clients never use the app.
 
 ## Screenshots
 
@@ -31,10 +29,10 @@ _Screenshots and a short iPhone recording will go here._
 - **Clients:** profile, birth data, notes and tags, search as you type, archive.
 - **Sessions:** autosaved notes, follow-ups, one or more tarot spreads per session, with the
   exact cards and positions kept for every past reading.
-- **Payments:** records what she received (no payment processing), with pending balances per
+- **Payments:** records payments received (no payment processing), with pending balances per
   currency.
-- **Reference:** the 78 Rider-Waite-Smith cards (public-domain scans) with her own notes,
-  spreads (including her own), zodiac profiles, and explainable crystal recommendations for a
+- **Reference:** the 78 Rider-Waite-Smith cards (public-domain scans) with the reader's own
+  notes, spreads (built-in and custom), zodiac profiles, and explainable crystal recommendations for a
   client's signs and chosen intentions, from a seed library of about 50 crystals.
 - **Astrology:** sun sign, natal summary and, when the birth time is known, rising sign and
   houses, computed on the device.
@@ -95,7 +93,7 @@ this is the short version.
 - **Last-write-wins per record, by `updated_at`.** Simple and predictable for one person on two
   devices. _Trade-off:_ it trusts client clocks and works per record, not per field.
 - **Free text is never silently lost.** When a note loses last-write-wins, the losing text is
-  stored as a conflict row, and the app asks her to keep, swap or combine the versions.
+  stored as a conflict row, and the app asks the reader to keep, swap or combine the versions.
   _Trade-off:_ occasional manual review instead of an automatic merge (no CRDTs).
 - **Clock handling.** Local writes get a strictly increasing `updated_at` per row, even if the
   clock repeats or goes backwards. Each response carries the server time; the measured skew is
@@ -106,9 +104,9 @@ this is the short version.
 - **Epochs.** Each server database has a random epoch id. If a device sees a different one (the
   server was restored or rebuilt), it resets its cursor and re-pushes all its rows with their
   original edit times, so last-write-wins still compares real edits.
-- **Seed data vs. her edits.** Cards, spreads, crystals and zodiac profiles ship as versioned
-  JSON. Seed rows are created on each device from its own bundle and never sync until she edits
-  them, and seed updates never overwrite her edits
+- **Seed data vs. the reader's edits.** Cards, spreads, crystals and zodiac profiles ship as
+  versioned JSON. Seed rows are created on each device from its own bundle and never sync until
+  the reader edits them, and seed updates never overwrite those edits
   ([details](specs/plan.md#seed-vs-user-edits-principle-5)).
 
 **Known limits, stated honestly:**
