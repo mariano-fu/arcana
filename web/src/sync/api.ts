@@ -35,11 +35,44 @@ export interface Api {
 
 type Fetch = (input: string, init: RequestInit) => Promise<Response>;
 
+/** How long a request may go unanswered (response and body) before it counts as `network`. */
+export interface Timeouts {
+  syncMs: number;
+  authMs: number;
+}
+
+/** specs/plan.md, "Sync": a stuck request (Tailscale half-up) must not hold up sync or sign-out. */
+export const DEFAULT_TIMEOUTS: Timeouts = { syncMs: 30_000, authMs: 15_000 };
+
 /** `fetch` is injectable for tests; the API is same-origin (`/api/…`, proxied by Vite in dev). */
-export function createApi(fetchFn: Fetch = (input, init) => fetch(input, init), base = ''): Api {
+export function createApi(
+  fetchFn: Fetch = (input, init) => fetch(input, init),
+  base = '',
+  timeouts: Timeouts = DEFAULT_TIMEOUTS,
+): Api {
   async function post<T, Rejected = never>(
     path: string,
     body: unknown,
+    timeoutMs: number,
+    access?: string,
+  ): Promise<ApiResult<T, Rejected>> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      controller.abort();
+    }, timeoutMs);
+    try {
+      const result = await send<T, Rejected>(path, body, controller.signal, access);
+      // Aborting mid-body makes the body unreadable, which `send` would call a server error.
+      return controller.signal.aborted ? { kind: 'network' } : result;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  async function send<T, Rejected>(
+    path: string,
+    body: unknown,
+    signal: AbortSignal,
     access?: string,
   ): Promise<ApiResult<T, Rejected>> {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -50,6 +83,7 @@ export function createApi(fetchFn: Fetch = (input, init) => fetch(input, init), 
         method: 'POST',
         headers,
         body: JSON.stringify(body),
+        signal,
       });
     } catch {
       return { kind: 'network' };
@@ -68,9 +102,10 @@ export function createApi(fetchFn: Fetch = (input, init) => fetch(input, init), 
   }
 
   return {
-    login: (credentials) => post('/api/auth/token/', credentials),
-    refresh: (refreshToken) => post('/api/auth/token/refresh/', { refresh: refreshToken }),
-    sync: (access, body) => post('/api/sync/', body, access),
+    login: (credentials) => post('/api/auth/token/', credentials, timeouts.authMs),
+    refresh: (refreshToken) =>
+      post('/api/auth/token/refresh/', { refresh: refreshToken }, timeouts.authMs),
+    sync: (access, body) => post('/api/sync/', body, timeouts.syncMs, access),
   };
 }
 
