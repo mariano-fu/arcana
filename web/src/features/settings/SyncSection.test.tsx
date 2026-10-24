@@ -220,18 +220,28 @@ describe('Sincronización, signed in', () => {
     expect(await section.findByText(/Última sincronización/)).toBeVisible();
   });
 
-  it('"Cerrar sesión" keeps the data and goes back to the signed-out view', async () => {
+  it('"Cerrar sesión" during a run waits for it, saying so, then keeps the data and signs out', async () => {
     const user = userEvent.setup();
     await signIn({ clock_skew_ms: 10 * 60_000 });
     const client = await createRepositories(db).client.create(newClient());
-    const section = show();
+    const engine = engineOn(server);
+    const release = server.hold();
+    const run = engine.sync('manual');
+    const section = show(engine);
 
     expect(await section.findByText(S.signOutNote)).toBeVisible();
     await user.click(await section.findByRole('button', { name: S.signOut }));
 
+    expect(await section.findByRole('button', { name: S.signingOut })).toBeDisabled();
+    expect(await db.auth.count()).toBe(1);
+
+    release();
+    expect((await run).state).toBe('idle');
     expect(await section.findByText(S.optional)).toBeVisible();
     expect(await db.auth.count()).toBe(0);
-    expect(await db.client.get(client.id)).toMatchObject({ pending: 1 });
+    // The run it waited for finished its push; the row stays on the device.
+    expect(server.get('client', client.id)).toBeDefined();
+    expect(await db.client.get(client.id)).toMatchObject({ name: client.name, deleted_at: null });
     const status = await readStatus(db);
     expect(status.state).toBe('signed_out');
     expect(status.clock_skew_ms).toBeNull();

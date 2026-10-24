@@ -206,7 +206,7 @@ function SignedIn({ engine, db }: { engine: SyncEngine; db: ArcanaDB }) {
         }}
         className={buttonClass}
       >
-        {t('settings.sync.signOut')}
+        {signingOut ? t('settings.sync.signingOut') : t('settings.sync.signOut')}
       </button>
       <p className="text-sm text-stone-600">{t('settings.sync.signOutNote')}</p>
     </>

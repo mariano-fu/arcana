@@ -716,6 +716,7 @@
         "ahead": "La hora de este teléfono está unos {{minutes}} minutos adelantada respecto al servidor. Revise la fecha y hora del teléfono: con la hora desajustada, al combinar cambios de dos dispositivos podría conservarse la versión equivocada."
       },
       "signOut": "Cerrar sesión",
+      "signingOut": "Cerrando sesión…",
       "signOutNote": "Sus datos y cambios pendientes se quedan en este teléfono."
     },
     "dataCheck": {
