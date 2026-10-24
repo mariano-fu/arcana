@@ -3,14 +3,14 @@ import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 
 import { routes } from '../../app/routes';
-import { db } from '../../db';
+import { db, repos } from '../../db';
 import es from '../../i18n/locales/es.json';
 import { cardsSeed } from '../../seed/cards';
 import { loadSeed } from '../../seed/loader';
 import { stubProperty } from '../../test/stub-property';
-import { clearDb } from '../clients/test-utils';
+import { clearDb, newClient, newSession } from '../clients/test-utils';
 import { formatBytes } from './storage';
-import { appBuild } from './versions';
+import { appBuild, formatBuildDate } from './versions';
 
 const S = es.settings;
 
@@ -53,9 +53,10 @@ describe('Ajustes', () => {
     expect(await screen.findByRole('heading', { level: 1, name: S.title })).toBeVisible();
   });
 
-  it('has storage, backup, versions and about sections and no delete or reset buttons', async () => {
+  it('has storage, data check, backup, versions and about sections and no delete or reset buttons', async () => {
     renderAt('/settings');
     await section(S.storage.title);
+    await section(S.dataCheck.title);
     await section(S.backup.title);
     await section(S.versions.title);
     await section(es.about.title);
@@ -111,6 +112,40 @@ describe('Almacenamiento', () => {
     const storage = await section(S.storage.title);
     expect(await storage.findByText(S.storage.unsupported)).toBeVisible();
     expect(storage.queryByRole('button')).not.toBeInTheDocument();
+  });
+});
+
+describe('Datos en este teléfono', () => {
+  it('lists the phone, what is stored on it and the oldest dates', async () => {
+    await db.meta.put({ key: 'device_id', value: '019a0c3e-4c00-7abc-8def-0123456789ab' });
+    const client = await repos.client.create(newClient({ created_at: '2026-09-01T12:00:00.000Z' }));
+    await repos.session.create(newSession(client.id, { started_at: '2026-09-02T15:00:00.000Z' }));
+    renderAt('/settings');
+    const data = await section(S.dataCheck.title);
+    expect(
+      await data.findByText(
+        `Teléfono: 019a0c3e · desde ${formatBuildDate('2025-10-22T14:06:40.640Z')}`,
+      ),
+    ).toBeVisible();
+    expect(data.getByText('Clientes: 1')).toBeVisible();
+    expect(data.getByText('Sesiones: 1')).toBeVisible();
+    expect(data.getByText('Pagos: 0')).toBeVisible();
+    expect(data.getByText('Cristales propios o editados: 0')).toBeVisible();
+    expect(
+      data.getByText(`Cliente más antiguo: ${formatBuildDate('2026-09-01T12:00:00.000Z')}`),
+    ).toBeVisible();
+    expect(
+      data.getByText(`Sesión más antigua: ${formatBuildDate('2026-09-02T15:00:00.000Z')}`),
+    ).toBeVisible();
+    expect(data.queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  it('shows dashes on an empty database', async () => {
+    renderAt('/settings');
+    const data = await section(S.dataCheck.title);
+    expect(await data.findByText('Teléfono: — · desde —')).toBeVisible();
+    expect(data.getByText('Cliente más antiguo: —')).toBeVisible();
+    expect(data.getByText('Sesión más antigua: —')).toBeVisible();
   });
 });
 
