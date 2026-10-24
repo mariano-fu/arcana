@@ -28,12 +28,12 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [x] T1.10 Custom spread builder.
 - [x] T1.11 Card reference screen (image + meanings) with her personal notes per card.
 - [x] T1.12 Home: upcoming follow-ups, pending balances, recent sessions.
-- [ ] T1.13 Export to JSON / import from JSON (Zod-validated, versioned format). Round-trip test.
+- [x] T1.13 Export to JSON / import from JSON (Zod-validated, versioned format). Round-trip test.
 - [x] T1.14 Settings: storage persistence request + status, export/import, versions.
   - Acerca de: list third-party licenses (generated at build time), including MIT notices for bundled packages.
   - Manual birth-place entry: make the timezone dropdown searchable, with Spanish labels and common zones (America/Costa_Rica, US, Central America, Spain) first.
 - [x] T1.15 Playwright e2e on WebKit iPhone viewport: create client → session → Cruz Celta → reload offline → data still there. Runs in CI on Ubuntu (GitHub Actions), not locally: Playwright doesn't support Arch-based distros.
-- [ ] T4.7 Service-worker update toast ("Nueva versión disponible — recargar"). Moved up from Phase 4. Switches `registerType` in `web/pwa.config.ts` to `prompt`.
+- [x] T4.7 Service-worker update toast ("Nueva versión disponible — recargar"). Moved up from Phase 4. Switches `registerType` in `web/pwa.config.ts` to `prompt`.
   - Note: On app version change, clear the sync 'stopped' state so a fixed bug doesn't leave sync paused.
   - Note: Add /api and /admin (and /static) to the service worker navigateFallbackDenylist.
 - [ ] T1.16 Storage survival check on her iPhone: confirm `navigator.storage.persist()` was granted, and after a week of real use verify all data is intact; record results in `docs/spikes/`.
@@ -51,6 +51,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
 - [ ] T2.7 Crystal library: browse, search, filter by chakra/sign/intention; add/edit/hide.
 - [x] T2.8 Crystal recommender: score = sign matches (sun ×2, moon ×1, rising ×1) + intention matches ×3; show reasons. Unit tests.
 - [ ] T2.9 Recommendations on client detail and inside a session (attach to session).
+  - Note: Any Dexie version with an `.upgrade()` callback needs a test that opens a populated database at the previous version, runs the upgrade, and asserts every synced row is still there. The hard-delete guard also runs inside upgrade transactions, so a hard delete there makes the database fail to open.
 
 ## Phase 3 — Backend & sync
 - [x] T3.1 `api/`: Django 5 + DRF + Postgres, settings via env, pytest, mypy, ruff. Dockerfile. CI job.
@@ -65,12 +66,13 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
   - Note: A 400 from /api/sync/ is not retried in a loop: show 'La sincronización está detenida' with details, keep local data and pending rows.
   - Note: Split pushes at 500 rows or ~1 MB, whichever comes first.
   - Note: If the server rejects a future updated_at, show 'Revise la fecha y hora del teléfono'.
-- [ ] T3.7 Conflict review screen ("Conflictos": show both versions, keep one or merge text).
+- [x] T3.7 Conflict review screen ("Conflictos": show both versions, keep one or merge text).
   - Note: Surface orphaned rows (child of a tombstoned parent) as 'Sesión de una ficha eliminada' with options to restore the ficha or delete the session.
   - Note: Test: resolving a server-created conflict row from a device whose clock is behind the server still wins (relies on T3.6's max(now, previous + 1 ms)).
   - Note: Synced tables: local hard delete/deleteRange throws (tombstones only), with a test.
 - [ ] T3.8 Settings: login, last sync, sync now, clock-skew warning.
 - [ ] T3.9 Two-device e2e: two browser contexts, offline edits on both, sync, assert outcome.
+  - Note: Add a test that Pagos (month list) and the month CSV still list a payment whose session or ficha is tombstoned, the ficha shown as '(cliente eliminado)'. Today this holds only because both filter on `payment.deleted_at` alone; no test covers it.
 
 ## Phase 4 — Deploy & horoscopes
 - [x] T4.1 `deploy/docker-compose.yml`: caddy (serves built PWA + proxies /api), api, db, cron. `.env.example`. Caddy must serve .webmanifest as application/manifest+json.
