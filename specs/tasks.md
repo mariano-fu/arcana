@@ -50,7 +50,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
   - Display positions with one shared formatter that floors total arc-minutes (29.9999° → 29°59′, never 29°60′ or 30°00′); test it at sign boundaries.
 - [ ] T2.7 Crystal library: browse, search, filter by chakra/sign/intention; add/edit/hide.
 - [x] T2.8 Crystal recommender: score = sign matches (sun ×2, moon ×1, rising ×1) + intention matches ×3; show reasons. Unit tests.
-- [ ] T2.9 Recommendations on client detail and inside a session (attach to session).
+- [x] T2.9 Recommendations on client detail and inside a session (attach to session).
   - Note: Any Dexie version with an `.upgrade()` callback needs a test that opens a populated database at the previous version, runs the upgrade, and asserts every synced row is still there. The hard-delete guard also runs inside upgrade transactions, so a hard delete there makes the database fail to open.
 
 ## Phase 3 — Backend & sync
@@ -70,8 +70,9 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
   - Note: Surface orphaned rows (child of a tombstoned parent) as 'Sesión de una ficha eliminada' with options to restore the ficha or delete the session.
   - Note: Test: resolving a server-created conflict row from a device whose clock is behind the server still wins (relies on T3.6's max(now, previous + 1 ms)).
   - Note: Synced tables: local hard delete/deleteRange throws (tombstones only), with a test.
-- [ ] T3.8 Settings: login, last sync, sync now, clock-skew warning.
+- [x] T3.8 Settings: login, last sync, sync now, clock-skew warning.
 - [ ] T3.9 Two-device e2e: two browser contexts, offline edits on both, sync, assert outcome.
+  - Note: Sync and login requests need a timeout (AbortController), so a stuck request (e.g. Tailscale half-up) doesn't hold up sync or sign-out; a timed-out request counts as offline.
   - Note: Add a test that Pagos (month list) and the month CSV still list a payment whose session or ficha is tombstoned, the ficha shown as '(cliente eliminado)'. Today this holds only because both filter on `payment.deleted_at` alone; no test covers it.
 
 ## Phase 4 — Deploy & horoscopes
@@ -83,6 +84,7 @@ Work top to bottom. Each task should be one agent session / one PR. `[P]` = can 
   - Note: On the real node, confirm Caddy's access log shows client_ip = the device's 100.x address and that a second device isn't throttled by the first; if tailscale serve doesn't set X-Forwarded-For, fix the chain before she uses it.
   - Note: The app origin must stay exactly https://zombiejesus.<tailnet>.ts.net (same host, port 443, root path) when switching to tailscale serve → Caddy; a different origin strands her IndexedDB data. Verify on her iPhone that existing data is still there before anything else.
   - Note: Narrow Caddy trusted_proxies from private_ranges to the Docker network gateway used by the loopback publish.
+  - Note: Deploy API migrations with or before the web app (a new client schema, e.g. session_crystal in Dexie v3, needs the server table first).
 - [ ] T4.3 Nightly `pg_dump` backups + tested restore procedure.
   - Note: The restore script itself runs rotate_sync_epoch after restoring (not a manual step); test that a restore changes the epoch.
   - Note: The one-shot migrate service runs a pg_dump to the backup volume before `migrate` when there are unapplied migrations.
