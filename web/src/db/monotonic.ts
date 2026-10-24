@@ -122,11 +122,11 @@ function isStored(value: unknown): value is { updated_at: IsoDateTime } {
 /**
  * Runs `scope` in a new read-write transaction whose writes keep `updated_at` exactly as given.
  *
- * The one narrow exception to the strictly increasing rule, used only by the sync engine:
- * marking rows pending for a full re-push after a server epoch change (their real edit times
- * must survive, so last-write-wins compares them), and re-stamping rows the server refused as
- * `clock_ahead` back to the device's corrected clock. Must not be called inside another
- * transaction, which it would share.
+ * The one narrow exception to the strictly increasing rule. The sync engine uses it to mark rows
+ * pending for a full re-push after a server epoch change (their real edit times must survive,
+ * so last-write-wins compares them) and to re-stamp rows the server refused as `clock_ahead`
+ * back to the device's corrected clock; backup import uses it so imported rows keep the edit
+ * times in the file. Must not be called inside another transaction, which it would share.
  */
 export function writeVerbatim<T>(
   db: Dexie,
