@@ -688,6 +688,24 @@
         "failed": "No se pudo importar. Sus datos no cambiaron."
       }
     },
+    "dataCheck": {
+      "title": "Datos en este teléfono",
+      "phone": "Teléfono: {{id}} · desde {{since}}",
+      "counts": {
+        "clients": "Clientes: {{n}}",
+        "sessions": "Sesiones: {{n}}",
+        "payments": "Pagos: {{n}}",
+        "readings": "Lecturas: {{n}}",
+        "cardDraws": "Cartas sacadas: {{n}}",
+        "cardNotes": "Notas de cartas: {{n}}",
+        "ownSpreads": "Tiradas propias: {{n}}",
+        "ownCrystals": "Cristales propios o editados: {{n}}"
+      },
+      "oldestClient": "Cliente más antiguo: {{date}}",
+      "oldestSession": "Sesión más antigua: {{date}}",
+      "none": "—",
+      "explain": "Un resumen de lo que hay guardado en este teléfono. Sirve para confirmar que sus datos siguen completos con el tiempo."
+    },
     "versions": {
       "title": "Versiones",
       "app": "Aplicación: versión {{version}} ({{commit}}, {{date}})",
