@@ -4,9 +4,10 @@ import AboutSection from './AboutSection';
 import BackupSection from './BackupSection';
 import DataCheckSection from './DataCheckSection';
 import StorageSection from './StorageSection';
+import SyncSection from './SyncSection';
 import VersionsSection from './VersionsSection';
 
-/** Ajustes. T3.8 adds its sync section (login, last sync, sync now) above these. */
+/** Ajustes. Sincronización sits below Respaldo, so a login form is never the first thing she sees. */
 export default function SettingsPage() {
   const { t } = useTranslation();
   return (
@@ -15,6 +16,7 @@ export default function SettingsPage() {
       <StorageSection />
       <DataCheckSection />
       <BackupSection />
+      <SyncSection />
       <VersionsSection />
       <AboutSection />
     </div>

@@ -38,6 +38,16 @@ function tableOf<T extends SyncedTableName>(
 
 const pushTables = (db: ArcanaDB) => PUSH_ORDER.map((table) => db.table(table));
 
+/** How many rows the next push would send, tombstones included ("Cambios sin enviar"). */
+export function countPending(db: ArcanaDB): Promise<number> {
+  return db.transaction('r', pushTables(db), async () => {
+    let count = 0;
+    for (const table of PUSH_ORDER)
+      count += await db.table(table).where('pending').equals(1).count();
+    return count;
+  });
+}
+
 /** Every pending row, parents first, and the snapshot to recognize them in the response. */
 export function readPending(
   db: ArcanaDB,

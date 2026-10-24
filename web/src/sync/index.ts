@@ -3,6 +3,7 @@ import { createApi } from './api';
 import { createSyncEngine } from './engine';
 
 export { createSyncEngine, type SyncEngine, type SyncReason } from './engine';
+export { countPending } from './apply';
 export { startSyncTriggers } from './triggers';
 export { readStatus, parseStatus, STATUS_KEY, type SyncStatus, type SyncState } from './status';
 

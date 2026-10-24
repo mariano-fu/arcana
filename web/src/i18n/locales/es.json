@@ -688,6 +688,37 @@
         "failed": "No se pudo importar. Sus datos no cambiaron."
       }
     },
+    "sync": {
+      "title": "Sincronización",
+      "optional": "La sincronización es opcional; la app funciona igual sin ella.",
+      "signIn": "Iniciar sesión",
+      "username": "Usuario",
+      "password": "Contraseña",
+      "merge": "Al iniciar sesión, los datos de este teléfono se combinan con los del servidor.",
+      "submit": "Entrar",
+      "signingIn": "Entrando…",
+      "cancel": "Cancelar",
+      "error": {
+        "invalid": "Usuario o contraseña incorrectos.",
+        "throttled": "Demasiados intentos. Espere un minuto e intente de nuevo.",
+        "unavailable": "No se pudo conectar con el servidor. Revise que Tailscale esté activo."
+      },
+      "signedIn": "Sesión iniciada",
+      "never": "Todavía no se ha sincronizado.",
+      "lastSync": "Última sincronización: {{date}}",
+      "state": {
+        "offline": "Sin conexión con el servidor. Se intentará de nuevo automáticamente.",
+        "error": "El servidor no respondió. Se intentará de nuevo automáticamente."
+      },
+      "pending": "Cambios sin enviar: {{count}}",
+      "skew": {
+        "behind": "La hora de este teléfono está unos {{minutes}} minutos atrasada respecto al servidor. Revise la fecha y hora del teléfono: con la hora desajustada, al combinar cambios de dos dispositivos podría conservarse la versión equivocada.",
+        "ahead": "La hora de este teléfono está unos {{minutes}} minutos adelantada respecto al servidor. Revise la fecha y hora del teléfono: con la hora desajustada, al combinar cambios de dos dispositivos podría conservarse la versión equivocada."
+      },
+      "signOut": "Cerrar sesión",
+      "signingOut": "Cerrando sesión…",
+      "signOutNote": "Sus datos y cambios pendientes se quedan en este teléfono."
+    },
     "dataCheck": {
       "title": "Datos en este teléfono",
       "phone": "Teléfono: {{id}} · desde {{since}}",

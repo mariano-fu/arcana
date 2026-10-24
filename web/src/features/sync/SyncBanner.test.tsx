@@ -17,6 +17,7 @@ beforeEach(() => {
   engine = {
     auth: { getAccess: vi.fn(), login: vi.fn(), refreshAfter: vi.fn(), expire: vi.fn() },
     sync,
+    signOut: () => Promise.resolve(),
     isSyncing: () => false,
     subscribe: () => () => {},
   };
@@ -32,6 +33,17 @@ async function show(status: Partial<SyncStatus>) {
 }
 
 describe('SyncBanner', () => {
+  it.each(['signed_out', 'idle', 'offline', 'error'] as const)(
+    'shows nothing while %s: never a prompt to log in',
+    async (state) => {
+      await show({ state });
+
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    },
+  );
+
   it('shows nothing while sync is fine or just offline', async () => {
     await show({ state: 'offline' });
 
