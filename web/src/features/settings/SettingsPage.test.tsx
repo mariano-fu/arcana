@@ -63,6 +63,21 @@ describe('Ajustes', () => {
     const buttons = screen.getAllByRole('button').map((button) => button.textContent);
     expect(buttons.join(' ')).not.toMatch(/borrar|eliminar|restablecer/i);
   });
+
+  it('puts Sincronización right below Respaldo and makes no API request when signed out', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    try {
+      renderAt('/settings');
+      const sync = await section(S.sync.title);
+      expect(await sync.findByText(S.sync.optional)).toBeVisible();
+
+      const titles = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
+      expect(titles.indexOf(S.sync.title)).toBe(titles.indexOf(S.backup.title) + 1);
+      expect(fetchSpy).not.toHaveBeenCalled();
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  });
 });
 
 describe('Almacenamiento', () => {

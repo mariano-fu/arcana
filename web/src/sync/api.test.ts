@@ -39,12 +39,26 @@ describe('createApi', () => {
   it.each([
     [400, { kind: 'rejected', body: { records: [] } }],
     [401, { kind: 'unauthorized' }],
+    [404, { kind: 'server_error', status: 404 }],
     [429, { kind: 'throttled' }],
     [502, { kind: 'server_error', status: 502 }],
   ])('maps HTTP %i', async (status, expected) => {
     const result = await createApi(fakeFetch(status, { records: [] })).sync('t', request);
 
     expect(result).toEqual(expected);
+  });
+
+  it.each([
+    [200, '<!doctype html><html></html>'],
+    [400, '<!doctype html><html></html>'],
+    [401, '<!doctype html><html></html>'],
+    [404, '<!doctype html><html></html>'],
+    [200, ''],
+    [200, '"just a string"'],
+  ])('maps HTTP %i with a non-JSON-object body to server_error', async (status, body) => {
+    const fetchFn = vi.fn(() => Promise.resolve(new Response(body, { status })));
+
+    expect(await createApi(fetchFn).sync('t', request)).toEqual({ kind: 'server_error', status });
   });
 
   it('maps a failed fetch to network', async () => {

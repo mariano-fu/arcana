@@ -42,8 +42,11 @@ export function createAuth(db: ArcanaDB, api: Api, locks: Locks = defaultLocks()
     async login(credentials) {
       const result = await api.login(credentials);
       if (result.kind === 'ok') {
+        // A 200 that isn't a token pair didn't come from the API.
+        const body: unknown = result.body;
+        if (!isTokenPair(body)) return 'unavailable';
         await locks.request(AUTH_LOCK, async () => {
-          await db.auth.put({ key: TOKENS, ...result.body });
+          await db.auth.put({ key: TOKENS, access: body.access, refresh: body.refresh });
         });
         const status = await readStatus(db);
         if (status.state === 'session_expired' || status.state === 'signed_out') {
@@ -77,4 +80,10 @@ export function createAuth(db: ArcanaDB, api: Api, locks: Locks = defaultLocks()
 
     expire,
   };
+}
+
+function isTokenPair(body: unknown): body is { access: string; refresh: string } {
+  if (typeof body !== 'object' || body === null) return false;
+  const { access, refresh } = body as Record<string, unknown>;
+  return typeof access === 'string' && typeof refresh === 'string';
 }

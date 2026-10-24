@@ -27,6 +27,7 @@ beforeEach(() => {
       reasons.push(reason);
       return Promise.resolve(INITIAL_STATUS);
     },
+    signOut: () => Promise.resolve(),
     isSyncing: () => false,
     subscribe: () => () => {},
   };
