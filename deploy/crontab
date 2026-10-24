@@ -4,3 +4,7 @@ CRON_TZ=America/Costa_Rica
 
 # Remove expired refresh tokens from the simplejwt blacklist tables.
 30 3 * * * python manage.py flushexpiredtokens
+
+# Dump the database to BACKUP_DIR, then delete dumps older than 30 days, always keeping the
+# newest 7 (docs/backups.md). Before flushexpiredtokens, so the two never overlap.
+0 3 * * * python manage.py backup_db --reason nightly

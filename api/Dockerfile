@@ -23,7 +23,8 @@ COPY --from=builder /opt/venv /opt/venv
 COPY --from=builder --chown=arcana:arcana /app /app
 USER arcana
 
-# Scheduled jobs (deploy/crontab), run by supercronic: non-root, logs to stdout.
+# Scheduled jobs (deploy/crontab), run by supercronic: non-root, logs to stdout. Also the
+# image of the one-shot migrate and of restores, which need the Postgres client (T4.3).
 FROM base AS cron
 ARG TARGETARCH
 ARG SUPERCRONIC_VERSION=v0.2.50
@@ -31,6 +32,15 @@ ARG SUPERCRONIC_VERSION=v0.2.50
 ARG SUPERCRONIC_SHA256_AMD64=d2d7c97fbfefc763d5bbcbbb3f8d61f9dd3410ce5d05a737c414994b80b8cdd0
 ARG SUPERCRONIC_SHA256_ARM64=a1c0af9872e8de89a1ce5c1b596e26c42917d5a2cf914d98faee2e28156899e2
 USER root
+# pg_dump, pg_restore and psql of the server's major version (Postgres 16), from the PGDG apt
+# repository: a newer pg_restore writes settings a 16 server rejects (transaction_timeout).
+# postgresql-common ships the repository's signing key. Bump it together with the db image.
+ARG PG_MAJOR=16
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates postgresql-common \
+    && /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y \
+    && apt-get install -y --no-install-recommends "postgresql-client-${PG_MAJOR}" \
+    && rm -rf /var/lib/apt/lists/*
 RUN python - <<'EOF'
 import hashlib, os, urllib.request
 arch = os.environ["TARGETARCH"]

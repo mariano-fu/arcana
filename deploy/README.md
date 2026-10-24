@@ -1,7 +1,7 @@
 # Deploy
 
 The homelab stack: `caddy` (the built PWA and `/api`), `api` (gunicorn), `db` (Postgres), `cron`
-(supercronic) and a one-shot `migrate`. Design and limits: `specs/plan.md`, "Deploy". Tailscale
+(supercronic: nightly backups, token cleanup) and a one-shot `migrate`. Design and limits: `specs/plan.md`, "Deploy". Tailscale
 setup: `docs/deploy.md` (T4.2).
 
 Needs Docker Engine with the Compose and **buildx** plugins (the Caddy image uses a named build
@@ -13,6 +13,7 @@ context).
 cd deploy
 docker volume create arcana_pgdata      # the database; outside the project, so `down -v` can't remove it
 cp .env.example .env                     # fill in; .env is gitignored, never commit it
+# BACKUP_DIR: a directory on the second disk owned by uid 10001 (docs/backups.md)
 BUILD_COMMIT=$(git rev-parse --short=7 HEAD) docker compose up -d --build
 docker compose exec api python manage.py createsuperuser
 ```
@@ -27,7 +28,16 @@ git pull && BUILD_COMMIT=$(git rev-parse --short=7 HEAD) docker compose up -d --
 
 `BUILD_COMMIT` is the commit Ajustes → Versiones shows; without it, it shows "dev".
 
-Every `up` runs `migrate` first; `api` and `cron` start only once it has succeeded.
+Every `up` runs `migrate` first; `api` and `cron` start only once it has succeeded. If
+migrations are pending, it dumps the database to `BACKUP_DIR` before migrating, and migrates
+nothing if that dump fails.
+
+## Backups
+
+Nightly at 03:00 Costa Rica time, to `BACKUP_DIR`; 30 days kept, the newest 7 always. Restore
+with `./restore.sh <file name>`: it stops the api, dumps the current data, restores, migrates
+and rotates the sync epoch. Setup, checks, the restore steps and known limits:
+`docs/backups.md`.
 
 ## Admin
 
@@ -48,6 +58,12 @@ For one-off commands: `docker compose exec api python manage.py <command>`.
 ## Smoke test
 
 `deploy/smoke.sh` builds and starts the stack under its own project name, ports and volume,
-checks it (caching headers, SPA fallback, throttling behind both proxies, cron, non-root, the
-external volume), then removes what it created. It never reads `deploy/.env` or touches
-`arcana_pgdata`. CI runs it in the `deploy` job.
+checks it (caching headers, SPA fallback, throttling behind both proxies, cron, backups and a
+restore, non-root, the external volume), then removes what it created. It never reads
+`deploy/.env` or touches `arcana_pgdata`; its backups go to a temporary directory. CI runs it in
+the `deploy` job.
+
+`SMOKE_PROJECT`, `SMOKE_PGDATA_VOLUME`, `SMOKE_CADDY_PORT` and `SMOKE_ADMIN_PORT` move it off
+names or ports another stack on the machine uses. Its cleanup runs `down -v` on that project and
+removes that volume, so it refuses to start (exit 2) if the project is `arcana`, the volume is
+`arcana_pgdata`, or the volume already exists: it only ever removes a volume it created itself.

@@ -1,8 +1,10 @@
 # Arcana on the homelab (specs/plan.md, "Deploy"). From this directory:
 #   docker volume create arcana_pgdata   # once: the database lives outside the project
+#   (and a BACKUP_DIR on the second disk, owned by uid 10001: docs/backups.md)
 #   cp .env.example .env                 # and fill it in; never commit .env
 #   docker compose up -d --build
-# Every `up` runs pending migrations first (the one-shot `migrate` service).
+# Every `up` runs pending migrations first (the one-shot `migrate` service), dumping the
+# database to BACKUP_DIR before it if any are pending.
 
 name: arcana
 
@@ -22,11 +24,28 @@ x-api: &api
   image: arcana-api:local
   # ENV_FILE lets smoke.sh use a throwaway file; normally deploy/.env.
   env_file: ${ENV_FILE:-.env}
-  environment:
+  environment: &api-environment
     DATABASE_URL: postgres://arcana:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/.env}@db:5432/arcana
     SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in deploy/.env}
     NUM_PROXIES: ${NUM_PROXIES:-2}
   tmpfs: [/tmp]
+
+# The image with the Postgres client and supercronic (api/Dockerfile, target cron), for the
+# services that dump or restore the database. Only they mount the backups.
+x-ops: &ops
+  <<: *api
+  build:
+    context: ../api
+    target: cron
+  image: arcana-cron:local
+  environment:
+    <<: *api-environment
+    # Inside the container; BACKUP_DIR in deploy/.env is the host directory mounted here.
+    BACKUP_DIR: /backups
+
+# A host directory on the second disk (deploy/.env), never a default: a missing setting must
+# not quietly put the backups on the database's own disk.
+x-backups: &backups ${BACKUP_DIR:?set BACKUP_DIR in deploy/.env (docs/backups.md)}:/backups
 
 services:
   db:
@@ -51,10 +70,14 @@ services:
       driver: json-file
       options: { max-size: "10m", max-file: "3" }
 
-  # Applies pending migrations (simplejwt's token_blacklist tables included), then exits.
+  # Applies pending migrations (simplejwt's token_blacklist tables included), then exits. If
+  # any are pending on an existing database, it dumps it to BACKUP_DIR first (pre-migrate);
+  # if that dump fails, nothing is migrated and api and cron don't start. deploy/restore.sh
+  # also runs restores with this service.
   migrate:
-    <<: *api
-    command: ["python", "manage.py", "migrate", "--noinput"]
+    <<: *ops
+    command: ["python", "manage.py", "migrate_with_backup"]
+    volumes: [*backups]
     networks: [backend]
     depends_on:
       db: { condition: service_healthy }
@@ -81,14 +104,12 @@ services:
       migrate: { condition: service_completed_successfully }
     restart: "no"
 
+  # Nightly backups and the other scheduled jobs (deploy/crontab).
   cron:
-    <<: *api
-    build:
-      context: ../api
-      target: cron
-    image: arcana-cron:local
+    <<: *ops
     volumes:
       - ./crontab:/app/crontab:ro
+      - *backups
     networks: [backend, egress]
     depends_on:
       migrate: { condition: service_completed_successfully }
