@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "core",
     "sync",
     "horoscopes",
+    "ops",
 ]
 
 MIDDLEWARE = [
@@ -82,6 +83,13 @@ DATABASES = {
 }
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("DB_CONN_MAX_AGE", default=60)
 DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
+
+# Database backups (ops/backups.py). Deployed, BACKUP_DIR is /backups, a bind mount of a
+# directory on the homelab's second disk (deploy/docker-compose.yml).
+BACKUP_DIR: str = env.str("BACKUP_DIR", default="/backups")
+BACKUP_RETENTION_DAYS: int = env.int("BACKUP_RETENTION_DAYS", default=30)
+# Kept whatever their age, so a month of failed backups never prunes the last good ones.
+BACKUP_KEEP_MIN: int = env.int("BACKUP_KEEP_MIN", default=7)
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

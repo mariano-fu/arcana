@@ -4,15 +4,23 @@
 # everything it created. Never touches deploy/.env or the real database volume.
 #
 #   deploy/smoke.sh            # from anywhere; needs docker compose, curl, python3
+#
+# SMOKE_PROJECT, SMOKE_PGDATA_VOLUME, SMOKE_CADDY_PORT and SMOKE_ADMIN_PORT override the names
+# and ports, to keep clear of other stacks on the same machine.
 set -euo pipefail
 
 cd "$(dirname "$0")"
-PROJECT=arcana-smoke
-export PGDATA_VOLUME=arcana_smoke_pgdata
-export CADDY_PORT=18080 ADMIN_PORT=18001
+PROJECT=${SMOKE_PROJECT:-arcana-smoke}
+export PGDATA_VOLUME=${SMOKE_PGDATA_VOLUME:-arcana_smoke_pgdata}
+export CADDY_PORT=${SMOKE_CADDY_PORT:-18080} ADMIN_PORT=${SMOKE_ADMIN_PORT:-18001}
 BASE="http://127.0.0.1:${CADDY_PORT}"
 WORK=$(mktemp -d)
 export ENV_FILE="$WORK/smoke.env"
+# The backups, in the throwaway directory. World-writable instead of owned by uid 10001
+# (docs/backups.md), which would need root here; the cleanup can still delete its files.
+export BACKUP_DIR="$WORK/backups"
+mkdir "$BACKUP_DIR"
+chmod 0777 "$BACKUP_DIR"
 THROTTLE_LIMIT=3
 
 cat >"$ENV_FILE" <<EOF
@@ -121,6 +129,30 @@ check "a client-sent X-Forwarded-For doesn't escape device A's bucket" test "$sp
 echo "== cron"
 check "crontab parses" compose exec -T cron supercronic -test /app/crontab
 check "flushexpiredtokens runs" compose exec -T cron python manage.py flushexpiredtokens
+
+echo "== backups"
+dumps() { ls "$BACKUP_DIR" | grep -E "^arcana-[0-9]{8}T[0-9]{6}Z-$1\.dump\$" || true; }
+manage() { compose exec -T api python manage.py "$@"; }
+epoch() { manage shell -c 'from sync.models import current_epoch; print(current_epoch())'; }
+user_gone() { manage shell -c "from django.contrib.auth.models import User; import sys; sys.exit(User.objects.filter(username='$1').exists())"; }
+check "a new database is migrated without a pre-migrate dump" test -z "$(dumps pre-migrate)"
+check "the nightly backup runs in cron" compose exec -T cron python manage.py backup_db --reason nightly
+nightly=$(dumps nightly | tail -1)
+check "  …and writes a dump to BACKUP_DIR ($nightly)" test -n "$nightly"
+check "api has no backup mount" compose exec -T api test ! -e /backups
+# Pending migrations: roll one back, then run the one-shot migrate as `up` does.
+compose run --rm --no-deps migrate python manage.py migrate horoscopes 0001 >/dev/null
+check "migrate with pending migrations succeeds" compose run --rm --no-deps migrate
+check "  …after a pre-migrate dump" test -n "$(dumps pre-migrate)"
+check "  …and leaves nothing pending" compose run --rm --no-deps migrate python manage.py migrate --check
+dumped_epoch=$(epoch)
+manage shell -c "from django.contrib.auth.models import User; User.objects.create_user('after-the-backup')"
+check "restore.sh restores the nightly dump" env COMPOSE_PROJECT_NAME="$PROJECT" ./restore.sh --yes "$nightly"
+check "  …dumping the replaced database first" test -n "$(dumps pre-restore)"
+check "  …dropping what was written after the dump" user_gone after-the-backup
+restored_epoch=$(epoch)
+check "  …and rotating the sync epoch ($dumped_epoch → $restored_epoch)" test -n "$restored_epoch" -a "$restored_epoch" != "$dumped_epoch"
+check "  …and the api is back" test "$(status_of "$BASE/api/health/" "${API_HOST[@]}")" = 200
 
 echo "== non-root"
 for service in api cron caddy; do
