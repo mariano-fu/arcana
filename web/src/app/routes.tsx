@@ -2,6 +2,7 @@ import { Navigate, type RouteObject } from 'react-router';
 
 import CardDetailPage from '../features/cards/CardDetailPage';
 import CardListPage from '../features/cards/CardListPage';
+import ConflictsPage from '../features/conflicts/ConflictsPage';
 import HomePage from '../features/home/HomePage';
 import ClientDetailPage from '../features/clients/ClientDetailPage';
 import ClientFormPage from '../features/clients/ClientFormPage';
@@ -36,6 +37,7 @@ export const routes: RouteObject[] = [
       { path: 'cards', element: <CardListPage /> },
       { path: 'cards/:key', element: <CardDetailPage /> },
       { path: 'settings', element: <SettingsPage /> },
+      { path: 'conflicts', element: <ConflictsPage /> },
       // Acerca de moved into Ajustes (T1.14); old links still land there.
       { path: 'about', element: <Navigate to="/settings" replace /> },
     ],

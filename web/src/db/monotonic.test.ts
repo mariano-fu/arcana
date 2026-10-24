@@ -2,7 +2,14 @@ import { newClient, newSession } from '../features/clients/test-utils';
 import { deleteClient } from '../features/clients/deletion';
 import { deleteSession } from '../features/sessions/actions';
 import { loadSeed, seedId } from '../seed/loader';
-import { ArcanaDB, createRepositories, getDeviceId, nextUpdatedAt, writeVerbatim } from '.';
+import {
+  ArcanaDB,
+  createRepositories,
+  getDeviceId,
+  HardDeleteError,
+  nextUpdatedAt,
+  writeVerbatim,
+} from '.';
 import type { Client } from '.';
 
 const T0 = '2026-10-20T12:00:00.000Z';
@@ -180,5 +187,49 @@ describe('monotonic updated_at middleware', () => {
     await repos.client.update(client.id, { name: 'Otro' });
     expect(listener).toHaveBeenCalledTimes(1);
     expect(await getDeviceId(db)).toBe(client.device_id);
+  });
+});
+
+describe('hard deletes on synced tables', () => {
+  async function aClient() {
+    return createRepositories(db, fixedClock(T0)).client.create(newClient());
+  }
+
+  it.each([
+    ['Table.delete', (id: string) => db.client.delete(id)],
+    ['Table.bulkDelete', (id: string) => db.client.bulkDelete([id])],
+    ['Table.clear', () => db.client.clear()],
+    ['Collection.delete (where)', (id: string) => db.client.where('id').equals(id).delete()],
+    ['Collection.delete (filter)', () => db.client.filter(() => true).delete()],
+    ['Collection.delete (all)', () => db.client.toCollection().delete()],
+  ])('%s throws and leaves the row', async (_name, remove) => {
+    const client = await aClient();
+
+    await expect(remove(client.id)).rejects.toThrow(HardDeleteError);
+
+    expect(await db.client.get(client.id)).toEqual(client);
+  });
+
+  it('is refused on every synced table, also inside writeVerbatim', async () => {
+    for (const table of db.tables.filter((t) => t.name !== 'meta' && t.name !== 'auth')) {
+      await expect(table.clear(), table.name).rejects.toThrow(/never hard-deleted/);
+    }
+    await expect(writeVerbatim(db, [db.session], () => db.session.clear())).rejects.toThrow(
+      HardDeleteError,
+    );
+  });
+
+  it('still allows local-only tables and deleting the whole database', async () => {
+    await db.meta.put({ key: 'x', value: '1' });
+    await db.meta.delete('x');
+    await db.auth.put({ key: 'tokens', access: 'a', refresh: 'r' });
+    await db.auth.clear();
+    expect(await db.meta.get('x')).toBeUndefined();
+    expect(await db.auth.count()).toBe(0);
+
+    await aClient();
+    await db.delete();
+    await db.open();
+    expect(await db.client.count()).toBe(0);
   });
 });

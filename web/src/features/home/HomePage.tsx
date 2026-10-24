@@ -16,6 +16,7 @@ import {
   type FollowUp,
 } from './home';
 import { useHomeData, useToday } from './hooks';
+import ReviewCard from '../conflicts/ReviewCard';
 
 const rowClass =
   'flex min-h-11 flex-col gap-1 rounded-lg border border-stone-200 bg-white px-4 py-3';
@@ -205,6 +206,7 @@ export default function HomePage() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-semibold">{t('home.title')}</h1>
+      <ReviewCard />
       <HomeSections />
       <Link
         to="/settings"

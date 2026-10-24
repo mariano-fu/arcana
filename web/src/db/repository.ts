@@ -26,6 +26,8 @@ export interface Repository<T extends SyncedRow> extends ReadonlyRepository<T> {
   update(id: string, patch: RowPatch<T>): Promise<T>;
   /** Soft delete: sets `deleted_at` so the tombstone syncs to other devices. */
   remove(id: string): Promise<void>;
+  /** Undoes a soft delete. The new `updated_at` beats the tombstone. No-op on a live row. */
+  restore(id: string): Promise<T>;
   /** Rows with unsynced changes, tombstones included. */
   listPending(): Promise<T[]>;
 }
@@ -108,6 +110,18 @@ export function createRepository<T extends SyncedRow>(
       await db.transaction('rw', table, async () => {
         const existing = await getLive(id);
         await table.put({ ...existing, ...stamped, deleted_at: stamped.updated_at });
+      });
+    },
+
+    async restore(id) {
+      const stamped = await stamp();
+      return db.transaction('rw', table, async () => {
+        const existing = await table.get(id);
+        if (!existing) throw new RowNotFoundError(table.name, id);
+        if (existing.deleted_at === null) return existing;
+        const row: T = { ...existing, ...stamped, deleted_at: null };
+        await table.put(row);
+        return row;
       });
     },
 

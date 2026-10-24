@@ -41,7 +41,24 @@ const verbatim = new WeakSet();
 /** Notified after every local edit (a `pending = 1` write outside `writeVerbatim`). */
 export type LocalWriteListener = () => void;
 
-export function monotonicUpdatedAt(onLocalWrite: LocalWriteListener): Middleware<DBCore> {
+/** A hard delete on a synced table: other devices would never learn of it. */
+export class HardDeleteError extends Error {
+  constructor(table: string) {
+    super(`${table}: synced rows are never hard-deleted; write a tombstone (deleted_at) instead`);
+    this.name = 'HardDeleteError';
+  }
+}
+
+/**
+ * `synced`: the tables whose rows sync. On those, `delete`, `bulkDelete`, `clear` and
+ * `Collection.delete` are refused (`HardDeleteError`): a removed row never reaches a push, so
+ * other devices would keep it forever. Deleting the whole database (`db.delete()`) is not a
+ * table write and stays allowed.
+ */
+export function monotonicUpdatedAt(
+  onLocalWrite: LocalWriteListener,
+  synced: ReadonlySet<string>,
+): Middleware<DBCore> {
   return {
     stack: 'dbcore',
     name: 'monotonicUpdatedAt',
@@ -50,7 +67,8 @@ export function monotonicUpdatedAt(onLocalWrite: LocalWriteListener): Middleware
         ...down,
         table(name) {
           const table = down.table(name);
-          return { ...table, mutate: (req) => mutate(table, req, onLocalWrite) };
+          const guarded = synced.has(name);
+          return { ...table, mutate: (req) => mutate(table, req, onLocalWrite, guarded) };
         },
       };
     },
@@ -61,7 +79,11 @@ async function mutate(
   table: DBCoreTable,
   req: DBCoreMutateRequest,
   onLocalWrite: LocalWriteListener,
+  guarded: boolean,
 ) {
+  if (guarded && (req.type === 'delete' || req.type === 'deleteRange')) {
+    throw new HardDeleteError(table.name);
+  }
   if ((req.type !== 'put' && req.type !== 'add') || verbatim.has(req.trans)) {
     return table.mutate(req);
   }
