@@ -285,6 +285,21 @@ class CardNote(SyncedModel):
         return self.card_id
 
 
+class SessionCrystal(SyncedModel):
+    """A crystal she attached to a session. The id is a UUIDv5 of the pair, so each crystal is
+    attached at most once per session across devices; detaching tombstones the row."""
+
+    session = models.ForeignKey(Session, on_delete=models.PROTECT, related_name="crystals")
+    # Reference only: seed crystals never sync unless edited, so no foreign key.
+    crystal_id = models.UUIDField()
+
+    class Meta:
+        db_table = "session_crystal"
+
+    def __str__(self) -> str:
+        return f"{self.session_id}: {self.crystal_id}"
+
+
 SYNCED_TABLE_NAMES = (
     "client",
     "session",
@@ -295,6 +310,7 @@ SYNCED_TABLE_NAMES = (
     "crystal",
     "intention_tag",
     "card_note",
+    "session_crystal",
     "conflict",
     "horoscope",
 )

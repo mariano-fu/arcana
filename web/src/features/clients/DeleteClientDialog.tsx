@@ -65,7 +65,7 @@ export default function DeleteClientDialog({ client, onArchive, onDelete, onCanc
   );
 }
 
-/** "Se eliminarán 4 sesiones y 3 pagos (₡45 000)." */
+/** "Se eliminarán 4 sesiones, 3 pagos (₡45 000) y 2 cristales en sesiones." */
 function summaryText(summary: DeletionSummary, t: TFunction): string {
   if (summary.sessions === 0 && summary.payments === 0) return t('clients.delete.onlyProfile');
 
@@ -80,9 +80,10 @@ function summaryText(summary: DeletionSummary, t: TFunction): string {
       t('clients.delete.payments', { count: summary.payments, totals: formatList(totals) }),
     );
   }
+  if (summary.crystals > 0) items.push(t('clients.delete.crystals', { count: summary.crystals }));
   // The verb agrees with the total: "Se eliminará 1 sesión" / "Se eliminarán 1 sesión y 1 pago".
   return t('clients.delete.summary', {
-    count: summary.sessions + summary.payments,
+    count: summary.sessions + summary.payments + summary.crystals,
     items: formatList(items),
   });
 }

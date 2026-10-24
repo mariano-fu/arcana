@@ -4,30 +4,35 @@ import { sumByCurrency, type CurrencyTotals } from '../payments';
 export interface DeletionSummary {
   sessions: number;
   payments: number;
+  /** Crystals attached to its live sessions. */
+  crystals: number;
   /** Total paid per currency (minor units); currencies are never summed together. */
   paidByCurrency: CurrencyTotals;
 }
 
 /** What deleting a client would remove, for the confirmation dialog. Tombstones aren't counted. */
 export async function getDeletionSummary(db: ArcanaDB, clientId: string): Promise<DeletionSummary> {
-  const [sessions, payments] = await Promise.all([
-    db.session
-      .where('client_id')
-      .equals(clientId)
-      .filter((row) => row.deleted_at === null)
-      .count(),
-    db.payment
-      .where('client_id')
-      .equals(clientId)
-      .filter((row) => row.deleted_at === null)
-      .toArray(),
+  const live = (row: { deleted_at: string | null }) => row.deleted_at === null;
+  const [sessionIds, payments] = await Promise.all([
+    db.session.where('client_id').equals(clientId).filter(live).primaryKeys(),
+    db.payment.where('client_id').equals(clientId).filter(live).toArray(),
   ]);
-  return { sessions, payments: payments.length, paidByCurrency: sumByCurrency(payments) };
+  const crystals = await db.session_crystal
+    .where('session_id')
+    .anyOf(sessionIds)
+    .filter(live)
+    .count();
+  return {
+    sessions: sessionIds.length,
+    payments: payments.length,
+    crystals,
+    paidByCurrency: sumByCurrency(payments),
+  };
 }
 
 /**
- * Soft-deletes the client and everything under it (sessions, payments, readings, card draws)
- * in one transaction, so the tombstones sync and nothing is left orphaned.
+ * Soft-deletes the client and everything under it (sessions, payments, readings, card draws,
+ * attached crystals) in one transaction, so the tombstones sync and nothing is left orphaned.
  */
 export async function deleteClient(
   db: ArcanaDB,
@@ -41,7 +46,7 @@ export async function deleteClient(
 
   await db.transaction(
     'rw',
-    [db.client, db.session, db.payment, db.reading, db.card_draw],
+    [db.client, db.session, db.payment, db.reading, db.card_draw, db.session_crystal],
     async () => {
       const client = await db.client.get(clientId);
       if (!client || client.deleted_at !== null) return;
@@ -59,12 +64,18 @@ export async function deleteClient(
         .anyOf(readings.map((reading) => reading.id))
         .filter(live)
         .toArray();
+      const crystals = await db.session_crystal
+        .where('session_id')
+        .anyOf(sessionIds)
+        .filter(live)
+        .toArray();
 
       await db.client.put({ ...client, ...tombstone });
       await db.session.bulkPut(sessions.map((row) => ({ ...row, ...tombstone })));
       await db.payment.bulkPut(payments.map((row) => ({ ...row, ...tombstone })));
       await db.reading.bulkPut(readings.map((row) => ({ ...row, ...tombstone })));
       await db.card_draw.bulkPut(draws.map((row) => ({ ...row, ...tombstone })));
+      await db.session_crystal.bulkPut(crystals.map((row) => ({ ...row, ...tombstone })));
     },
   );
 }

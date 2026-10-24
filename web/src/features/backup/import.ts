@@ -294,6 +294,7 @@ const isUntouchedSeed: { [T in BackupTable]: (row: SyncedTables[T]) => boolean }
   reading: () => false,
   card_draw: () => false,
   card_note: () => false,
+  session_crystal: () => false,
   conflict: () => false,
 };
 

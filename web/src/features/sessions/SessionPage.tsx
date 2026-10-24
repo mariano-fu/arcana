@@ -5,6 +5,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router';
 import { db, repos, type Client, type Currency, type Session } from '../../db';
 import { useClient } from '../clients/hooks';
 import { CURRENCIES, CURRENCY_SYMBOL, formatMoney } from '../payments';
+import SessionCrystals from '../crystals/SessionCrystals';
 import SessionPayments from '../payments/SessionPayments';
 import SessionReadings from '../spreads/SessionReadings';
 import { deleteSession } from './actions';
@@ -245,6 +246,8 @@ function SessionEditor({
       </Field>
 
       <SessionReadings sessionId={session.id} />
+
+      <SessionCrystals sessionId={session.id} client={client} />
 
       <section className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold">{t('sessions.field.followUp')}</h2>

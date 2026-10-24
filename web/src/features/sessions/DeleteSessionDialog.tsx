@@ -48,9 +48,11 @@ export default function DeleteSessionDialog({ sessionId, onDelete, onCancel }: P
   );
 }
 
-/** "Se eliminarán la sesión, 1 tirada y 2 pagos (₡10 000 y US$20,00)." */
+/** "Se eliminarán la sesión, 1 tirada, 2 pagos (₡10 000 y US$20,00) y 1 cristal." */
 function summaryText(summary: SessionDeletionSummary, t: TFunction): string {
-  if (summary.readings === 0 && summary.payments === 0) return t('sessions.delete.onlySession');
+  if (summary.readings === 0 && summary.payments === 0 && summary.crystals === 0) {
+    return t('sessions.delete.onlySession');
+  }
 
   const items = [t('sessions.delete.session')];
   if (summary.readings > 0) items.push(t('sessions.delete.readings', { count: summary.readings }));
@@ -63,5 +65,6 @@ function summaryText(summary: SessionDeletionSummary, t: TFunction): string {
       t('sessions.delete.payments', { count: summary.payments, totals: formatList(totals) }),
     );
   }
+  if (summary.crystals > 0) items.push(t('sessions.delete.crystals', { count: summary.crystals }));
   return t('sessions.delete.summary', { items: formatList(items) });
 }

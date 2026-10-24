@@ -88,6 +88,8 @@ export async function createSession(
 export interface SessionDeletionSummary {
   readings: number;
   payments: number;
+  /** Attached crystals. */
+  crystals: number;
   /** Total paid per currency (minor units); currencies are never summed together. */
   paidByCurrency: CurrencyTotals;
 }
@@ -97,14 +99,23 @@ export async function getSessionDeletionSummary(
   db: ArcanaDB,
   sessionId: string,
 ): Promise<SessionDeletionSummary> {
-  const [readings, payments] = await Promise.all([
+  const [readings, payments, crystals] = await Promise.all([
     db.reading.where('session_id').equals(sessionId).filter(live).count(),
     db.payment.where('session_id').equals(sessionId).filter(live).toArray(),
+    db.session_crystal.where('session_id').equals(sessionId).filter(live).count(),
   ]);
-  return { readings, payments: payments.length, paidByCurrency: sumByCurrency(payments) };
+  return {
+    readings,
+    payments: payments.length,
+    crystals,
+    paidByCurrency: sumByCurrency(payments),
+  };
 }
 
-/** Tombstones the session and its payments, readings and card draws. Call inside a transaction. */
+/**
+ * Tombstones the session and its payments, readings, card draws and attached crystals. Call
+ * inside a transaction.
+ */
 async function tombstoneSession(
   db: ArcanaDB,
   session: Session,
@@ -117,16 +128,22 @@ async function tombstoneSession(
     .anyOf(readings.map((reading) => reading.id))
     .filter(live)
     .toArray();
+  const crystals = await db.session_crystal
+    .where('session_id')
+    .equals(session.id)
+    .filter(live)
+    .toArray();
 
   await db.session.put({ ...session, ...tombstone });
   await db.payment.bulkPut(payments.map((row) => ({ ...row, ...tombstone })));
   await db.reading.bulkPut(readings.map((row) => ({ ...row, ...tombstone })));
   await db.card_draw.bulkPut(draws.map((row) => ({ ...row, ...tombstone })));
+  await db.session_crystal.bulkPut(crystals.map((row) => ({ ...row, ...tombstone })));
 }
 
 /**
- * Soft-deletes the session and everything under it (payments, readings, card draws) in one
- * transaction, so the tombstones sync and nothing is left orphaned.
+ * Soft-deletes the session and everything under it (payments, readings, card draws, attached
+ * crystals) in one transaction, so the tombstones sync and nothing is left orphaned.
  */
 export async function deleteSession(
   db: ArcanaDB,
@@ -137,7 +154,7 @@ export async function deleteSession(
   const tombstone = { ...stamped, deleted_at: stamped.updated_at };
   await db.transaction(
     'rw',
-    [db.session, db.payment, db.reading, db.card_draw, db.meta],
+    [db.session, db.payment, db.reading, db.card_draw, db.session_crystal, db.meta],
     async () => {
       await db.meta.delete(freshKey(sessionId));
       const session = await db.session.get(sessionId);
@@ -158,9 +175,9 @@ export interface DiscardOptions {
 
 /**
  * Silently discards a session created by mistake: if it still has its "Nueva sesión" marker,
- * its fields are exactly as created and it has no readings or payments, it is tombstoned (and
- * a client it unarchived is archived again). The marker is removed either way: once checked,
- * the session is no longer just created. Returns whether it was discarded.
+ * its fields are exactly as created and it has no readings, payments or attached crystals, it is
+ * tombstoned (and a client it unarchived is archived again). The marker is removed either way:
+ * once checked, the session is no longer just created. Returns whether it was discarded.
  */
 export async function discardIfUntouched(
   db: ArcanaDB,
@@ -171,7 +188,7 @@ export async function discardIfUntouched(
   const tombstone = { ...stamped, deleted_at: stamped.updated_at };
   return db.transaction(
     'rw',
-    [db.client, db.session, db.payment, db.reading, db.card_draw, db.meta],
+    [db.client, db.session, db.payment, db.reading, db.card_draw, db.session_crystal, db.meta],
     async () => {
       const marker = await db.meta.get(freshKey(sessionId));
       if (!marker) return false;
@@ -183,8 +200,9 @@ export async function discardIfUntouched(
       if (!session || session.deleted_at !== null) return false;
       if (!sameSessionFields(pickSessionFields(session), fresh.created)) return false;
       if (requireUnmodified && session.updated_at !== fresh.updated_at) return false;
-      const { readings, payments } = await getSessionDeletionSummary(db, sessionId);
-      if (readings > 0 || payments > 0) return false;
+      // Only live rows count: a crystal attached and removed again leaves it untouched (T2.9 Q3).
+      const { readings, payments, crystals } = await getSessionDeletionSummary(db, sessionId);
+      if (readings > 0 || payments > 0 || crystals > 0) return false;
 
       await tombstoneSession(db, session, tombstone);
       if (fresh.unarchived) {

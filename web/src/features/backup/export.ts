@@ -53,6 +53,7 @@ export function readBackup(db: ArcanaDB, appVersion: string): Promise<BackupDraf
         intention_tag: await rowsOf(db, 'intention_tag'),
         card_note: await rowsOf(db, 'card_note'),
         session: await rowsOf(db, 'session'),
+        session_crystal: await rowsOf(db, 'session_crystal'),
         payment: await rowsOf(db, 'payment'),
         reading: await rowsOf(db, 'reading'),
         card_draw: await rowsOf(db, 'card_draw'),

@@ -34,6 +34,7 @@ export function emptyTables(): BackupTables {
     intention_tag: [],
     card_note: [],
     session: [],
+    session_crystal: [],
     payment: [],
     reading: [],
     card_draw: [],
@@ -45,7 +46,7 @@ export function backupWith(tables: Partial<BackupTables>, exportedAt = at(59)): 
   return {
     format: BACKUP_FORMAT,
     format_version: FORMAT_VERSION,
-    db_schema_version: 2,
+    db_schema_version: 3,
     app_version: '0.1.0',
     exported_at: exportedAt,
     device_id: OTHER_DEVICE,
@@ -74,12 +75,22 @@ export function sessionRow(
   return { ...newSession(clientId), ...syncedFields(updatedAt), ...fields };
 }
 
+/**
+ * The same backup as a format 1 file (before T2.9): no `session_crystal` table, and no
+ * `session_crystal` value in the conflict table enum.
+ */
+export function asVersion1(backup: Backup): object {
+  const { session_crystal, ...tables } = backup.tables;
+  if (session_crystal.length > 0) throw new Error('a v1 file has no attached crystals');
+  return { ...backup, format_version: 1, db_schema_version: 2, tables };
+}
+
 /** As stored on this device: the backup row plus `pending`. */
 export const stored = <R>(row: R, pending: 0 | 1 = 0) => ({ ...row, pending });
 
 /**
  * A database with a bit of everything: clients with sessions, payments, a reading with draws,
- * notes, a deleted client, a row pulled from the server, a custom spread, and every kind of
+ * attached crystals (one detached), notes, a deleted client, a row pulled from the server, a custom spread, and every kind of
  * seed edit (edited, hidden, renamed, own tag, deleted seed spread), plus a conflict copy.
  */
 export async function fillDb(db: ArcanaDB): Promise<void> {
@@ -113,6 +124,15 @@ export async function fillDb(db: ArcanaDB): Promise<void> {
     });
   }
   await repos.card_note.create({ card_id: 'major-00', note: 'Mi nota personal' });
+  await repos.session_crystal.create({
+    session_id: session.id,
+    crystal_id: seedId('crystal', 'rose-quartz'),
+  });
+  const detached = await repos.session_crystal.create({
+    session_id: session.id,
+    crystal_id: seedId('crystal', 'amethyst'),
+  });
+  await repos.session_crystal.remove(detached.id);
   await repos.conflict.create({
     table: 'client',
     record_id: client.id,

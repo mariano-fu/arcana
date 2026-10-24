@@ -17,6 +17,7 @@ export const PUSH_ORDER: readonly PushableTable[] = [
   'intention_tag',
   'card_note',
   'session',
+  'session_crystal',
   'payment',
   'reading',
   'card_draw',
@@ -51,6 +52,7 @@ const pushers: { [T in PushableTable]: (row: SyncedTables[T]) => PushChangeOf<T>
   crystal: (row) => ({ table: 'crystal', record: wire(row) }),
   intention_tag: (row) => ({ table: 'intention_tag', record: wire(row) }),
   card_note: (row) => ({ table: 'card_note', record: wire(row) }),
+  session_crystal: (row) => ({ table: 'session_crystal', record: wire(row) }),
   conflict: (row) => ({ table: 'conflict', record: wire(row) }),
 };
 
@@ -72,6 +74,7 @@ const pullers: { [T in SyncedTableName]: (record: PulledRecordOf<T>) => SyncedTa
   crystal: (record) => ({ ...record, pending: 0 }),
   intention_tag: (record) => ({ ...record, pending: 0 }),
   card_note: (record) => ({ ...record, pending: 0 }),
+  session_crystal: (record) => ({ ...record, pending: 0 }),
   conflict: (record) => ({ ...record, pending: 0 }),
   horoscope: (record) => ({ ...record, pending: 0 }),
 };

@@ -21,7 +21,7 @@ import {
   type Backup,
   type BackupRow,
 } from './format';
-import { at, backupWith, clientRow, sessionRow } from './test-utils';
+import { asVersion1, at, backupWith, clientRow, sessionRow } from './test-utils';
 
 /** True when A and B have the same keys and are assignable both ways. */
 type Exact<A, B> = [A] extends [B]
@@ -46,6 +46,7 @@ export type Checks = [
   Assert<Row<'crystal'>>,
   Assert<Row<'intention_tag'>>,
   Assert<Row<'card_note'>>,
+  Assert<Row<'session_crystal'>>,
   Assert<Row<'conflict'>>,
   Assert<Exact<z.infer<typeof backupSchema>, Backup>>,
 ];
@@ -219,6 +220,41 @@ describe('parseBackup', () => {
     ],
   ])('refuses %s as invalid', (_, change) => {
     expect(problem(text(change(valid())))).toEqual({ kind: 'invalid', count: 1 });
+  });
+
+  it('reads a version 1 file as version 2 with no attached crystals', () => {
+    const backup = valid();
+
+    // Everything else as in the file, whose device ran Dexie schema 2.
+    expect(parseBackup(text(asVersion1(backup)))).toEqual({
+      ok: true,
+      backup: { ...backup, db_schema_version: 2 },
+    });
+    expect(backup.tables.session_crystal).toEqual([]);
+  });
+
+  it('refuses a version 1 file whose tables are not an object as invalid', () => {
+    expect(problem(text({ ...asVersion1(valid()), tables: 42 }))).toEqual({
+      kind: 'invalid',
+      count: 1,
+    });
+  });
+
+  it('refuses an attached crystal with a bad crystal id as invalid', () => {
+    const backup = valid();
+    const session = backup.tables.session[0];
+    if (!session) throw new Error('session missing');
+    const attached = {
+      id: crypto.randomUUID(),
+      updated_at: at(3),
+      deleted_at: null,
+      server_version: null,
+      device_id: session.device_id,
+      session_id: session.id,
+      crystal_id: 'rose-quartz',
+    };
+    const file = { ...backup, tables: { ...backup.tables, session_crystal: [attached] } };
+    expect(problem(text(file))).toEqual({ kind: 'invalid', count: 1 });
   });
 
   it('logs where a file is invalid, never its values', () => {

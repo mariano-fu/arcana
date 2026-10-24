@@ -20,6 +20,7 @@ import {
   at,
   backupWith,
   clientRow,
+  asVersion1,
   exportOf,
   OTHER_DEVICE,
   rowsIn,
@@ -340,12 +341,53 @@ describe('foreign keys', () => {
     expect(await everything(db)).toEqual(before);
   });
 
+  it('refuses an attached crystal whose session is missing', async () => {
+    const before = await everything(db);
+    const session = sessionRow(newId(), at(1));
+    const attached = {
+      id: newId(),
+      updated_at: at(2),
+      deleted_at: null,
+      server_version: null,
+      device_id: OTHER_DEVICE,
+      session_id: session.id,
+      crystal_id: seedId('crystal', 'rose-quartz'),
+    };
+    const client = clientRow(at(1), { id: session.client_id });
+
+    expect(await applyImport(db, backupWith({ session_crystal: [attached] }))).toEqual({
+      ok: false,
+      problem: { kind: 'missingParent', count: 1 },
+    });
+    expect(await everything(db)).toEqual(before);
+    // With its session (and client) in the file, it imports.
+    expect(
+      await importOk(
+        backupWith({ client: [client], session: [session], session_crystal: [attached] }),
+      ),
+    ).toEqual(counts({ added: 3 }));
+  });
+
   it('accepts a parent stored on this device, even deleted', async () => {
     const client = await repos.client.create(newClient());
     await repos.client.remove(client.id);
     const session = sessionRow(client.id, at(1));
 
     expect(await importOk(backupWith({ session: [session] }))).toEqual(counts({ added: 1 }));
+  });
+});
+
+describe('version 1 files', () => {
+  it('still import, with no attached crystals', async () => {
+    const client = clientRow(at(1));
+    const session = sessionRow(client.id, at(2));
+    const text = JSON.stringify(asVersion1(backupWith({ client: [client], session: [session] })));
+
+    const parsed = await readBackupFile(new Blob([text]));
+    if (!parsed.ok) throw new Error(`v1 file refused: ${parsed.problem.kind}`);
+    expect(await importOk(parsed.backup)).toEqual(counts({ added: 2 }));
+    expect(await db.session.get(session.id)).toEqual(stored(session, 1));
+    expect(await db.session_crystal.count()).toBe(0);
   });
 });
 

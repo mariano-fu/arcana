@@ -106,6 +106,17 @@ export interface CardDraw extends SyncedRow {
   note: string;
 }
 
+/**
+ * A crystal she attached to a session. The id is a UUIDv5 of the pair (`sessionCrystalId`), so
+ * a crystal is attached at most once per session across devices; detaching tombstones the row
+ * and attaching it again revives it.
+ */
+export interface SessionCrystal extends SyncedRow {
+  session_id: string;
+  /** Reference only (no foreign key on the server): unedited seed crystals never sync. */
+  crystal_id: string;
+}
+
 /** Grid cell for a position: 0-based `col`/`row`; `rotated` lays the card crosswise. */
 export interface SpreadLayout {
   col: number;
@@ -192,6 +203,7 @@ export interface SyncedTables {
   crystal: Crystal;
   intention_tag: IntentionTag;
   card_note: CardNote;
+  session_crystal: SessionCrystal;
   conflict: Conflict;
   horoscope: Horoscope;
 }
