@@ -339,6 +339,12 @@
       "intentionsIntro": "Cada intención describe lo que la persona busca. Entre paréntesis, cuántos cristales la tienen.",
       "corrections": "Correcciones"
     },
+    "recommend": {
+      "intentions": "¿Qué busca la persona? Elija una o varias intenciones.",
+      "empty": "Agregue fecha de nacimiento o elija una intención.",
+      "noMatches": "Ningún cristal coincide con estos signos e intenciones.",
+      "more": "Ver más"
+    },
     "reason": {
       "sun": "Sol en {{sign}}",
       "moon": "Luna en {{sign}}",
@@ -547,7 +553,6 @@
       "notes": "Notas",
       "astrology": "Astrología",
       "crystals": "Cristales recomendados",
-      "crystalsSoon": "Las recomendaciones de cristales estarán disponibles pronto.",
       "sessions": "Sesiones",
       "noSessions": "Aún no hay sesiones.",
       "archive": "Archivar",
