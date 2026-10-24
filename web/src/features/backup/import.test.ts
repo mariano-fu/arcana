@@ -9,6 +9,7 @@ import { FakeSyncServer } from '../../test/fakeSyncServer';
 import type { Backup } from './format';
 import {
   applyImport,
+  conflictId,
   futureRows,
   MAX_BACKUP_BYTES,
   previewImport,
@@ -29,9 +30,11 @@ import {
 let db: ArcanaDB;
 let repos: Repositories;
 
-beforeEach(() => {
+beforeEach(async () => {
   db = new ArcanaDB(`test-${crypto.randomUUID()}`);
   repos = createRepositories(db);
+  // As in the app, where loading the seed at startup creates it before any import.
+  await getDeviceId(db);
 });
 
 afterEach(async () => {
@@ -154,6 +157,45 @@ describe('merging into a device with data', () => {
     await db.client.put({ pending, ...row });
     const reordered = Object.fromEntries(Object.entries(row).reverse()) as typeof row;
     expect(await importOk(backupWith({ client: [reordered] }))).toEqual(counts({ unchanged: 1 }));
+  });
+
+  it('keeps pending local text it overwrites as one conflict, also on a re-import', async () => {
+    // The scheme matches the server's: Python's uuid5 under CONFLICT_ID_NAMESPACE.
+    expect(
+      conflictId(
+        'client',
+        '0190f3a0-0000-7000-8000-000000000001',
+        'notes',
+        '2026-10-01T12:00:00.000Z',
+        '0190f3a0-0000-7000-8000-0000000000aa',
+      ),
+    ).toBe('445fb365-4e60-5376-96ac-91c963431607');
+
+    const localDevice = await getDeviceId(db);
+    const local = clientRow(at(1), { notes: 'texto local', device_id: localDevice });
+    await db.client.put(stored(local, 1));
+    const backup = backupWith({
+      client: [
+        { ...local, notes: 'texto del archivo', updated_at: at(2), device_id: OTHER_DEVICE },
+      ],
+    });
+
+    expect(await importOk(backup)).toEqual(counts({ updated: 1 }));
+    expect((await db.client.get(local.id))?.notes).toBe('texto del archivo');
+    const expected = {
+      id: conflictId('client', local.id, 'notes', local.updated_at, localDevice),
+      table: 'client',
+      record_id: local.id,
+      field: 'notes',
+      losing_value: 'texto local',
+      losing_device_id: localDevice,
+      resolved: false,
+      pending: 1,
+    };
+    expect(await db.conflict.toArray()).toEqual([expect.objectContaining(expected)]);
+
+    await importOk(backup);
+    expect(await db.conflict.toArray()).toEqual([expect.objectContaining(expected)]);
   });
 });
 

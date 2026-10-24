@@ -8,12 +8,24 @@
 // Written rows keep `updated_at` and `deleted_at` exactly as in the file and are marked
 // `pending = 1`, so sync pushes them and the server's last-write-wins has the last word. The
 // cursor, epoch and device id are never touched.
+// - when a newer file row overwrites a pending (never pushed) local row, each free-text field
+//   whose local value differs is kept as a conflict row with the local value as the loser,
+//   under the server's deterministic id, so the text she typed is never silently lost.
 //
 // A file is validated whole (`parseBackup`) before anything is read, and written in one
 // transaction that checks foreign keys against the file and this device first: a failure
 // anywhere leaves the database as it was.
 
-import { writeVerbatim, type ArcanaDB, type SyncedTables } from '../../db';
+import { v5 as uuidv5 } from 'uuid';
+
+import {
+  getDeviceId,
+  nowIso,
+  writeVerbatim,
+  type ArcanaDB,
+  type Conflict,
+  type SyncedTables,
+} from '../../db';
 import { isUntouchedSeedRow } from '../../seed/loader';
 import {
   BACKUP_TABLES,
@@ -31,6 +43,34 @@ export const MAX_BACKUP_BYTES = 25 * 1024 * 1024;
 
 /** Rows dated further ahead than this are flagged: the server refuses them as `clock_ahead`. */
 const CLOCK_AHEAD_MS = 24 * 60 * 60_000;
+
+/** Last-write-wins keeps the losing value of these as a conflict row (sync rule 2). */
+const FREE_TEXT_FIELDS: Partial<Record<BackupTable, readonly string[]>> = {
+  client: ['notes'],
+  session: ['notes', 'follow_up_note'],
+  payment: ['note'],
+  card_draw: ['note'],
+  card_note: ['note'],
+};
+
+// Must match CONFLICT_ID_NAMESPACE in api/sync/service.py, and never change: conflict ids are
+// UUIDv5s under it, so the same loss always gets the same id, here and on the server.
+const CONFLICT_ID_NAMESPACE = '6f1c2a52-3d0e-4d8b-9a57-7c0f3e1b2d94';
+
+/** The conflict id scheme of specs/plan.md ("Conflict rows"), the same as the server's. */
+export function conflictId(
+  table: BackupTable,
+  recordId: string,
+  field: string,
+  losingUpdatedAt: string,
+  losingDeviceId: string,
+): string {
+  const timestamp = new Date(losingUpdatedAt).toISOString();
+  return uuidv5(
+    `${table}:${recordId}:${field}:${timestamp}:${losingDeviceId}`,
+    CONFLICT_ID_NAMESPACE,
+  );
+}
 
 /**
  * What an import does, by what she would notice:
@@ -106,16 +146,20 @@ class ImportAborted extends Error {
  */
 export async function applyImport(db: ArcanaDB, backup: Backup): Promise<ImportResult> {
   try {
+    // Read before the transaction, whose scope lacks `meta`. It already exists: the seed loader
+    // creates it at startup.
+    const deviceId = await getDeviceId(db);
     // writeVerbatim: the monotonic middleware would otherwise move `updated_at` past the
     // local row's, and last-write-wins on the next push would compare the wrong times.
     const counts = await writeVerbatim(db, allTables(db), async () => {
-      const plan = await planImport(db, backup);
+      const plan = await planImport(db, backup, deviceId);
       if (plan.missingParents > 0) {
         throw new ImportAborted({ kind: 'missingParent', count: plan.missingParents });
       }
       for (const { table, rows } of plan.writes) {
         if (rows.length > 0) await db.table(table).bulkPut(rows);
       }
+      if (plan.conflicts.length > 0) await db.conflict.bulkAdd(plan.conflicts);
       return plan.counts;
     });
     return { ok: true, counts };
@@ -139,21 +183,42 @@ export function futureRows(backup: Backup, now: Date): number {
 interface Plan {
   counts: ImportCounts;
   writes: { table: BackupTable; rows: unknown[] }[];
+  /** New conflict rows for overwritten pending text; not counted, she sees them as conflicts. */
+  conflicts: Conflict[];
   missingParents: number;
+}
+
+/** A pending local row the import overwrites. */
+interface Overwrite {
+  table: BackupTable;
+  local: Record<string, unknown> & { id: string; updated_at: string; device_id: string };
+  written: Record<string, unknown>;
 }
 
 /**
  * Decides every row against the stored ones, inside the caller's transaction. Its reads are
  * awaited right here, one level below the transaction scope, which Dexie keeps the transaction
- * alive across (a deeper chain of native awaits would let it commit early).
+ * alive across (a deeper chain of native awaits would let it commit early). Conflict rows are
+ * only built with a `deviceId`, which only the import passes: the preview writes nothing.
  */
-async function planImport(db: ArcanaDB, backup: Backup): Promise<Plan> {
+async function planImport(db: ArcanaDB, backup: Backup, deviceId?: string): Promise<Plan> {
   const counts: ImportCounts = { added: 0, updated: 0, deleted: 0, kept: 0, unchanged: 0 };
   const writes: Plan['writes'] = [];
+  const overwrites: Overwrite[] = [];
   for (const table of BACKUP_TABLES) {
     const incoming = backup.tables[table];
     const stored: unknown[] = await db.table(table).bulkGet(incoming.map((row) => row.id));
-    writes.push({ table, rows: planTable(table, incoming, stored, counts) });
+    writes.push({ table, rows: planTable(table, incoming, stored, counts, overwrites) });
+  }
+
+  let conflicts: Conflict[] = [];
+  if (deviceId !== undefined) {
+    const candidates = lostText(overwrites, deviceId);
+    // Insert only if absent, so a re-import never duplicates or reopens one, and never on top
+    // of a conflict row the file itself writes.
+    const fromFile = new Set(backup.tables.conflict.map((row) => row.id));
+    const existing = await db.conflict.bulkGet(candidates.map((row) => row.id));
+    conflicts = candidates.filter((row, i) => existing[i] === undefined && !fromFile.has(row.id));
   }
 
   let missingParents = 0;
@@ -161,7 +226,35 @@ async function planImport(db: ArcanaDB, backup: Backup): Promise<Plan> {
     // A tombstoned parent counts: the server accepts children of deleted rows.
     if ((await db.table(ref.parentTable).get(ref.parentId)) === undefined) missingParents++;
   }
-  return { counts, writes, missingParents };
+  return { counts, writes, conflicts, missingParents };
+}
+
+/** A conflict row per free-text field whose pending local value the import overwrites. */
+function lostText(overwrites: Overwrite[], deviceId: string): Conflict[] {
+  const now = nowIso();
+  const conflicts: Conflict[] = [];
+  for (const { table, local, written } of overwrites) {
+    for (const field of FREE_TEXT_FIELDS[table] ?? []) {
+      const losing = local[field] as string | null;
+      if (losing === written[field]) continue;
+      conflicts.push({
+        id: conflictId(table, local.id, field, local.updated_at, local.device_id),
+        updated_at: now,
+        deleted_at: null,
+        device_id: deviceId,
+        pending: 1,
+        server_version: null,
+        table,
+        record_id: local.id,
+        field,
+        losing_value: losing,
+        losing_device_id: local.device_id,
+        created_at: now,
+        resolved: false,
+      });
+    }
+  }
+  return conflicts;
 }
 
 function planTable<T extends BackupTable>(
@@ -169,6 +262,7 @@ function planTable<T extends BackupTable>(
   incoming: BackupRow<T>[],
   stored: unknown[],
   counts: ImportCounts,
+  overwrites: Overwrite[],
 ): SyncedTables[T][] {
   const writes: SyncedTables[T][] = [];
   incoming.forEach((row, i) => {
@@ -182,6 +276,9 @@ function planTable<T extends BackupTable>(
     if (outcome === 'write') {
       writes.push(candidate);
       counts[effect(candidate, local)]++;
+      if (local?.pending === 1) {
+        overwrites.push({ table, local, written: candidate } as unknown as Overwrite);
+      }
     } else {
       counts[outcome]++;
     }
