@@ -37,9 +37,10 @@ A tarot reader starting a small business needs one place to keep track of her cl
 
 **Acceptance criteria**
 - A session autosaves; closing the app mid-reading loses nothing.
-- "Nueva sesión" saves the session right away. If she leaves the session page with it still exactly as created (no field edited, no readings, no payments), it is discarded silently (tombstoned). If the app is closed first, the next app start discards it instead, as long as it was never modified. Only the device that created the session discards it.
+- "Nueva sesión" saves the session right away. If she leaves the session page with it still exactly as created (no field edited, no readings, no payments, no attached crystals), it is discarded silently (tombstoned). If the app is closed first, the next app start discards it instead, as long as it was never modified. Only the device that created the session discards it.
 - Starting a session for an archived client unarchives the client (they came back), with a short notice: "La ficha se desarchivó". If that session is then discarded as untouched, the client is archived again.
-- Deleting a session asks for confirmation and lists what goes with it (readings, payments with totals per currency); its payments, readings and card draws are tombstoned with it.
+- Deleting a session asks for confirmation and lists what goes with it (readings, payments with totals per currency, attached crystals); its payments, readings, card draws and attached crystals are tombstoned with it. Deleting a client does the same for all its sessions, and its dialog lists the crystals attached to them ("N cristales en sesiones").
+- Inside a session, a "Cristales" section lists the crystals attached to it, each with "Quitar", and the client's recommendations (same intention chips, top 5 and "Ver más" as on the client's profile), each with "Agregar a la sesión", or a disabled "En la sesión" once attached. An attached crystal she hides or deletes later still shows, labelled "(oculto)" or "(eliminado)". Attaching from the crystal library comes with it (T2.7).
 - From a client's timeline I can open any past session and see exactly which cards were drawn, in which positions, upright or reversed.
 
 ## Feature 2b — Payments (Pagos)

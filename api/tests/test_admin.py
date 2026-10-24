@@ -22,6 +22,7 @@ FACTORIES: dict[str, type[Any]] = {
     "crystal": factories.CrystalFactory,
     "intention_tag": factories.IntentionTagFactory,
     "card_note": factories.CardNoteFactory,
+    "session_crystal": factories.SessionCrystalFactory,
     "conflict": factories.ConflictFactory,
     "horoscope": factories.HoroscopeFactory,
 }

@@ -13,6 +13,7 @@ import type {
   Payment,
   Reading,
   Session,
+  SessionCrystal,
   SpreadLayout,
   SpreadPosition,
   SpreadSnapshotPosition,
@@ -60,6 +61,7 @@ export type Checks = [
   Assert<Pulled<Crystal, Schemas['CrystalRecord']>>,
   Assert<Pulled<IntentionTag, Schemas['IntentionTagRecord']>>,
   Assert<Pulled<CardNote, Schemas['CardNoteRecord']>>,
+  Assert<Pulled<SessionCrystal, Schemas['SessionCrystalRecord']>>,
   Assert<Pulled<Conflict, Schemas['ConflictRecord']>>,
   Assert<Pulled<Horoscope, Schemas['HoroscopeRecord']>>,
 
@@ -72,6 +74,7 @@ export type Checks = [
   Assert<Pushed<Crystal, Schemas['CrystalRecordRequest']>>,
   Assert<Pushed<IntentionTag, Schemas['IntentionTagRecordRequest']>>,
   Assert<Pushed<CardNote, Schemas['CardNoteRecordRequest']>>,
+  Assert<Pushed<SessionCrystal, Schemas['SessionCrystalRecordRequest']>>,
   Assert<Pushed<Conflict, Schemas['ConflictRecordRequest']>>,
 
   // JSON columns.

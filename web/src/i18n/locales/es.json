@@ -345,6 +345,19 @@
       "noMatches": "Ningún cristal coincide con estos signos e intenciones.",
       "more": "Ver más"
     },
+    "session": {
+      "title": "Cristales",
+      "empty": "Aún no hay cristales en esta sesión.",
+      "recommended": "Recomendados",
+      "add": "Agregar a la sesión",
+      "addLabel": "Agregar {{name}} a la sesión",
+      "added": "En la sesión",
+      "addedLabel": "{{name}} ya está en la sesión",
+      "remove": "Quitar",
+      "removeLabel": "Quitar {{name}} de la sesión",
+      "hidden": "(oculto)",
+      "deleted": "(eliminado)"
+    },
     "reason": {
       "sun": "Sol en {{sign}}",
       "moon": "Luna en {{sign}}",
@@ -570,6 +583,8 @@
       "sessions_other": "{{count}} sesiones",
       "payments_one": "{{count}} pago ({{totals}})",
       "payments_other": "{{count}} pagos ({{totals}})",
+      "crystals_one": "{{count}} cristal en una sesión",
+      "crystals_other": "{{count}} cristales en sesiones",
       "irreversible": "Esto no se puede deshacer.",
       "suggestArchive": "Si solo quiere quitar la ficha de la lista, puede archivarla: se conserva todo el historial y puede desarchivarla cuando quiera.",
       "archiveInstead": "Archivar la ficha",
@@ -619,13 +634,15 @@
     "delete": {
       "button": "Eliminar sesión",
       "title": "¿Eliminar esta sesión?",
-      "onlySession": "Se eliminará solo la sesión: no tiene tiradas ni pagos.",
+      "onlySession": "Se eliminará solo la sesión: no tiene tiradas, pagos ni cristales.",
       "summary": "Se eliminarán {{items}}.",
       "session": "la sesión",
       "readings_one": "{{count}} tirada",
       "readings_other": "{{count}} tiradas",
       "payments_one": "{{count}} pago ({{totals}})",
       "payments_other": "{{count}} pagos ({{totals}})",
+      "crystals_one": "{{count}} cristal",
+      "crystals_other": "{{count}} cristales",
       "irreversible": "Esto no se puede deshacer.",
       "confirm": "Eliminar definitivamente"
     }

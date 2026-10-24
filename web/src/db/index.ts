@@ -32,6 +32,7 @@ export function createRepositories(db: ArcanaDB, clock?: Clock): Repositories {
     crystal: createRepository(db, db.crystal, clock),
     intention_tag: createRepository(db, db.intention_tag, clock),
     card_note: createRepository(db, db.card_note, clock),
+    session_crystal: createRepository(db, db.session_crystal, clock),
     conflict: createRepository(db, db.conflict, clock),
     // Server-owned: only the sync engine writes it.
     horoscope: createReadonlyRepository(db.horoscope),

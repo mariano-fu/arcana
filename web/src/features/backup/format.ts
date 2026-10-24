@@ -17,7 +17,7 @@ import { PAYMENT_METHODS } from '../payments/form';
 import { SESSION_TYPES } from '../sessions/form';
 
 export const BACKUP_FORMAT = 'arcana-backup';
-export const FORMAT_VERSION = 1;
+export const FORMAT_VERSION = 2;
 
 /**
  * The tables a backup holds, parents first: every table sync pushes. Horoscopes are left out:
@@ -154,6 +154,11 @@ export const rowSchemas = {
     card_id: z.string(),
     note: z.string(),
   }),
+  session_crystal: z.strictObject({
+    ...synced,
+    session_id: id,
+    crystal_id: id,
+  }),
   conflict: z.strictObject({
     ...synced,
     table: z.enum([
@@ -166,6 +171,7 @@ export const rowSchemas = {
       'crystal',
       'intention_tag',
       'card_note',
+      'session_crystal',
       'conflict',
       'horoscope',
     ]),
@@ -200,6 +206,7 @@ export const backupSchema = z
       crystal: z.array(rowSchemas.crystal),
       intention_tag: z.array(rowSchemas.intention_tag),
       card_note: z.array(rowSchemas.card_note),
+      session_crystal: z.array(rowSchemas.session_crystal),
       conflict: z.array(rowSchemas.conflict),
     }),
   })
@@ -221,9 +228,16 @@ export const backupSchema = z
 
 /**
  * Upgrades a file of format N to N + 1, keyed by N: one step per version below
- * `FORMAT_VERSION`. Empty while version 1 is the only one.
+ * `FORMAT_VERSION`. A step only reshapes the file; the result is validated as a whole after.
  */
-export const MIGRATIONS: Readonly<Partial<Record<number, (file: object) => object>>> = {};
+export const MIGRATIONS: Readonly<Partial<Record<number, (file: object) => object>>> = {
+  // v2 (T2.9): `session_crystal`. A v1 file has no attached crystals.
+  1: (file) => {
+    const tables = 'tables' in file ? file.tables : undefined;
+    if (typeof tables !== 'object' || tables === null) return { ...file, format_version: 2 };
+    return { ...file, format_version: 2, tables: { ...tables, session_crystal: [] } };
+  },
+};
 
 /** Why a file can't be imported (or an export can't be shared). Each has a Spanish message. */
 export type BackupProblem =
@@ -305,6 +319,14 @@ export function parentRefs(tables: BackupTables): ParentRef[] {
   }
   for (const row of tables.card_draw) {
     refs.push({ table: 'card_draw', id: row.id, parentTable: 'reading', parentId: row.reading_id });
+  }
+  for (const row of tables.session_crystal) {
+    refs.push({
+      table: 'session_crystal',
+      id: row.id,
+      parentTable: 'session',
+      parentId: row.session_id,
+    });
   }
   return refs;
 }

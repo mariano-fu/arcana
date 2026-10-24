@@ -11,11 +11,24 @@ export const PAGE_SIZE = 5;
 
 const collator = new Intl.Collator('es', { sensitivity: 'base' });
 
+/** Inside a session: which crystals are attached, and how to attach one. */
+export interface AttachControls {
+  attachedIds: ReadonlySet<string>;
+  onAttach: (crystalId: string) => void;
+}
+
 /**
  * Crystals for the client's signs and the intentions she picks here. The picked intentions are
- * not saved (T2.9 Q2): they start empty every time the page opens.
+ * not saved (T2.9 Q2): they start empty every time the page opens. With `attach` (the session
+ * page), each one has "Agregar a la sesión", or a disabled "En la sesión" once attached.
  */
-export default function CrystalRecommendations({ client }: { client: Client }) {
+export default function CrystalRecommendations({
+  client,
+  attach,
+}: {
+  client: Client;
+  attach?: AttachControls;
+}) {
   const { t } = useTranslation();
   const data = useLiveQuery(async () => {
     const [crystals, tags] = await Promise.all([repos.crystal.list(), repos.intention_tag.list()]);
@@ -93,9 +106,36 @@ export default function CrystalRecommendations({ client }: { client: Client }) {
         <>
           <ol className="flex flex-col gap-2">
             {ranked.slice(0, shown).map(({ crystal, reasons }) => (
-              <li key={crystal.id} className="rounded-lg border border-stone-200 bg-white p-3">
-                <p className="font-medium">{crystal.name}</p>
-                <p className="text-stone-600">{formatReasons(reasons, tags, t)}</p>
+              <li
+                key={crystal.id}
+                className="flex flex-col gap-2 rounded-lg border border-stone-200 bg-white p-3"
+              >
+                <div>
+                  <p className="font-medium">{crystal.name}</p>
+                  <p className="text-stone-600">{formatReasons(reasons, tags, t)}</p>
+                </div>
+                {attach &&
+                  (attach.attachedIds.has(crystal.id) ? (
+                    <button
+                      type="button"
+                      disabled
+                      aria-label={t('crystals.session.addedLabel', { name: crystal.name })}
+                      className="flex min-h-11 items-center self-start rounded-lg border border-stone-200 bg-stone-100 px-4 text-base text-stone-400"
+                    >
+                      {t('crystals.session.added')}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      aria-label={t('crystals.session.addLabel', { name: crystal.name })}
+                      onClick={() => {
+                        attach.onAttach(crystal.id);
+                      }}
+                      className="flex min-h-11 items-center self-start rounded-lg border border-stone-300 bg-white px-4 text-base"
+                    >
+                      {t('crystals.session.add')}
+                    </button>
+                  ))}
               </li>
             ))}
           </ol>

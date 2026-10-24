@@ -18,6 +18,7 @@ from sync.models import (
     Client,
     Conflict,
     Session,
+    SessionCrystal,
     SyncedModel,
     SyncEpoch,
     current_epoch,
@@ -638,6 +639,45 @@ def test_card_note_round_trips_through_push_and_pull(api: APIClient) -> None:
         str(DEVICE_A),
     )
     assert CardNote.objects.get().note == "Mine"
+
+
+def test_session_crystal_round_trips_with_a_plain_crystal_reference(api: APIClient) -> None:
+    # Seed crystals never sync unless edited, so the crystal may be unknown to the server.
+    session = factories.SessionFactory(updated_at=at(0))
+    unknown_crystal = uuid.uuid4()
+    attached = factories.SessionCrystalFactory.build(
+        session=session, crystal_id=unknown_crystal, updated_at=at(1)
+    )
+
+    ok(push(api, DEVICE_A, [change(attached)]))
+    body = ok(push(api, DEVICE_B, []))
+
+    record = pulled(body, "session_crystal")[str(attached.id)]
+    assert (record["session_id"], record["crystal_id"]) == (str(session.id), str(unknown_crystal))
+    assert stored(SessionCrystal, attached.id).crystal_id == unknown_crystal
+
+
+def test_session_crystal_detach_and_reattach_reuse_the_row(api: APIClient) -> None:
+    attached = factories.SessionCrystalFactory(updated_at=at(0))
+
+    ok(push(api, DEVICE_A, [change(attached, deleted_at=at(1), updated_at=at(1))]))
+    assert stored(SessionCrystal, attached.id).deleted_at == at(1)
+
+    ok(push(api, DEVICE_B, [change(attached, deleted_at=None, updated_at=at(2))]))
+    assert stored(SessionCrystal, attached.id).deleted_at is None
+    assert SessionCrystal.objects.count() == 1
+
+
+def test_session_crystal_without_its_session_rejects_the_push(api: APIClient) -> None:
+    orphan = factories.SessionCrystalFactory.build(
+        session=factories.SessionFactory.build(client=new_client()), updated_at=at(1)
+    )
+
+    response = push(api, DEVICE_A, [change(orphan)])
+
+    assert response.status_code == 400
+    assert response.json()["records"][0]["code"] == "missing_parent"
+    assert not SessionCrystal.objects.exists()
 
 
 def test_every_response_carries_the_database_epoch(api: APIClient) -> None:

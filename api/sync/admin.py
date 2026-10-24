@@ -101,6 +101,12 @@ class CardNoteAdmin(SyncedModelAdmin):
     search_fields = ("card_id", "note")
 
 
+@admin.register(models.SessionCrystal)
+class SessionCrystalAdmin(SyncedModelAdmin):
+    list_display = ("session", "crystal_id", "updated_at", "server_version")
+    raw_id_fields = ("session",)
+
+
 @admin.register(models.Conflict)
 class ConflictAdmin(SyncedModelAdmin):
     list_display = ("table", "field", "record_id", "resolved", "created_at", "server_version")

@@ -1,5 +1,7 @@
 import { db, repos, type Session } from '../../db';
+import { loadSeed, seedId } from '../../seed/loader';
 import { clearDb, newClient, newPayment, newSession } from '../clients/test-utils';
+import { attachCrystal, detachCrystal, sessionCrystalId } from '../crystals/actions';
 import {
   createSession,
   deleteSession,
@@ -14,7 +16,13 @@ import { defaultSessionFields, pickSessionFields } from './form';
 const NOW = '2099-10-19T15:00:00.000Z';
 const clock = () => NOW;
 
-beforeEach(clearDb);
+const ROSE = seedId('crystal', 'rose-quartz');
+const AMETHYST = seedId('crystal', 'amethyst');
+
+beforeEach(async () => {
+  await clearDb();
+  await loadSeed(db);
+});
 
 async function addReading(session: Session) {
   const reading = await repos.reading.create({
@@ -69,7 +77,7 @@ describe('createSession', () => {
 });
 
 describe('getSessionDeletionSummary', () => {
-  it('counts live readings and payments, with totals per currency', async () => {
+  it('counts live readings, payments and attached crystals, with totals per currency', async () => {
     const client = await repos.client.create(newClient());
     const { session } = await createSession(db, client.id);
     await addReading(session);
@@ -78,25 +86,32 @@ describe('getSessionDeletionSummary', () => {
     await repos.payment.create(newPayment(session, { amount_minor: 2000, currency: 'USD' }));
     const refunded = await repos.payment.create(newPayment(session, { amount_minor: 99 }));
     await repos.payment.remove(refunded.id);
+    await attachCrystal(db, session.id, ROSE);
+    await attachCrystal(db, session.id, AMETHYST);
+    await detachCrystal(db, session.id, AMETHYST);
     const { session: other } = await createSession(db, client.id);
     await repos.payment.create(newPayment(other));
+    await attachCrystal(db, other.id, AMETHYST);
 
     expect(await getSessionDeletionSummary(db, session.id)).toEqual({
       readings: 1,
       payments: 3,
+      crystals: 1,
       paidByCurrency: { CRC: 1500000, USD: 2000 },
     });
   });
 });
 
 describe('deleteSession', () => {
-  it('tombstones the session and its payments, readings and card draws, nothing else', async () => {
+  it('tombstones the session and its payments, readings, draws and crystals, nothing else', async () => {
     const client = await repos.client.create(newClient());
     const { session } = await createSession(db, client.id);
     const { reading, draw } = await addReading(session);
     const payment = await repos.payment.create(newPayment(session));
+    const attached = await attachCrystal(db, session.id, ROSE);
     const { session: other } = await createSession(db, client.id);
     const otherPayment = await repos.payment.create(newPayment(other));
+    const otherAttached = await attachCrystal(db, other.id, ROSE);
 
     await deleteSession(db, session.id, clock);
 
@@ -105,11 +120,13 @@ describe('deleteSession', () => {
       await db.payment.get(payment.id),
       await db.reading.get(reading.id),
       await db.card_draw.get(draw.id),
+      await db.session_crystal.get(attached.id),
     ]) {
       expect(row).toMatchObject({ deleted_at: NOW, updated_at: NOW, pending: 1 });
     }
     expect(await repos.session.get(other.id)).toBeDefined();
     expect(await repos.payment.get(otherPayment.id)).toBeDefined();
+    expect(await repos.session_crystal.get(otherAttached.id)).toBeDefined();
     expect(await repos.client.get(client.id)).toBeDefined();
   });
 });
@@ -170,6 +187,30 @@ describe('discardIfUntouched', () => {
     expect(await discardIfUntouched(db, withPayment.session.id)).toBe(false);
   });
 
+  it('keeps a session with an attached crystal', async () => {
+    const { session } = await created();
+    await attachCrystal(db, session.id, ROSE);
+
+    expect(await discardIfUntouched(db, session.id)).toBe(false);
+    expect(await repos.session.get(session.id)).toBeDefined();
+    expect(await repos.session_crystal.get(sessionCrystalId(session.id, ROSE))).toBeDefined();
+  });
+
+  it('discards a session whose crystal was attached and removed again (T2.9 Q3)', async () => {
+    const leaving = await created();
+    const sweeping = await created();
+    for (const { session } of [leaving, sweeping]) {
+      await attachCrystal(db, session.id, ROSE);
+      await detachCrystal(db, session.id, ROSE);
+    }
+
+    expect(await discardIfUntouched(db, leaving.session.id)).toBe(true);
+    // The startup sweep too: the session row itself was never modified.
+    expect(await discardIfUntouched(db, sweeping.session.id, { requireUnmodified: true })).toBe(
+      true,
+    );
+  });
+
   it('archives the client again when creating the session had unarchived them', async () => {
     const { client, session, unarchived } = await created(true);
     expect(unarchived).toBe(true);
@@ -223,6 +264,8 @@ describe('sweepFreshSessions', () => {
     await repos.session.update(edited.id, { notes: 'Tres de Espadas' });
     const { session: paid } = await createSession(db, active.id);
     await repos.payment.create(newPayment(paid));
+    const { session: withCrystal } = await createSession(db, active.id);
+    await attachCrystal(db, withCrystal.id, ROSE);
     const { session: open } = await createSession(db, active.id);
     const old = await repos.session.create(newSession(active.id));
 
@@ -230,7 +273,7 @@ describe('sweepFreshSessions', () => {
 
     expect(await db.session.get(fresh.id)).toMatchObject({ deleted_at: NOW });
     expect((await repos.client.get(archived.id))?.archived).toBe(true);
-    for (const kept of [edited, paid, open, old]) {
+    for (const kept of [edited, paid, withCrystal, open, old]) {
       expect(await repos.session.get(kept.id)).toBeDefined();
     }
     // The open page's session keeps its marker for when she leaves it.

@@ -548,7 +548,7 @@ export interface components {
             table: "card_note";
             record: components["schemas"]["CardNoteRecord"];
         };
-        PulledChange: components["schemas"]["PulledClientChange"] | components["schemas"]["PulledSessionChange"] | components["schemas"]["PulledPaymentChange"] | components["schemas"]["PulledReadingChange"] | components["schemas"]["PulledCardDrawChange"] | components["schemas"]["PulledSpreadTemplateChange"] | components["schemas"]["PulledCrystalChange"] | components["schemas"]["PulledIntentionTagChange"] | components["schemas"]["PulledCardNoteChange"] | components["schemas"]["PulledConflictChange"] | components["schemas"]["PulledHoroscopeChange"];
+        PulledChange: components["schemas"]["PulledClientChange"] | components["schemas"]["PulledSessionChange"] | components["schemas"]["PulledPaymentChange"] | components["schemas"]["PulledReadingChange"] | components["schemas"]["PulledCardDrawChange"] | components["schemas"]["PulledSpreadTemplateChange"] | components["schemas"]["PulledCrystalChange"] | components["schemas"]["PulledIntentionTagChange"] | components["schemas"]["PulledCardNoteChange"] | components["schemas"]["PulledSessionCrystalChange"] | components["schemas"]["PulledConflictChange"] | components["schemas"]["PulledHoroscopeChange"];
         PulledClientChange: {
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -613,6 +613,14 @@ export interface components {
             table: "session";
             record: components["schemas"]["SessionRecord"];
         };
+        PulledSessionCrystalChange: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            table: "session_crystal";
+            record: components["schemas"]["SessionCrystalRecord"];
+        };
         PulledSpreadTemplateChange: {
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -637,7 +645,7 @@ export interface components {
             table: "card_note";
             record: components["schemas"]["CardNoteRecordRequest"];
         };
-        PushChangeRequest: components["schemas"]["PushClientChangeRequest"] | components["schemas"]["PushSessionChangeRequest"] | components["schemas"]["PushPaymentChangeRequest"] | components["schemas"]["PushReadingChangeRequest"] | components["schemas"]["PushCardDrawChangeRequest"] | components["schemas"]["PushSpreadTemplateChangeRequest"] | components["schemas"]["PushCrystalChangeRequest"] | components["schemas"]["PushIntentionTagChangeRequest"] | components["schemas"]["PushCardNoteChangeRequest"] | components["schemas"]["PushConflictChangeRequest"];
+        PushChangeRequest: components["schemas"]["PushClientChangeRequest"] | components["schemas"]["PushSessionChangeRequest"] | components["schemas"]["PushPaymentChangeRequest"] | components["schemas"]["PushReadingChangeRequest"] | components["schemas"]["PushCardDrawChangeRequest"] | components["schemas"]["PushSpreadTemplateChangeRequest"] | components["schemas"]["PushCrystalChangeRequest"] | components["schemas"]["PushIntentionTagChangeRequest"] | components["schemas"]["PushCardNoteChangeRequest"] | components["schemas"]["PushSessionCrystalChangeRequest"] | components["schemas"]["PushConflictChangeRequest"];
         PushClientChangeRequest: {
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -707,6 +715,14 @@ export interface components {
             table: "session";
             record: components["schemas"]["SessionRecordRequest"];
         };
+        PushSessionCrystalChangeRequest: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            table: "session_crystal";
+            record: components["schemas"]["SessionCrystalRecordRequest"];
+        };
         PushSpreadTemplateChangeRequest: {
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -732,10 +748,11 @@ export interface components {
          *     * `crystal` - crystal
          *     * `intention_tag` - intention_tag
          *     * `card_note` - card_note
+         *     * `session_crystal` - session_crystal
          *     * `conflict` - conflict
          * @enum {string}
          */
-        PushableTableEnum: "client" | "session" | "payment" | "reading" | "card_draw" | "spread_template" | "crystal" | "intention_tag" | "card_note" | "conflict";
+        PushableTableEnum: "client" | "session" | "payment" | "reading" | "card_draw" | "spread_template" | "crystal" | "intention_tag" | "card_note" | "session_crystal" | "conflict";
         ReadingRecord: {
             /** Format: uuid */
             id: string;
@@ -804,6 +821,47 @@ export interface components {
          * @enum {string}
          */
         RecordErrorCodeEnum: "invalid" | "server_owned" | "clock_ahead" | "constraint" | "missing_parent";
+        SessionCrystalRecord: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * Format: date-time
+             * @description Client clock; last-write-wins compares it.
+             */
+            updated_at: string;
+            /**
+             * Format: date-time
+             * @description Tombstone.
+             */
+            deleted_at: string | null;
+            readonly server_version: number;
+            /** Format: uuid */
+            device_id: string;
+            /** Format: uuid */
+            session_id: string;
+            /** Format: uuid */
+            crystal_id: string;
+        };
+        SessionCrystalRecordRequest: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * Format: date-time
+             * @description Client clock; last-write-wins compares it.
+             */
+            updated_at: string;
+            /**
+             * Format: date-time
+             * @description Tombstone.
+             */
+            deleted_at?: string | null;
+            /** Format: uuid */
+            device_id?: string;
+            /** Format: uuid */
+            session_id: string;
+            /** Format: uuid */
+            crystal_id: string;
+        };
         SessionRecord: {
             /** Format: uuid */
             id: string;
@@ -984,11 +1042,12 @@ export interface components {
          *     * `crystal` - crystal
          *     * `intention_tag` - intention_tag
          *     * `card_note` - card_note
+         *     * `session_crystal` - session_crystal
          *     * `conflict` - conflict
          *     * `horoscope` - horoscope
          * @enum {string}
          */
-        SyncedTableEnum: "client" | "session" | "payment" | "reading" | "card_draw" | "spread_template" | "crystal" | "intention_tag" | "card_note" | "conflict" | "horoscope";
+        SyncedTableEnum: "client" | "session" | "payment" | "reading" | "card_draw" | "spread_template" | "crystal" | "intention_tag" | "card_note" | "session_crystal" | "conflict" | "horoscope";
         TokenObtainPair: {
             readonly access: string;
             readonly refresh: string;

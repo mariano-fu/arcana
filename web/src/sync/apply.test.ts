@@ -1,7 +1,13 @@
-import { newClient } from '../features/clients/test-utils';
+import { newClient, newPayment, newSession } from '../features/clients/test-utils';
 import { ArcanaDB, createRepositories, type Client, type Repositories } from '../db';
 import type { PulledChange, PushResult, SyncResponse } from './api';
-import { applyResponse, NOTHING_PUSHED, readPending, restampClockAhead } from './apply';
+import {
+  applyResponse,
+  countPending,
+  NOTHING_PUSHED,
+  readPending,
+  restampClockAhead,
+} from './apply';
 import { CURSOR_KEY, EPOCH_KEY, readCursor } from './status';
 
 let db: ArcanaDB;
@@ -250,6 +256,26 @@ describe('applyResponse', () => {
     expect((await db.client.get(client.id))?.pending).toBe(1);
     expect(await db.client.count()).toBe(1);
     expect(await readCursor(db)).toBe(5);
+  });
+});
+
+describe('readPending', () => {
+  it('reads attached crystals after their session, and countPending counts them', async () => {
+    const client = await repos.client.create(newClient());
+    const session = await repos.session.create(newSession(client.id));
+    // Written before its session's payment, but still pushed after the session.
+    await repos.session_crystal.create({ session_id: session.id, crystal_id: 'crystal-1' });
+    await repos.payment.create(newPayment(session));
+
+    const { changes } = await readPending(db);
+
+    expect(changes.map((change) => change.table)).toEqual([
+      'client',
+      'session',
+      'session_crystal',
+      'payment',
+    ]);
+    expect(await countPending(db)).toBe(4);
   });
 });
 

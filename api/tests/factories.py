@@ -72,6 +72,14 @@ class CardDrawFactory(SyncedFactory):
         model = models.CardDraw
 
 
+class SessionCrystalFactory(SyncedFactory):
+    session = factory.SubFactory(SessionFactory)
+    crystal_id = factory.LazyFunction(uuid.uuid4)
+
+    class Meta:
+        model = models.SessionCrystal
+
+
 class SpreadTemplateFactory(SyncedFactory):
     name = factory.Sequence(lambda n: f"Custom spread {n}")
     positions = factory.LazyFunction(

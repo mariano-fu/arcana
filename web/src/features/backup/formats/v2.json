@@ -1,0 +1,212 @@
+{
+  "app_version": "string",
+  "db_schema_version": "integer",
+  "device_id": "string (uuid) | null",
+  "exported_at": "string (date-time)",
+  "format": "const \"arcana-backup\"",
+  "format_version": "const 2",
+  "seed_versions": {
+    "crystals": "integer | null",
+    "spreads": "integer | null"
+  },
+  "tables": {
+    "card_draw": {
+      "[]": {
+        "card_id": "string",
+        "deleted_at": "string (date-time) | null",
+        "device_id": "string (uuid)",
+        "id": "string (uuid)",
+        "note": "string",
+        "position_index": "integer",
+        "reading_id": "string (uuid)",
+        "reversed": "boolean",
+        "server_version": "integer | null",
+        "updated_at": "string (date-time)"
+      }
+    },
+    "card_note": {
+      "[]": {
+        "card_id": "string",
+        "deleted_at": "string (date-time) | null",
+        "device_id": "string (uuid)",
+        "id": "string (uuid)",
+        "note": "string",
+        "server_version": "integer | null",
+        "updated_at": "string (date-time)"
+      }
+    },
+    "client": {
+      "[]": {
+        "archived": "boolean",
+        "birth_date": "string (date) | null",
+        "birth_lat": "number | null",
+        "birth_lng": "number | null",
+        "birth_place_label": "string | null",
+        "birth_time": "string | null",
+        "birth_tz": "string | null",
+        "created_at": "string (date-time)",
+        "deleted_at": "string (date-time) | null",
+        "device_id": "string (uuid)",
+        "email": "string | null",
+        "id": "string (uuid)",
+        "instagram": "string | null",
+        "name": "string",
+        "notes": "string",
+        "server_version": "integer | null",
+        "tags": "string[]",
+        "updated_at": "string (date-time)",
+        "whatsapp": "string | null"
+      }
+    },
+    "conflict": {
+      "[]": {
+        "created_at": "string (date-time)",
+        "deleted_at": "string (date-time) | null",
+        "device_id": "string (uuid)",
+        "field": "string",
+        "id": "string (uuid)",
+        "losing_device_id": "string (uuid)",
+        "losing_value": "string | null",
+        "record_id": "string (uuid)",
+        "resolved": "boolean",
+        "server_version": "integer | null",
+        "table": "enum \"client\" \"session\" \"payment\" \"reading\" \"card_draw\" \"spread_template\" \"crystal\" \"intention_tag\" \"card_note\" \"session_crystal\" \"conflict\" \"horoscope\"",
+        "updated_at": "string (date-time)"
+      }
+    },
+    "crystal": {
+      "[]": {
+        "care": "string",
+        "chakras": "string[]",
+        "colors": "string[]",
+        "deleted_at": "string (date-time) | null",
+        "description": "string",
+        "device_id": "string (uuid)",
+        "hidden": "boolean",
+        "id": "string (uuid)",
+        "intentions": "string[]",
+        "name": "string",
+        "seed_key": "string | null",
+        "server_version": "integer | null",
+        "signs": "string[]",
+        "updated_at": "string (date-time)",
+        "user_modified": "boolean"
+      }
+    },
+    "intention_tag": {
+      "[]": {
+        "deleted_at": "string (date-time) | null",
+        "device_id": "string (uuid)",
+        "id": "string (uuid)",
+        "key": "string",
+        "label": "string | null",
+        "server_version": "integer | null",
+        "updated_at": "string (date-time)"
+      }
+    },
+    "payment": {
+      "[]": {
+        "amount_minor": "integer",
+        "client_id": "string (uuid)",
+        "currency": "enum \"CRC\" \"USD\"",
+        "deleted_at": "string (date-time) | null",
+        "device_id": "string (uuid)",
+        "id": "string (uuid)",
+        "method": "enum \"sinpe\" \"cash\" \"transfer\" \"paypal\" \"other\"",
+        "note": "string",
+        "paid_at": "string (date)",
+        "reference": "string | null",
+        "server_version": "integer | null",
+        "session_id": "string (uuid)",
+        "updated_at": "string (date-time)"
+      }
+    },
+    "reading": {
+      "[]": {
+        "created_at": "string (date-time)",
+        "deleted_at": "string (date-time) | null",
+        "device_id": "string (uuid)",
+        "id": "string (uuid)",
+        "label": "string | null",
+        "server_version": "integer | null",
+        "session_id": "string (uuid)",
+        "spread_snapshot": {
+          "name": "string",
+          "positions": {
+            "[]": {
+              "index": "integer",
+              "layout": {
+                "anyOf 0": {
+                  "col": "integer",
+                  "rotated": "boolean",
+                  "row": "integer"
+                },
+                "anyOf 1": "null"
+              },
+              "meaning": "string",
+              "name": "string"
+            }
+          }
+        },
+        "spread_template_id": "string (uuid)",
+        "updated_at": "string (date-time)"
+      }
+    },
+    "session": {
+      "[]": {
+        "client_id": "string (uuid)",
+        "currency": "enum \"CRC\" \"USD\"",
+        "deleted_at": "string (date-time) | null",
+        "device_id": "string (uuid)",
+        "follow_up_date": "string (date) | null",
+        "follow_up_note": "string",
+        "id": "string (uuid)",
+        "notes": "string",
+        "price_minor": "integer | null",
+        "server_version": "integer | null",
+        "started_at": "string (date-time)",
+        "type": "enum \"in_person\" \"online\" \"message\"",
+        "updated_at": "string (date-time)"
+      }
+    },
+    "session_crystal": {
+      "[]": {
+        "crystal_id": "string (uuid)",
+        "deleted_at": "string (date-time) | null",
+        "device_id": "string (uuid)",
+        "id": "string (uuid)",
+        "server_version": "integer | null",
+        "session_id": "string (uuid)",
+        "updated_at": "string (date-time)"
+      }
+    },
+    "spread_template": {
+      "[]": {
+        "deleted_at": "string (date-time) | null",
+        "description": "string",
+        "device_id": "string (uuid)",
+        "id": "string (uuid)",
+        "is_seed": "boolean",
+        "name": "string",
+        "positions": {
+          "[]": {
+            "index": "integer",
+            "layout": {
+              "anyOf 0": {
+                "col": "integer",
+                "rotated": "boolean",
+                "row": "integer"
+              },
+              "anyOf 1": "null"
+            },
+            "meaning": "string",
+            "name": "string"
+          }
+        },
+        "seed_key": "string | null",
+        "server_version": "integer | null",
+        "updated_at": "string (date-time)"
+      }
+    }
+  }
+}

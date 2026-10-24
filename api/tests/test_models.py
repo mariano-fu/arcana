@@ -6,7 +6,7 @@ from django.apps import apps
 from django.db import IntegrityError, connection, models, transaction
 
 from horoscopes.models import SERVER_DEVICE_ID
-from sync.models import SYNC_LOCK_KEY, SYNCED_TABLE_NAMES, CardDraw, Client, Reading
+from sync.models import SYNC_LOCK_KEY, SYNCED_TABLE_NAMES, CardDraw, Client, Reading, SessionCrystal
 from sync.registry import synced_models
 from tests import factories
 
@@ -42,6 +42,7 @@ def test_registry_covers_every_sync_table() -> None:
 
     assert set(registry) == set(SYNCED_TABLE_NAMES)
     assert registry["card_draw"] is CardDraw
+    assert registry["session_crystal"] is SessionCrystal
 
 
 def test_reading_may_reference_a_spread_template_the_server_never_saw() -> None:
