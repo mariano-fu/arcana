@@ -3,15 +3,17 @@
 # The chain is device → tailscale serve (TLS, on the host) → Caddy (here, plain HTTP on 8080,
 # published on the host's loopback only) → gunicorn. tailscale serve sets X-Forwarded-For to
 # the device's tailnet address and X-Forwarded-Proto to https. Its connection reaches Caddy
-# through Docker's port publishing, from a private address (the bridge gateway), so Caddy
-# trusts private ranges: it keeps those headers and appends that address to
-# X-Forwarded-For. Django then counts 2 proxies (NUM_PROXIES=2). Tailnet addresses
-# (100.64.0.0/10) are not private ranges, so a device can never pose as a proxy.
+# through Docker's port publishing, from the gateway of the `edge` network (fixed subnet in
+# docker-compose.yml), so Caddy trusts that one address and nothing else: it keeps those
+# headers and appends the gateway to X-Forwarded-For. Django then counts 2 proxies
+# (NUM_PROXIES=2). Any other peer, a container on `edge` or a tailnet device, is not a proxy:
+# Caddy ignores its X-Forwarded-For and client_ip is the peer itself. The default matches
+# compose's, so an unset EDGE_GATEWAY can't leave the list empty.
 {
 	admin off
 	auto_https off
 	servers {
-		trusted_proxies static private_ranges
+		trusted_proxies static {$EDGE_GATEWAY:172.30.80.1}/32
 		client_ip_headers X-Forwarded-For
 		trusted_proxies_strict
 	}

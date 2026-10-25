@@ -17,13 +17,22 @@ BUILD_COMMIT=$(git rev-parse --short=7 HEAD) docker compose up -d --build
 docker compose exec api python manage.py createsuperuser
 ```
 
-Then point `tailscale serve` on the host at `http://127.0.0.1:8080` (`CADDY_PORT`).
+Then point `tailscale serve` on the host at `http://127.0.0.1:8080` (`CADDY_PORT`):
+`docs/deploy.md`, with the checks to run before she uses it.
 
 ## Updating
 
+Migrations go out before the PWA: bring up `api` (it waits for `migrate`) before the new
+`caddy`.
+
 ```sh
-git pull && BUILD_COMMIT=$(git rev-parse --short=7 HEAD) docker compose up -d --build
+git pull && export BUILD_COMMIT=$(git rev-parse --short=7 HEAD)
+docker compose build
+docker compose up -d --wait api cron && docker compose up -d --wait caddy
 ```
+
+The first update that adds the fixed `edge` subnet (T4.2) needs a `docker compose down` first
+(never `-v`): `docs/deploy.md`, step 2.
 
 `BUILD_COMMIT` is the commit Ajustes → Versiones shows; without it, it shows "dev".
 

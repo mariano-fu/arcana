@@ -26,6 +26,9 @@ AUTH_THROTTLE_RATE=${THROTTLE_LIMIT}/min
 # below would depend on which worker a request lands on.
 WEB_CONCURRENCY=1
 EOF
+# The edge network (docker-compose.yml): its own subnet, so a run next to the live stack doesn't
+# clash with it.
+export EDGE_SUBNET=172.30.81.0/24 EDGE_GATEWAY=172.30.81.1
 
 compose() { docker compose -p "$PROJECT" --env-file "$ENV_FILE" "$@"; }
 # Every profile, so cleanup also removes the opt-in admin service.
@@ -117,6 +120,54 @@ check "device A is throttled (429)" test "$last" = 429
 check "device B is not (400)" test "$(as_device 100.64.0.2 -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d '{}' "$BASE/api/auth/token/")" = 400
 spoofed=$(as_device "198.51.100.7, 100.64.0.1" -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d '{}' "$BASE/api/auth/token/")
 check "a client-sent X-Forwarded-For doesn't escape device A's bucket" test "$spoofed" = 429
+
+echo "== Caddy trusts only the edge gateway as a proxy"
+# client_ip in Caddy's access log for the request whose URI carries the marker $1.
+client_ip() {
+	for _ in $(seq 20); do
+		ip=$(compose logs --no-color --no-log-prefix caddy | python3 -c '
+import json, sys
+for line in sys.stdin:
+    try:
+        entry = json.loads(line)
+    except ValueError:
+        continue
+    if not isinstance(entry, dict) or entry.get("msg") != "handled request":
+        continue
+    request = entry.get("request") or {}
+    if sys.argv[1] in request.get("uri", ""):
+        print(request.get("client_ip", ""))
+' "$1" | tail -1)
+		if [ -n "$ip" ]; then
+			echo "$ip"
+			return
+		fi
+		sleep 0.5
+	done
+}
+# Through the loopback publish, as tailscale serve reaches it.
+as_device 100.64.0.1 -o /dev/null "$BASE/healthz?probe=xff-device"
+via_publish=$(client_ip probe=xff-device)
+check "client_ip is the device behind tailscale serve ($via_publish)" test "$via_publish" = 100.64.0.1
+check "  …never the edge gateway itself" test "$via_publish" != "$EDGE_GATEWAY"
+as_device "198.51.100.7, 100.64.0.1" -o /dev/null "$BASE/healthz?probe=xff-spoofed"
+spoofed_ip=$(client_ip probe=xff-spoofed)
+check "a client-sent X-Forwarded-For doesn't change client_ip ($spoofed_ip)" test "$spoofed_ip" = 100.64.0.1
+check "  …nor makes it the edge gateway" test "$spoofed_ip" != "$EDGE_GATEWAY"
+# Any other peer on the edge network is not a proxy: Caddy ignores its X-Forwarded-For. This
+# is what trusting private_ranges got wrong. A throwaway container from the api image (no
+# curl needed), removed when it exits.
+peer=$(docker run --rm --network "${PROJECT}_edge" --read-only --cap-drop ALL \
+	--security-opt no-new-privileges:true arcana-api:local python -c '
+import http.client
+c = http.client.HTTPConnection("caddy", 8080, timeout=10)
+c.request("GET", "/healthz?probe=edge-peer", headers={"X-Forwarded-For": "100.64.0.9"})
+c.getresponse().read()
+print(c.sock.getsockname()[0])
+' || true)
+peer_ip=$(client_ip probe=edge-peer)
+check "a container on the edge network reached Caddy ($peer)" test -n "$peer"
+check "  …and its X-Forwarded-For is ignored: client_ip is the peer ($peer_ip)" test -n "$peer" -a "$peer_ip" = "$peer"
 
 echo "== cron"
 check "crontab parses" compose exec -T cron supercronic -test /app/crontab

@@ -109,6 +109,9 @@ services:
     ports: ["127.0.0.1:${CADDY_PORT:-8080}:8080"]
     # Caddy's state; nothing to keep (TLS ends at tailscale serve).
     tmpfs: ["/data:uid=10002,gid=10002", "/config:uid=10002,gid=10002"]
+    # The edge network's gateway: the only address Caddy trusts as a proxy (Caddyfile).
+    environment:
+      EDGE_GATEWAY: ${EDGE_GATEWAY:-172.30.80.1}
     networks: [edge, backend]
     # No depends_on: Caddy resolves api:8000 per request, so the app shell is served even if
     # the API never starts (say, a failed migration); /api answers 502 until it does.
@@ -119,7 +122,14 @@ networks:
   backend:
     internal: true
   egress: {}
-  edge: {}
+  # Carries the loopback publish (backend is internal, so it can't). Fixed subnet: tailscale
+  # serve's connection reaches Caddy from this gateway, which Caddy trusts and nothing else.
+  # Overridable so smoke.sh can run next to the live stack.
+  edge:
+    ipam:
+      config:
+        - subnet: ${EDGE_SUBNET:-172.30.80.0/24}
+          gateway: ${EDGE_GATEWAY:-172.30.80.1}
 
 volumes:
   # External and fixed-name, so `docker compose down -v` can't remove it.
