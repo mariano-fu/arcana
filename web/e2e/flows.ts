@@ -87,11 +87,13 @@ export async function addPayment(
   page: Page,
   amount: string,
   method: Exclude<PaymentMethodKey, 'label'>,
+  { reference }: { reference?: string } = {},
 ): Promise<void> {
   await page.getByRole('button', { name: es.payments.section.add }).click();
   const form = page.getByRole('form', { name: es.payments.form.addTitle });
   await form.getByLabel(es.payments.field.amount).fill(amount);
   await form.getByRole('button', { name: es.payments.method[method] }).click();
+  if (reference) await form.getByLabel(es.payments.field.reference).fill(reference);
   await form.getByRole('button', { name: es.common.save }).click();
   await expect(form).toBeHidden();
 }

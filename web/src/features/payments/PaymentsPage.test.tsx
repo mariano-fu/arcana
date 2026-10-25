@@ -299,6 +299,45 @@ describe('Pagos screen', () => {
       await expectCsv(file);
       expect(click).not.toHaveBeenCalled();
     });
+
+    // A delete on another device cascades only over the rows it had, so a payment recorded
+    // elsewhere can stay live under a deleted session or ficha after a sync (T3.9). The month's
+    // list and its CSV filter on the payment alone, so it still counts.
+    it('keeps a live payment whose session or ficha was deleted, in the list and the CSV', async () => {
+      const dora = await sessionFor('Dora Prueba');
+      await pay(dora, { amount_minor: 300_000, paid_at: '2026-10-05', method: 'transfer' });
+      await repos.session.remove(dora.id);
+      const eva = await sessionFor('Eva Prueba');
+      await pay(eva, { amount_minor: 200_000, paid_at: '2026-10-06', method: 'cash' });
+      await repos.session.remove(eva.id);
+      await repos.client.remove(eva.client_id);
+      const user = userEvent.setup();
+      await openPayments();
+
+      const rows = paymentRows();
+      expect(rows).toHaveLength(2);
+      expect(rows[0]).toContain(es.payments.page.csv.unknownClient);
+      expect(rows[0]).toContain(formatMoney(200_000, 'CRC'));
+      expect(rows[1]).toContain('Dora Prueba');
+      expect(rows[1]).toContain(formatMoney(300_000, 'CRC'));
+      const income = within(incomeSection()).getAllByRole('listitem');
+      expect(income.map((item) => item.textContent)).toEqual([formatMoney(500_000, 'CRC')]);
+
+      await user.click(screen.getByRole('button', { name: es.payments.page.export.button }));
+
+      await waitFor(() => {
+        expect(click).toHaveBeenCalledOnce();
+      });
+      const text = new TextDecoder().decode(
+        new Uint8Array((await downloaded?.arrayBuffer()) ?? new ArrayBuffer(0)),
+      );
+      expect(text.split('\r\n')).toEqual([
+        'Fecha;Cliente;Monto;Moneda;Método;Referencia;Nota',
+        '2026-10-05;Dora Prueba;3000,00;CRC;Transferencia;;',
+        '2026-10-06;(cliente eliminado);2000,00;CRC;Efectivo;;',
+        '',
+      ]);
+    });
   });
 });
 

@@ -95,8 +95,8 @@ export async function waitForServiceWorker(page: Page): Promise<void> {
     .toBe(true);
 }
 
-/** Live (non-tombstoned) rows of a table, read straight from IndexedDB. */
-export async function readRows(page: Page, table: string): Promise<Record<string, unknown>[]> {
+/** Every row of an IndexedDB store, tombstones included, read straight from the database. */
+export async function readStore(page: Page, table: string): Promise<Record<string, unknown>[]> {
   return page.evaluate(async (name) => {
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
       const request = indexedDB.open('arcana');
@@ -108,7 +108,7 @@ export async function readRows(page: Page, table: string): Promise<Record<string
       };
     });
     try {
-      const rows = await new Promise<Record<string, unknown>[]>((resolve, reject) => {
+      return await new Promise<Record<string, unknown>[]>((resolve, reject) => {
         const request = db.transaction(name).objectStore(name).getAll();
         request.onsuccess = () => {
           resolve(request.result as Record<string, unknown>[]);
@@ -117,9 +117,13 @@ export async function readRows(page: Page, table: string): Promise<Record<string
           reject(request.error ?? new Error(`reading ${name} failed`));
         };
       });
-      return rows.filter((row) => row.deleted_at === null);
     } finally {
       db.close();
     }
   }, table);
+}
+
+/** Live (non-tombstoned) rows of a table, read straight from IndexedDB. */
+export async function readRows(page: Page, table: string): Promise<Record<string, unknown>[]> {
+  return (await readStore(page, table)).filter((row) => row.deleted_at === null);
 }
