@@ -24,12 +24,19 @@ const sessionIdFrom = (page: Device['page']) => {
   return id;
 };
 
-async function writeNotes({ page }: Device, sessionId: string, text: string): Promise<void> {
-  await page.goto(`/sessions/${sessionId}`);
+/** On the session page: types the session notes and waits until they are saved. */
+async function fillNotes(page: Device['page'], text: string): Promise<void> {
   const notes = page.getByLabel(es.sessions.field.notes);
+  // Fails fast if the session isn't there, instead of waiting out the test timeout in fill().
+  await expect(notes).toBeVisible();
   await notes.fill(text);
   await notes.blur();
   await expect(page.getByText(es.sessions.save.saved, { exact: true })).toBeVisible();
+}
+
+async function writeNotes({ page }: Device, sessionId: string, text: string): Promise<void> {
+  await page.goto(`/sessions/${sessionId}`);
+  await fillNotes(page, text);
 }
 
 async function sessionRow({ page }: Device, id: string): Promise<Record<string, unknown>> {
@@ -81,6 +88,8 @@ test('two devices edit offline, sync, and agree on the outcome', async ({ browse
   await createClient(a.page, f.notesClient);
   await startSession(a.page, f.notesClient.name);
   const notesSession = sessionIdFrom(a.page);
+  // An untouched "Nueva sesión" is discarded on leaving its page; a first note keeps it.
+  await fillNotes(a.page, f.initialNote);
   await openClients(a.page);
   await createClient(a.page, f.deletedClient);
   await startSession(a.page, f.deletedClient.name);

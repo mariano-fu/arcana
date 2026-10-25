@@ -24,6 +24,7 @@ export function syncFixtures(run: string) {
   return {
     notesClient: { name: `Ficha Notas ${run}` },
     deletedClient: { name: `Ficha Borrada ${run}` },
+    initialNote: `Nota inicial ${run}`,
     noteA: `Nota del dispositivo A ${run}`,
     noteB: `Nota del dispositivo B ${run}`,
     /** Payment references, so each payment can be found in the list and the CSV. */
