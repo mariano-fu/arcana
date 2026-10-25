@@ -15,3 +15,20 @@ export const OTHER_FAKE_CLIENT = { name: 'Persona Ficticia Dos' } as const;
 export const OFFLINE_FAKE_CLIENT = { name: 'Cliente Sin Conexión' } as const;
 
 export const SESSION_NOTE = 'Nota de prueba: sin datos reales.';
+
+/**
+ * Two-device sync (T3.9). Each run adds a suffix, since a retry syncs with the same server
+ * database: the test only looks at its own rows.
+ */
+export function syncFixtures(run: string) {
+  return {
+    notesClient: { name: `Ficha Notas ${run}` },
+    deletedClient: { name: `Ficha Borrada ${run}` },
+    initialNote: `Nota inicial ${run}`,
+    noteA: `Nota del dispositivo A ${run}`,
+    noteB: `Nota del dispositivo B ${run}`,
+    /** Payment references, so each payment can be found in the list and the CSV. */
+    firstPaymentRef: `E2E-P1-${run}`,
+    lateralPaymentRef: `E2E-P2-${run}`,
+  } as const;
+}

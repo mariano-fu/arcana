@@ -38,14 +38,50 @@ jobs:
 
   # Playwright on WebKit with an iPhone profile against the production build (T1.15). Not a
   # required check: making it one means updating main's branch protection (Mariano's call).
+  # The two-device sync spec (T3.9) runs against the real API: Playwright starts gunicorn when
+  # E2E_API is set (web/playwright.config.ts), on this job's own Postgres and a made-up account.
   e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
       run:
         working-directory: web
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: arcana
+          POSTGRES_PASSWORD: arcana
+          POSTGRES_DB: arcana
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U arcana"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://arcana:arcana@localhost:5432/arcana
+      SECRET_KEY: ci-only-not-a-real-secret-at-least-32-bytes
+      E2E_API: "1"
+      # Made-up account, CI only. The API keeps its production auth throttle.
+      E2E_API_USERNAME: e2e-dispositivo
+      E2E_API_PASSWORD: ci-only-e2e-password-not-real
     steps:
       - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
+        with:
+          working-directory: api
+          enable-cache: true
+          cache-dependency-glob: api/uv.lock
+      - run: uv sync --locked
+        working-directory: api
+      - run: uv run python manage.py migrate --noinput
+        working-directory: api
+      - run: uv run python manage.py createsuperuser --noinput --username "$E2E_API_USERNAME" --email e2e@example.invalid
+        working-directory: api
+        env:
+          DJANGO_SUPERUSER_PASSWORD: ${{ env.E2E_API_PASSWORD }}
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc

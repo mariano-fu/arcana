@@ -40,6 +40,6 @@ Other agents may be working in other worktrees at the same time. Only touch file
 ## Commands
 (fill in as the project grows)
 - web: `cd web && npm run dev | npm test | npm run lint | npm run typecheck`
-- e2e: CI only (the `e2e` job; Playwright doesn't support Arch). It runs `npm run build && npm run test:e2e` in `web/`.
+- e2e: CI only (the `e2e` job; Playwright doesn't support Arch). It runs `npm run build && npm run test:e2e` in `web/`. With `E2E_API` set (as the job does, with its own Postgres and a made-up account), Playwright also starts the API for the two-device sync spec.
 - api: `cd api && pytest | mypy . | ruff check .`
 - api commands run inside the uv-managed venv: prefix them with `uv run` (e.g. `uv run pytest`), after `uv sync` once.
