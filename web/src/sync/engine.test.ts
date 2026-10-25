@@ -2,6 +2,7 @@ import { newClient, newSession } from '../features/clients/test-utils';
 import { loadSeed, seedId } from '../seed/loader';
 import { FakeSyncServer } from '../test/fakeSyncServer';
 import { ArcanaDB, createRepositories, getDeviceId, type Repositories } from '../db';
+import { createApi, type ApiResult } from './api';
 import { createAuth } from './auth';
 import { createSyncEngine, type SyncEngine, type SyncReason } from './engine';
 import { createLocalLocks, type Locks } from './locks';
@@ -635,5 +636,99 @@ describe('unexpected errors', () => {
     expect((await engine.sync('open')).state).toBe('error');
     expect(error).toHaveBeenCalled();
     expect((await engine.sync('interval')).state).toBe('idle');
+  });
+});
+
+/** Short timeouts so a stuck request ends within the test (the defaults are 30 s and 15 s). */
+const SHORT = { syncMs: 50, authMs: 50 };
+
+/**
+ * `fetch` in front of the fake server, so the real `createApi` and its timeouts run. A request
+ * that doesn't answer (the server is held, or `dropAnswers` is set) settles only when aborted.
+ */
+function fetchTo(target: FakeSyncServer) {
+  const bridge = {
+    dropAnswers: false,
+    fetch: vi.fn(async (input: string, init: RequestInit): Promise<Response> => {
+      const aborted = new Promise<never>((_resolve, reject) => {
+        init.signal?.addEventListener('abort', () => {
+          reject(new DOMException('The operation was aborted.', 'AbortError'));
+        });
+      });
+      const result = await Promise.race([route(target, input, init), aborted]);
+      if (bridge.dropAnswers) return aborted;
+      return toResponse(result);
+    }),
+  };
+  return bridge;
+}
+
+function route(target: FakeSyncServer, input: string, init: RequestInit) {
+  const body = JSON.parse(init.body as string) as never;
+  if (input === '/api/auth/token/') return target.login();
+  if (input === '/api/auth/token/refresh/') {
+    return target.refresh((body as { refresh: string }).refresh);
+  }
+  const auth = (init.headers as Record<string, string>).Authorization ?? '';
+  return target.sync(auth.replace('Bearer ', ''), body);
+}
+
+function toResponse(result: ApiResult<unknown, unknown>): Response {
+  switch (result.kind) {
+    case 'ok':
+      return new Response(JSON.stringify(result.body), { status: 200 });
+    case 'rejected':
+      return new Response(JSON.stringify(result.body), { status: 400 });
+    case 'unauthorized':
+      return new Response('{}', { status: 401 });
+    case 'throttled':
+      return new Response('{}', { status: 429 });
+    case 'server_error':
+      return new Response('', { status: result.status });
+    case 'network':
+      throw new TypeError('Failed to fetch');
+  }
+}
+
+describe('a request that never answers', () => {
+  it('ends a push as offline with its rows still pending and the cursor kept; the next run re-pushes', async () => {
+    const bridge = fetchTo(server);
+    const timed = createSyncEngine({ db, api: createApi(bridge.fetch, '', SHORT), locks });
+    const client = await repos.client.create(newClient());
+    const cursor = await readCursor(db);
+    // The server applies the push, but the answer never arrives.
+    bridge.dropAnswers = true;
+
+    expect((await timed.sync('open')).state).toBe('offline');
+
+    expect((await db.client.get(client.id))?.pending).toBe(1);
+    expect(await readCursor(db)).toBe(cursor);
+    expect(server.requests).toHaveLength(1);
+    const version = server.version;
+
+    bridge.dropAnswers = false;
+    expect((await timed.sync('interval')).state).toBe('idle');
+
+    expect(server.requests[1]?.changes?.map((change) => change.record.id)).toContain(client.id);
+    expect((await db.client.get(client.id))?.pending).toBe(0);
+    expect(server.version).toBe(version); // The re-push was a no-op.
+  });
+
+  it("doesn't hold up sign-out: the run ends offline, then she is signed out", async () => {
+    const bridge = fetchTo(server);
+    const timed = createSyncEngine({ db, api: createApi(bridge.fetch, '', SHORT), locks });
+    await repos.client.create(newClient());
+    server.hold();
+
+    const run = timed.sync('open');
+    await vi.waitFor(() => {
+      expect(bridge.fetch).toHaveBeenCalled();
+    });
+    await timed.signOut();
+
+    expect((await run).state).toBe('offline');
+    expect((await readStatus(db)).state).toBe('signed_out');
+    expect(await db.auth.count()).toBe(0);
+    expect(await db.client.where('pending').equals(1).count()).toBe(1);
   });
 });

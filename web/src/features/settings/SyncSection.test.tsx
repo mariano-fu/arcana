@@ -142,6 +142,27 @@ describe('Sincronización, signed out', () => {
     expect(await db.auth.count()).toBe(0);
   });
 
+  it('says the server is unreachable when the login request times out, never wrong credentials', async () => {
+    // No answer until aborted, as with Tailscale half-up.
+    const fetchFn = vi.fn<(input: string, init: RequestInit) => Promise<Response>>(
+      (_input, init) =>
+        new Promise((_resolve, reject) => {
+          init.signal?.addEventListener('abort', () => {
+            reject(new DOMException('The operation was aborted.', 'AbortError'));
+          });
+        }),
+    );
+    const section = show(engineOn(createApi(fetchFn, '', { syncMs: 50, authMs: 50 })));
+
+    await submitLogin(section);
+
+    const alert = await section.findByRole('alert');
+    expect(alert).toHaveTextContent(S.error.unavailable);
+    expect(alert).not.toHaveTextContent(S.error.invalid);
+    expect(fetchFn.mock.calls[0]?.[1].signal?.aborted).toBe(true);
+    expect(await db.auth.count()).toBe(0);
+  });
+
   it('asks her to wait when throttled', async () => {
     const section = show(engineOn(createApi(fetchReturning(429, '{}'))));
 
