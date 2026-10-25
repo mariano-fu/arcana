@@ -75,6 +75,8 @@ test('a client, session, Cruz Celta and payment survive an offline reload', asyn
   context,
   api,
 }) => {
+  // Shares CI's 2 workers with the two-device spec, which starts two browsers plus gunicorn.
+  test.setTimeout(60_000);
   expect(celticCrossCards).toHaveLength(10);
   await page.goto('/');
   await waitForServiceWorker(page);
