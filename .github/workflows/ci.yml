@@ -74,7 +74,7 @@ jobs:
             web/test-results/
           retention-days: 7
 
-  # Not a required check yet: add it to main's branch protection once this job is on main.
+  # A required check on main, with web: renaming this job means updating the branch protection.
   api:
     runs-on: ubuntu-latest
     defaults:
